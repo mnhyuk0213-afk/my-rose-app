@@ -1,0 +1,299 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import NavBar from "@/components/NavBar";
+
+type Tone = "warm" | "trendy" | "professional" | "fun";
+type Platform = "instagram" | "naver-blog" | "kakao";
+
+const TONES: { id: Tone; label: string; desc: string }[] = [
+  { id: "warm", label: "따뜻한", desc: "친근하고 감성적인 톤" },
+  { id: "trendy", label: "트렌디", desc: "MZ 감성, 짧고 임팩트" },
+  { id: "professional", label: "전문적", desc: "신뢰감 있는 공식 톤" },
+  { id: "fun", label: "유쾌한", desc: "이모지·말장난 활용" },
+];
+
+const PLATFORMS: { id: Platform; label: string; icon: string }[] = [
+  { id: "instagram", label: "인스타그램", icon: "📸" },
+  { id: "naver-blog", label: "네이버 블로그", icon: "📝" },
+  { id: "kakao", label: "카카오채널", icon: "💛" },
+];
+
+const CONTENT_TYPES = ["신메뉴 소개", "이벤트·할인", "시즌 한정", "재료 이야기", "매장 소식", "리뷰 감사", "일상 공유"];
+
+export default function SnsContentPage() {
+  const [platform, setPlatform] = useState<Platform>("instagram");
+  const [tone, setTone] = useState<Tone>("warm");
+  const [contentType, setContentType] = useState("신메뉴 소개");
+  const [menuName, setMenuName] = useState("");
+  const [description, setDescription] = useState("");
+  const [hashtags, setHashtags] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const toneLabels: Record<Tone, string> = {
+    warm: "따뜻하고 감성적인",
+    trendy: "트렌디하고 임팩트 있는",
+    professional: "전문적이고 신뢰감 있는",
+    fun: "유쾌하고 이모지를 적극 활용하는",
+  };
+
+  const platformLabels: Record<Platform, string> = {
+    instagram: "인스타그램 (짧고 감성적, 해시태그 20개 이내, 줄바꿈 활용)",
+    "naver-blog": "네이버 블로그 (SEO 최적화, 키워드 자연스럽게 포함, 800~1200자)",
+    kakao: "카카오채널 (간결하고 행동 유도 문구 포함, 300자 이내)",
+  };
+
+  async function generate() {
+    if (!menuName && !description) return;
+    setLoading(true);
+    setResult("");
+
+    const prompt = `당신은 외식업 전문 SNS 마케터입니다.
+아래 정보를 바탕으로 ${platformLabels[platform]} 플랫폼에 최적화된 게시글을 작성하세요.
+
+[콘텐츠 정보]
+콘텐츠 유형: ${contentType}
+메뉴/이벤트명: ${menuName || "(없음)"}
+상세 내용: ${description || "(없음)"}
+추가 해시태그 요청: ${hashtags || "(없음)"}
+
+[작성 조건]
+- 톤: ${toneLabels[tone]}
+- 플랫폼: ${platformLabels[platform]}
+- 외식업 매장 운영자가 직접 올리는 게시글처럼 자연스럽게
+- 광고 느낌 최소화, 진정성 있게
+- 마지막에 해시태그 포함 (인스타의 경우)
+
+게시글만 작성하세요. 설명, 제목, 마크다운 없이 바로 시작.`;
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+
+      if (!res.ok || !res.body) throw new Error("API 오류");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let text = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        text += decoder.decode(value, { stream: true });
+        setResult(text);
+      }
+    } catch {
+      setResult("콘텐츠 생성 중 오류가 발생했습니다. 다시 시도해주세요.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const copyToClipboard = async () => {
+    await navigator.clipboard.writeText(result);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
+        body{font-family:'Pretendard',-apple-system,sans-serif}
+      `}</style>
+      <NavBar />
+      <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
+        <div className="mx-auto max-w-3xl">
+          <div className="flex items-center gap-3 mb-8 mt-4">
+            <Link href="/tools" className="text-sm text-slate-400 hover:text-slate-700 transition">← 도구 목록</Link>
+          </div>
+
+          <div className="mb-8">
+            <div className="inline-flex items-center gap-2 bg-pink-50 text-pink-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
+              <span>📱</span> AI 콘텐츠 생성기
+            </div>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">SNS 콘텐츠 생성기</h1>
+            <p className="text-slate-500 text-sm">메뉴·이벤트 정보를 입력하면 AI가 맞춤 SNS 게시글을 작성해드립니다.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 입력 */}
+            <div className="space-y-5">
+              {/* 플랫폼 */}
+              <div className="rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 p-6 space-y-4">
+                <h2 className="font-bold text-slate-900">플랫폼 선택</h2>
+                <div className="grid grid-cols-3 gap-2">
+                  {PLATFORMS.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setPlatform(p.id)}
+                      className={`rounded-2xl py-3 text-center transition ${
+                        platform === p.id ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-500 hover:bg-slate-100"
+                      }`}
+                    >
+                      <div className="text-xl mb-1">{p.icon}</div>
+                      <div className="text-xs font-semibold">{p.label}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 콘텐츠 유형 */}
+              <div className="rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 p-6 space-y-3">
+                <h2 className="font-bold text-slate-900">콘텐츠 유형</h2>
+                <div className="flex flex-wrap gap-2">
+                  {CONTENT_TYPES.map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setContentType(t)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+                        contentType === t ? "bg-pink-500 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 톤 */}
+              <div className="rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 p-6 space-y-3">
+                <h2 className="font-bold text-slate-900">글 톤</h2>
+                <div className="grid grid-cols-2 gap-2">
+                  {TONES.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setTone(t.id)}
+                      className={`rounded-2xl py-3 px-4 text-left transition ${
+                        tone === t.id ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-500 hover:bg-slate-100"
+                      }`}
+                    >
+                      <div className="text-sm font-bold">{t.label}</div>
+                      <div className={`text-xs mt-0.5 ${tone === t.id ? "text-slate-300" : "text-slate-400"}`}>{t.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 상세 입력 */}
+              <div className="rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 p-6 space-y-4">
+                <h2 className="font-bold text-slate-900">상세 정보</h2>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">메뉴 / 이벤트명</label>
+                  <input
+                    type="text"
+                    value={menuName}
+                    onChange={(e) => setMenuName(e.target.value)}
+                    placeholder="예) 딸기 라떼, 오픈 1주년 이벤트"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-pink-400 focus:bg-white transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">내용 설명</label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="예) 국산 딸기 생크림 라떼, 한정 수량, 가격 6,500원, 3월 한 달만"
+                    rows={3}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-pink-400 focus:bg-white transition resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">추가 해시태그 (선택)</label>
+                  <input
+                    type="text"
+                    value={hashtags}
+                    onChange={(e) => setHashtags(e.target.value)}
+                    placeholder="예) 성수동카페, 홍대맛집"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-pink-400 focus:bg-white transition"
+                  />
+                </div>
+
+                <button
+                  onClick={generate}
+                  disabled={loading || (!menuName && !description)}
+                  className="w-full rounded-2xl bg-pink-500 py-3.5 text-sm font-bold text-white transition hover:bg-pink-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="4" />
+                        <path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      생성 중...
+                    </>
+                  ) : "✨ AI 게시글 생성"}
+                </button>
+              </div>
+            </div>
+
+            {/* 결과 */}
+            <div>
+              <div className="rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 overflow-hidden h-full min-h-[500px] flex flex-col">
+                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                  <h2 className="font-bold text-slate-900">생성 결과</h2>
+                  {result && (
+                    <button
+                      onClick={copyToClipboard}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition"
+                    >
+                      {copied ? (
+                        <><span className="text-emerald-500">✓</span> 복사됨</>
+                      ) : (
+                        <>📋 복사</>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex-1 p-6">
+                  {!result && !loading && (
+                    <div className="h-full flex flex-col items-center justify-center text-center">
+                      <div className="text-5xl mb-4">✍️</div>
+                      <p className="text-slate-400 text-sm">왼쪽에서 정보를 입력하고<br />생성 버튼을 눌러주세요</p>
+                    </div>
+                  )}
+                  {(result || loading) && (
+                    <div className="whitespace-pre-wrap text-sm text-slate-700 leading-relaxed">
+                      {result}
+                      {loading && <span className="inline-block w-1 h-4 bg-pink-400 animate-pulse ml-0.5 rounded" />}
+                    </div>
+                  )}
+                </div>
+
+                {result && (
+                  <div className="px-6 pb-6 flex gap-2">
+                    <button
+                      onClick={generate}
+                      className="flex-1 rounded-2xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+                    >
+                      🔄 다시 생성
+                    </button>
+                    <button
+                      onClick={copyToClipboard}
+                      className="flex-1 rounded-2xl bg-slate-900 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 transition"
+                    >
+                      {copied ? "✓ 복사됨" : "📋 복사하기"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-2xl bg-slate-100 px-5 py-4 text-xs text-slate-500 leading-relaxed">
+            💡 <strong className="text-slate-700">Tip.</strong> 인스타그램은 첫 줄이 가장 중요합니다. 생성된 글에서 첫 문장을 더 임팩트 있게 다듬어보세요. 실제 게시 전 맞춤법 검사도 꼭 확인하세요.
+          </div>
+        </div>
+      </main>
+    </>
+  );
+}
