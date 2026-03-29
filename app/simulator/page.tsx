@@ -1573,15 +1573,7 @@ export default function Page() {
       setForm(sanitizeFullForm(raw));
       return;
     }
-
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
-
-    try {
-      setForm(sanitizeFullForm(JSON.parse(saved)));
-    } catch (error) {
-      console.error("저장값 불러오기 실패", error);
-    }
+    // localStorage에서 불러오지 않음 — 항상 빈 값으로 시작
   }, []);
 
   // 폼 변경 시 자동저장 + 도구 연동 이벤트
