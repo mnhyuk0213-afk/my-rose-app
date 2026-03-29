@@ -35,7 +35,7 @@ export default function NavBar() {
         .vela-nav-links a{font-size:15px;font-weight:500;color:#6B7684;text-decoration:none;transition:color .15s}
         .vela-nav-links a:hover{color:#191F28}
         .vela-dropdown{position:relative}
-        .vela-dropdown-btn{font-size:15px;font-weight:500;color:#6B7684;background:none;border:none;cursor:pointer;font-family:inherit;transition:color .15s;padding:0}
+        .vela-dropdown-btn{font-size:15px;font-weight:500;color:#6B7684;background:none;border:none;cursor:pointer;font-family:inherit;transition:color .15s;padding:0;text-decoration:none;display:inline-block}
         .vela-dropdown-btn:hover{color:#191F28}
         .vela-dropdown-menu{display:none;position:absolute;top:calc(100% + 16px);left:50%;transform:translateX(-50%);background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,.12);border:1px solid #E5E8EB;padding:16px;width:560px;z-index:200;display:none;grid-template-columns:1fr 1fr 1fr;gap:0}
         .vela-dropdown:hover .vela-dropdown-menu{display:grid}
@@ -74,7 +74,7 @@ export default function NavBar() {
             <a href="/#features">서비스</a>
             <Link href="/pricing">요금제</Link>
             <div className="vela-dropdown">
-              <button className="vela-dropdown-btn">도구 모음 ▾</button>
+              <Link href="/tools" className="vela-dropdown-btn">도구 모음 ▾</Link>
               <div className="vela-dropdown-menu">
                 <div className="vela-dropdown-section">
                   <span className="vela-dropdown-label">💰 재무·수익</span>
