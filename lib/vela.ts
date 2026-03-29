@@ -191,7 +191,9 @@ export const INDUSTRY_CONFIG: Record<
     },
   },
   gogi: {
-    label: "🥩 고깃집",
+    label: "고깃집", icon: "🥩",
+    maxTurnover: 4, cogsWarnRate: 45, laborWarnRate: 30, netMarginWarn: 8,
+    simPctMin: 0.05, simPctMax: 0.20, simSteps: 4,
     defaultStep1: {
       seats: 30, avgSpend: 35000, turnover: 2.0,
       weekdayDays: 22, weekendDays: 8, weekendMultiplier: 1.5,
