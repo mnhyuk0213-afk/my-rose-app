@@ -210,7 +210,7 @@ export const INDUSTRY_CONFIG: Record<
       incomeTaxRate: 24, vatEnabled: true, insuranceRate: 9,
     },
     defaultStep3: {
-      businessType: "operating",
+      businessType: "existing",
       deposit: 50000000, premium: 30000000, interior: 40000000, equipment: 20000000,
       loanAmount: 50000000, loanRate: 5.5, loanTerm: 60,
       recoveryMonths: 24,
