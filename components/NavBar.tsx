@@ -93,6 +93,7 @@ export default function NavBar() {
                   <Link href="/tools/startup-checklist" className="vela-dropdown-item">✅ 창업 체크리스트</Link>
                   <Link href="/tools/area-analysis" className="vela-dropdown-item">🗺️ 상권 분석 도우미</Link>
                   <Link href="/dashboard" className="vela-dropdown-item">📊 월별 매출 현황</Link>
+                  <Link href="/my-store" className="vela-dropdown-item">🏪 내 가게 현황</Link>
                   <Link href="/monthly-input" className="vela-dropdown-item">📝 이번 달 입력</Link>
                 </div>
                 <div className="vela-dropdown-section">

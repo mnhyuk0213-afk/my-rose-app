@@ -9,7 +9,8 @@ const PROTECTED_PATHS = [
   "/profile",
   "/dashboard",
   "/monthly-input",
-  "/tools/menu-cost/saved",  // 저장된 원가 현황 (로그인 필요)
+  "/my-store",             // 내 가게 현황
+  "/tools/menu-cost/saved",
   "/tools/sns-content",
   "/tools/review-reply",
   "/tools/area-analysis",
