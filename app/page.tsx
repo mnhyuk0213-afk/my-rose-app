@@ -474,8 +474,19 @@ export default function LandingPage() {
               <Link href="/simulator">시뮬레이터</Link>
             </div>
           </div>
+          {/* 사업자 정보 */}
+          <div style={{ borderTop: "1px solid rgba(255,255,255,.06)", paddingTop: "20px", marginBottom: "4px" }}>
+            <p style={{ fontSize: "12px", color: "var(--gray-400)", lineHeight: "2" }}>
+              상호: 벨라솔루션 &nbsp;|&nbsp; 대표자: 김민혁 &nbsp;|&nbsp; 사업자등록번호: 777-17-02386
+              <br />
+              주소: 대전광역시 중구 당디로96번길 9, 204호(유천동)
+              <br />
+              이메일: mnhyuk0213@velaanalytics.com &nbsp;|&nbsp; 업태: 정보통신업 / 응용 소프트웨어 개발 및 공급업
+            </p>
+          </div>
+
           <div className="footer-bottom">
-            <div className="footer-copy">© {new Date().getFullYear()} VELA. All rights reserved.</div>
+            <div className="footer-copy">© {new Date().getFullYear()} 벨라솔루션. All rights reserved.</div>
             <div className="footer-legal">
               <Link href="/terms">이용약관</Link>
               <Link href="/privacy">개인정보처리방침</Link>
