@@ -505,6 +505,32 @@ function ResultContent() {
     setTimeout(() => setSaveMsg(""), 3000);
   };
 
+  const shareToCommunity = async () => {
+    if (!userId) { router.push("/login?next=/community"); return; }
+    const supabase = createSupabaseBrowserClient();
+    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", userId).single();
+    const authorName = profile?.full_name ?? "익명";
+    const title = simTitle.trim() || `${config.label} 수익 분석`;
+    const { error } = await supabase.from("shared_simulations").insert({
+      user_id: userId,
+      title,
+      description: "",
+      industry: form.industry,
+      form,
+      result: {
+        totalSales: result.totalSales,
+        profit: result.profit,
+        netMargin: result.netMargin,
+        bep: result.bep,
+      },
+      author_name: authorName,
+      is_public: true,
+    });
+    if (error) { setSaveMsg("공유 실패. 다시 시도해주세요."); return; }
+    setSaveMsg("커뮤니티에 공유됐습니다 ✓");
+    setTimeout(() => setSaveMsg(""), 3000);
+  };
+
   const pieData = useMemo(() => {
     const base = [
       { name: "원가", value: result.cogs },
@@ -545,6 +571,9 @@ function ResultContent() {
             <button onClick={() => router.push("/simulator")} className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">← 입력으로 돌아가기</button>
             <button onClick={() => window.print()} className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">PDF로 저장</button>
             <button onClick={() => navigator.clipboard.writeText(window.location.href).catch(console.error)} className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-500">링크 공유</button>
+            <button onClick={shareToCommunity} className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-3 text-sm font-semibold text-blue-600 hover:bg-blue-100 transition">
+              👥 커뮤니티 공유
+            </button>
             <button onClick={saveToCloud} className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700">
               {userId ? "☁️ 클라우드 저장" : "🔒 로그인 후 저장"}
             </button>

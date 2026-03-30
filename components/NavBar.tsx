@@ -76,6 +76,7 @@ export default function NavBar() {
 
           <div className="vela-nav-links">
             <a href="/#features">서비스</a>
+            <Link href="/community">커뮤니티</Link>
             <Link href="/pricing">요금제</Link>
             <div className="vela-dropdown">
               <Link href="/tools" className="vela-dropdown-btn">도구 모음 ▾</Link>

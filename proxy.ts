@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+// 로그인 필수 경로 (개인 데이터 관련만)
 const PROTECTED_PATHS = [
-  "/simulator",
-  "/result",
   "/profile",
   "/dashboard",
   "/monthly-input",
   "/my-store",
-  "/tools/menu-cost/saved",
-  "/tools/sns-content",
-  "/tools/review-reply",
-  "/tools/area-analysis",
 ];
 
+// 관리자만 접근 가능
 const ADMIN_PATHS = ["/admin"];
+
 const AUTH_PATHS = ["/login", "/signup"];
 
 export async function proxy(request: NextRequest) {
