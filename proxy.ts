@@ -1,31 +1,30 @@
-// proxy.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-// 로그인 필수 경로
 const PROTECTED_PATHS = [
   "/simulator",
   "/result",
   "/profile",
   "/dashboard",
   "/monthly-input",
-  "/my-store",             // 내 가게 현황
+  "/my-store",
   "/tools/menu-cost/saved",
   "/tools/sns-content",
   "/tools/review-reply",
   "/tools/area-analysis",
 ];
-// 도구 목록·원가계산기·인건비·세금·체크리스트·PL리포트는 로그인 없이 접근 가능
 
+const ADMIN_PATHS = ["/admin"];
 const AUTH_PATHS = ["/login", "/signup"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isProtected = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
+  const isAdminPath = ADMIN_PATHS.some((p) => pathname.startsWith(p));
   const isAuthPage = AUTH_PATHS.some((p) => pathname.startsWith(p));
 
-  if (!isProtected && !isAuthPage) return NextResponse.next();
+  if (!isProtected && !isAdminPath && !isAuthPage) return NextResponse.next();
 
   let response = NextResponse.next({ request: { headers: request.headers } });
 
@@ -46,14 +45,13 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (isProtected && !user) {
+  if ((isProtected || isAdminPath) && !user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // 관리자 전용: ADMIN_EMAIL 환경변수에 허용 이메일 설정
-  if (isProtected && user && process.env.ADMIN_EMAIL) {
+  if (isAdminPath && user && process.env.ADMIN_EMAIL) {
     const allowed = process.env.ADMIN_EMAIL.split(",").map(e => e.trim().toLowerCase());
     if (!allowed.includes((user.email ?? "").toLowerCase())) {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
