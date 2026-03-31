@@ -148,18 +148,6 @@ export default function LandingPage() {
         .step-num{width:56px;height:56px;background:var(--blue);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;margin:0 auto 20px}
         .step-title{font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:8px}
         .step-desc{font-size:14px;color:var(--gray-600);line-height:1.7}
-        .tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:56px}
-        .tool-section-card{background:#fff;border-radius:20px;padding:28px;border:1px solid var(--gray-200);transition:transform .2s,box-shadow .2s}
-        .tool-section-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.08)}
-        .tool-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-        .tool-section-left{display:flex;align-items:center;gap:10px}
-        .tool-section-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
-        .tool-section-name{font-size:17px;font-weight:700;color:var(--gray-900)}
-        .tool-badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:100px}
-        .tool-item{font-size:13px;color:var(--gray-600);padding:7px 0;border-bottom:1px solid var(--gray-100)}
-        .tool-item:last-child{border-bottom:none}
-        .tool-link{display:inline-flex;align-items:center;gap:4px;margin-top:16px;font-size:13px;font-weight:600;text-decoration:none;transition:opacity .15s}
-        .tool-link:hover{opacity:.7}
         .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:56px}
         .pricing-card{background:#fff;border:2px solid var(--gray-200);border-radius:24px;padding:36px 32px;position:relative;transition:border-color .2s}
         .pricing-card.popular{border-color:var(--blue)}
@@ -218,8 +206,8 @@ export default function LandingPage() {
         .footer-legal{display:flex;gap:16px}
         .footer-legal a{font-size:13px;color:var(--gray-400);text-decoration:none}
         .footer-legal a:hover{color:#fff}
-        @media(max-width:1024px){.hero-inner{grid-template-columns:1fr;gap:48px}.features-grid,.pricing-grid,.testi-grid,.tools-grid{grid-template-columns:1fr 1fr}.steps-grid{grid-template-columns:1fr 1fr}.contact-layout{grid-template-columns:1fr;gap:48px}}
-        @media(max-width:640px){.features-grid,.pricing-grid,.testi-grid,.steps-grid,.tools-grid{grid-template-columns:1fr}.hero-stats{flex-direction:column;gap:20px}.form-row{grid-template-columns:1fr}.footer-top{flex-direction:column;gap:24px}.footer-bottom{flex-direction:column;gap:16px;text-align:center}.hero-actions{flex-direction:column}}
+        @media(max-width:1024px){.hero-inner{grid-template-columns:1fr;gap:48px}.features-grid,.pricing-grid,.testi-grid{grid-template-columns:1fr 1fr}.steps-grid{grid-template-columns:1fr 1fr}.contact-layout{grid-template-columns:1fr;gap:48px}}
+        @media(max-width:640px){.features-grid,.pricing-grid,.testi-grid,.steps-grid{grid-template-columns:1fr}.hero-stats{flex-direction:column;gap:20px}.form-row{grid-template-columns:1fr}.footer-top{flex-direction:column;gap:24px}.footer-bottom{flex-direction:column;gap:16px;text-align:center}.hero-actions{flex-direction:column}}
       `}</style>
 
       <NavBar />
@@ -235,10 +223,10 @@ export default function LandingPage() {
               <p className="hero-desc">매출·원가·인건비·대출을 한 번에 시뮬레이션하고<br />AI 컨설턴트의 맞춤 전략을 받아보세요.</p>
               <div className="hero-actions">
                 <Link href={isLoggedIn ? "/simulator" : "/signup"} className="btn-primary">무료로 시작하기 →</Link>
-                <Link href="/simulator" className="btn-secondary">직접 계산해보기 →</Link>
+                <a href="#features" className="btn-secondary">서비스 알아보기</a>
               </div>
               <div className="hero-stats">
-                <div><div className="stat-num">5<span>개</span></div><div className="stat-label">업종 지원</div></div>
+                <div><div className="stat-num">4<span>개</span></div><div className="stat-label">업종 지원</div></div>
                 <div><div className="stat-num">20<span>+</span></div><div className="stat-label">재무 지표</div></div>
                 <div><div className="stat-num">AI</div><div className="stat-label">실시간 전략</div></div>
               </div>
@@ -251,7 +239,7 @@ export default function LandingPage() {
                 <span className="hero-card-badge">흑자</span>
               </div>
               <div className="hero-metric-label">이번 달 세전 순이익</div>
-              <div className="hero-metric-value green">+3,420,000원</div>
+              <div className={`hero-metric-value green`}>+3,420,000원</div>
               <div className="hero-bar-wrap"><div className="hero-bar" /></div>
               <div className="hero-row"><span className="hero-row-label">월 총 매출</span><span className="hero-row-value">28,500,000원</span></div>
               <div className="hero-row"><span className="hero-row-label">손익분기점</span><span className="hero-row-value">22,100,000원 ✓</span></div>
@@ -269,7 +257,7 @@ export default function LandingPage() {
           <div className="features-grid">
             {[
               { icon: "📊", title: "수익 시뮬레이터", desc: "좌석·객단가·회전율·배달 매출까지 입력하면 월 매출·순이익·손익분기점을 즉시 계산합니다.", tag: "실시간 계산", delay: 0 },
-              { icon: "🤖", title: "AI 전략 컨설팅", desc: "매장 데이터를 기반으로 AI가 운영·마케팅·메뉴 전략을 제안하고 채팅으로 추가 질문도 가능합니다.", tag: "AI 분석", delay: 80 },
+              { icon: "🤖", title: "AI 전략 컨설팅", desc: "매장 데이터를 기반으로 AI가 운영·마케팅·메뉴 전략을 제안하고 채팅으로 추가 질문도 가능합니다.", tag: "Claude AI", delay: 80 },
               { icon: "📋", title: "POS 데이터 분석", desc: "엑셀 POS 파일을 업로드하면 AI가 매출 패턴·피크 시간·인기 메뉴를 자동 분석합니다.", tag: "파일 업로드", delay: 160 },
               { icon: "🎯", title: "목표 역산 계획", desc: "원하는 월 순이익을 입력하면 필요한 객단가·회전율을 역산해 달성 경로를 제시합니다.", tag: "목표 설정", delay: 0 },
               { icon: "💰", title: "투자금 회수 예측", desc: "보증금·권리금·인테리어와 대출 조건을 입력하면 투자금 회수 기간을 자동 계산합니다.", tag: "재무 계획", delay: 80 },
@@ -308,75 +296,15 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* TOOLS */}
-      <section id="tools" className="features-bg">
-        <div className="section-inner">
-          <FadeIn>
-            <span className="section-tag">🛠️ 도구 모음</span>
-            <h2 className="section-title">사업에 필요한 모든 도구</h2>
-            <p className="section-desc">원가 계산부터 AI 마케팅까지 — 외식업 운영에 필요한 도구를 한 곳에 모았습니다.</p>
-          </FadeIn>
-          <div className="tools-grid">
-            {[
-              {
-                emoji: "💰", title: "재무·수익",
-                color: "#059669", bg: "#ECFDF5",
-                items: ["🧮 메뉴별 원가 계산기", "👥 인건비 스케줄러", "🧾 세금 계산기", "📄 손익계산서 PDF"],
-                href: "/tools/menu-cost", badge: null, delay: 0,
-              },
-              {
-                emoji: "🚀", title: "창업·운영",
-                color: "#0891B2", bg: "#ECFEFF",
-                items: ["✅ 창업 체크리스트", "🗺️ 상권 분석 도우미", "📊 월별 매출 대시보드", "📝 이번 달 매장 입력"],
-                href: "/tools/startup-checklist", badge: null, delay: 80,
-              },
-              {
-                emoji: "📣", title: "AI 마케팅",
-                color: "#DB2777", bg: "#FDF2F8",
-                items: ["📱 SNS 콘텐츠 생성기", "💬 리뷰 답변 생성기"],
-                href: "/tools/sns-content", badge: "AI", delay: 160,
-              },
-            ].map((section) => (
-              <FadeIn key={section.title} delay={section.delay}>
-                <div className="tool-section-card">
-                  <div className="tool-section-header">
-                    <div className="tool-section-left">
-                      <div className="tool-section-icon" style={{ background: section.bg }}>{section.emoji}</div>
-                      <span className="tool-section-name">{section.title}</span>
-                    </div>
-                    {section.badge && (
-                      <span className="tool-badge" style={{ background: section.bg, color: section.color }}>{section.badge}</span>
-                    )}
-                  </div>
-                  <div>
-                    {section.items.map(item => (
-                      <div key={item} className="tool-item">{item}</div>
-                    ))}
-                  </div>
-                  <Link href={section.href} className="tool-link" style={{ color: section.color }}>
-                    바로 사용하기 →
-                  </Link>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-          <FadeIn delay={200}>
-            <div style={{ marginTop: 32, textAlign: "center" }}>
-              <Link href="/tools" className="btn-secondary">전체 도구 보기 →</Link>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
-
       {/* PRICING */}
-      <section id="pricing">
+      <section id="pricing" className="features-bg">
         <div className="section-inner">
           <FadeIn><span className="section-tag">요금제</span><h2 className="section-title">합리적인 가격으로</h2><p className="section-desc">매장 규모에 맞는 플랜을 선택하세요. 언제든 변경 가능합니다.</p></FadeIn>
           <div className="pricing-grid">
             {[
               { plan: "무료", price: "0", unit: "원/월", desc: "혼자 운영하는 소규모 매장", features: ["수익 시뮬레이터", "월 3회 AI 브리핑", "기본 차트 및 분석", "링크 공유"], btn: "무료로 시작", cls: "pricing-btn-gray", href: "/signup", popular: false },
-              { plan: "스탠다드", price: "9,900", unit: "원/월", desc: "성장하는 매장을 위한 핵심 기능", features: ["무료 플랜 모든 기능", "무제한 AI 브리핑", "AI 전략 추천", "POS 파일 분석", "히스토리 12개월"], btn: "스탠다드 시작", cls: "pricing-btn-blue", href: "/signup", popular: true },
-              { plan: "프로", price: "29,900", unit: "원/월", desc: "다점포·프랜차이즈 운영자", features: ["스탠다드 모든 기능", "매장 무제한 관리", "팀 멤버 초대", "우선 고객 지원", "맞춤 컨설팅 월 1회"], btn: "프로 시작", cls: "pricing-btn-gray", href: "/signup", popular: false },
+              { plan: "스탠다드", price: "9,900", unit: "원/월", desc: "성장하는 매장을 위한 핵심 기능", features: ["무료 플랜 모든 기능", "무제한 AI 브리핑", "AI 전략 추천", "POS 파일 분석", "히스토리 12개월"], btn: "스탠다드 시작", cls: "pricing-btn-blue", href: "/pricing", popular: true },
+              { plan: "프로", price: "29,900", unit: "원/월", desc: "다점포·프랜차이즈 운영자", features: ["스탠다드 모든 기능", "매장 무제한 관리", "팀 멤버 초대", "우선 고객 지원", "맞춤 컨설팅 월 1회"], btn: "프로 시작", cls: "pricing-btn-gray", href: "/pricing", popular: false },
             ].map((p) => (
               <FadeIn key={p.plan}>
                 <div className={`pricing-card${p.popular ? " popular" : ""}`}>
@@ -399,9 +327,9 @@ export default function LandingPage() {
           <FadeIn><span className="section-tag" style={{ background: "rgba(255,255,255,.1)", color: "#93C5FD" }}>후기</span><h2 className="section-title">실제 사장님들의 이야기</h2></FadeIn>
           <div className="testi-grid">
             {[
-              { text: "손익분기점을 처음으로 제대로 이해했어요. 월 매출이 2,800만원인데 실수령이 왜 이것밖에 안 되는지 숫자로 보이니까 바로 알겠더라고요.", name: "김○○", role: "홍대 카페 운영 2년차", av: "김", delay: 0 },
-              { text: "창업 전에 시뮬레이터로 3가지 시나리오를 다 계산해봤어요. 덕분에 보증금 협상할 때 숫자 근거가 있어서 자신 있게 했습니다.", name: "이○○", role: "음식점 예비 창업자", av: "이", delay: 80 },
-              { text: "세금 계산기랑 원가 계산기가 특히 유용했어요. 메뉴 가격 올릴 때 이걸로 계산하고 결정했는데 순이익이 확실히 올랐습니다.", name: "박○○", role: "분식점 사장님 3년차", av: "박", delay: 160 },
+              { text: "손익분기점을 처음으로 제대로 이해했어요. 숫자를 보니 어디서 돈이 새는지 바로 보이더라고요.", name: "김○○", role: "카페 운영 3년차", av: "김", delay: 0 },
+              { text: "AI가 배달 채널 추가를 추천해줬는데, 실행 후 월 매출이 20% 올랐습니다. 믿기 어렵지만 사실이에요.", name: "박○○", role: "분식점 사장님", av: "박", delay: 80 },
+              { text: "창업 전에 미리 수치를 검토할 수 있어서 보증금 협상도 자신 있게 했습니다.", name: "이○○", role: "파인다이닝 예비 창업자", av: "이", delay: 160 },
             ].map((t) => (
               <FadeIn key={t.name} delay={t.delay}>
                 <div className="testi-card">
@@ -416,6 +344,57 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* GAME BANNER */}
+      <section style={{background:"linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)", padding:"80px 24px"}}>
+        <div className="section-inner" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:48,alignItems:"center"}}>
+          <FadeIn>
+            <span className="section-tag" style={{background:"rgba(49,130,246,0.2)",color:"#60a5fa"}}>NEW</span>
+            <h2 style={{fontSize:"clamp(28px,3.5vw,44px)",fontWeight:800,color:"#fff",letterSpacing:"-0.02em",margin:"12px 0 16px",lineHeight:1.2}}>
+              경영 시뮬레이션 게임<br />
+              <span style={{color:"#3182F6"}}>직접 운영해보세요</span>
+            </h2>
+            <p style={{fontSize:17,color:"#94a3b8",lineHeight:1.7,marginBottom:32}}>
+              90일 동안 내 가게를 운영하며 날씨·이벤트·직원 관리까지 경험하세요.
+              카페, 음식점, 고깃집 등 5가지 업종으로 진짜 사장님 감각을 키워보세요.
+            </p>
+            <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
+              <Link href="/game" style={{display:"inline-flex",alignItems:"center",gap:8,background:"#3182F6",color:"#fff",padding:"14px 28px",borderRadius:12,fontSize:16,fontWeight:700,textDecoration:"none"}}>
+                🎮 게임 시작하기 →
+              </Link>
+              <Link href="/simulator" style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(255,255,255,0.1)",color:"#fff",padding:"14px 28px",borderRadius:12,fontSize:16,fontWeight:600,textDecoration:"none",border:"1px solid rgba(255,255,255,0.2)"}}>
+                📊 시뮬레이터
+              </Link>
+            </div>
+          </FadeIn>
+          <FadeIn delay={100}>
+            <div style={{background:"rgba(255,255,255,0.05)",borderRadius:24,padding:28,border:"1px solid rgba(255,255,255,0.1)"}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+                {[
+                  {icon:"☕",label:"카페",sub:"객단가 7천원"},
+                  {icon:"🥩",label:"고깃집",sub:"객단가 4.5만원"},
+                  {icon:"🍽️",label:"음식점",sub:"객단가 2.2만원"},
+                  {icon:"✨",label:"파인다이닝",sub:"객단가 9만원"},
+                ].map(item=>(
+                  <div key={item.label} style={{background:"rgba(255,255,255,0.07)",borderRadius:14,padding:"14px 16px",border:"1px solid rgba(255,255,255,0.08)"}}>
+                    <div style={{fontSize:24,marginBottom:6}}>{item.icon}</div>
+                    <p style={{fontSize:14,fontWeight:700,color:"#fff",margin:"0 0 2px"}}>{item.label}</p>
+                    <p style={{fontSize:12,color:"#64748b",margin:0}}>{item.sub}</p>
+                  </div>
+                ))}
+              </div>
+              <div style={{background:"rgba(49,130,246,0.15)",borderRadius:12,padding:"12px 16px",border:"1px solid rgba(49,130,246,0.3)",display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:18}}>🏆</span>
+                <div>
+                  <p style={{fontSize:13,fontWeight:700,color:"#60a5fa",margin:0}}>글로벌 랭킹 시스템</p>
+                  <p style={{fontSize:12,color:"#475569",margin:0}}>90일 최고 순이익으로 전 세계 사장님들과 경쟁!</p>
+                </div>
+              </div>
+            </div>
+          </FadeIn>
+        </div>
+        <style>{`@media(max-width:768px){.game-banner-grid{grid-template-columns:1fr !important}}`}</style>
       </section>
 
       {/* CTA */}
@@ -436,7 +415,7 @@ export default function LandingPage() {
           <div className="contact-layout">
             <FadeIn>
               <div className="contact-info">
-                {[{ label: "이메일", value: "mnhyuk0213@velaanalytics.com" }, { label: "운영 시간", value: "평일 10:00 — 18:00" }, { label: "응답 시간", value: "영업일 기준 1일 이내" }].map((c) => (
+                {[{ label: "이메일", value: "hello@vela.kr" }, { label: "운영 시간", value: "평일 10:00 — 18:00" }, { label: "응답 시간", value: "영업일 기준 1일 이내" }].map((c) => (
                   <div key={c.label}><div className="contact-label">{c.label}</div><div className="contact-value">{c.value}</div></div>
                 ))}
                 <div style={{ paddingTop: 16, borderTop: "1px solid var(--gray-200)" }}>
@@ -468,25 +447,13 @@ export default function LandingPage() {
             <div className="footer-logo">VELA<span>.</span></div>
             <div className="footer-links">
               <a href="#features">서비스</a>
-              <a href="#tools">도구</a>
               <a href="#pricing">요금제</a>
               <a href="#contact">문의</a>
               <Link href="/simulator">시뮬레이터</Link>
             </div>
           </div>
-          {/* 사업자 정보 */}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,.06)", paddingTop: "20px", marginBottom: "4px" }}>
-            <p style={{ fontSize: "12px", color: "var(--gray-400)", lineHeight: "2" }}>
-              상호: 벨라솔루션 &nbsp;|&nbsp; 대표자: 김민혁 &nbsp;|&nbsp; 사업자등록번호: 777-17-02386
-              <br />
-              주소: 대전광역시 중구 당디로96번길 9, 204호(유천동)
-              <br />
-              이메일: mnhyuk0213@velaanalytics.com &nbsp;|&nbsp; 업태: 정보통신업 / 응용 소프트웨어 개발 및 공급업
-            </p>
-          </div>
-
           <div className="footer-bottom">
-            <div className="footer-copy">© {new Date().getFullYear()} 벨라솔루션. All rights reserved.</div>
+            <div className="footer-copy">© {new Date().getFullYear()} VELA. All rights reserved.</div>
             <div className="footer-legal">
               <Link href="/terms">이용약관</Link>
               <Link href="/privacy">개인정보처리방침</Link>
