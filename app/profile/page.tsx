@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
@@ -9,22 +8,26 @@ import type { User } from "@supabase/supabase-js";
 
 type HistoryRow = {
   id: string; label: string; created_at: string;
-  result: { totalSales:number; netProfit:number; netMargin:number; bep:number; cogsRate?:number; laborRate?:number };
-  form: { industry:string; avgSpend?:number; cogsRate?:number; laborCost?:number; rent?:number };
+  result: { totalSales:number; netProfit:number; netMargin:number; bep:number };
+  form: { industry:string; avgSpend?:number; cogsRate?:number };
 };
 
 const II: Record<string,string> = { cafe:"☕",restaurant:"🍽️",bar:"🍺",finedining:"✨",gogi:"🥩" };
-type Tab = "overview"|"history"|"monthly"|"menu_cost";
+type Tab = "profile"|"history"|"account";
 
 export default function ProfilePage() {
-  const [user,setUser]         = useState<User|null>(null);
-  const [history,setHistory]   = useState<HistoryRow[]>([]);
-  const [loading,setLoading]   = useState(true);
-  const [tab,setTab]           = useState<Tab>("overview");
-  const [nickname,setNickname] = useState("");
-  const [editNick,setEditNick] = useState(false);
-  const [savingNick,setSavingNick] = useState(false);
-  const [avatar,setAvatar]     = useState<string|null>(null);
+  const [user, setUser]             = useState<User|null>(null);
+  const [history, setHistory]       = useState<HistoryRow[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [tab, setTab]               = useState<Tab>("profile");
+  const [nickname, setNickname]     = useState("");
+  const [editNick, setEditNick]     = useState(false);
+  const [savingNick, setSavingNick] = useState(false);
+  const [avatar, setAvatar]         = useState<string|null>(null);
+  const [pwForm, setPwForm]   = useState({ next:"", confirm:"" });
+  const [pwMsg, setPwMsg]     = useState("");
+  const [savingPw, setSavingPw] = useState(false);
+  const [resetMsg, setResetMsg] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const sb = createSupabaseBrowserClient();
 
@@ -34,7 +37,8 @@ export default function ProfilePage() {
       if(!user){setLoading(false);return;}
       setNickname(user.user_metadata?.nickname||user.user_metadata?.full_name||user.email?.split("@")[0]||"");
       setAvatar(user.user_metadata?.avatar_url||null);
-      sb.from("simulation_history").select("id,label,created_at,result,form").eq("user_id",user.id).order("created_at",{ascending:false}).limit(24)
+      sb.from("simulation_history").select("id,label,created_at,result,form")
+        .eq("user_id",user.id).order("created_at",{ascending:false}).limit(24)
         .then(({data})=>{setHistory(data??[]);setLoading(false);});
     });
   },[sb]);
@@ -43,7 +47,7 @@ export default function ProfilePage() {
     if(!user||!nickname.trim())return;
     setSavingNick(true);
     await sb.auth.updateUser({data:{nickname:nickname.trim()}});
-    setSavingNick(false);setEditNick(false);
+    setSavingNick(false); setEditNick(false);
   };
 
   const handleAvatar = async(e:React.ChangeEvent<HTMLInputElement>)=>{
@@ -59,274 +63,301 @@ export default function ProfilePage() {
     }
   };
 
+  const changePassword = async()=>{
+    if(!pwForm.next||pwForm.next!==pwForm.confirm){ setPwMsg("새 비밀번호가 일치하지 않아요."); return; }
+    if(pwForm.next.length<6){ setPwMsg("비밀번호는 6자 이상이어야 해요."); return; }
+    setSavingPw(true);
+    const {error}=await sb.auth.updateUser({password:pwForm.next});
+    if(error) setPwMsg("변경 실패: "+error.message);
+    else { setPwMsg("✅ 비밀번호가 변경됐어요!"); setPwForm({next:"",confirm:""}); }
+    setSavingPw(false);
+    setTimeout(()=>setPwMsg(""),4000);
+  };
+
   const delHistory = async(id:string)=>{
     await sb.from("simulation_history").delete().eq("id",id);
     setHistory(p=>p.filter(h=>h.id!==id));
   };
 
-  // 월별 집계
-  const monthly = (()=>{
-    const m:Record<string,{label:string;sales:number;profit:number;count:number}>={};
-    [...history].reverse().forEach(h=>{
-      const d=new Date(h.created_at),k=`${d.getFullYear()}-${d.getMonth()+1}`;
-      if(!m[k])m[k]={label:`${d.getFullYear()}년 ${d.getMonth()+1}월`,sales:0,profit:0,count:0};
-      m[k].sales+=h.result.totalSales||0;m[k].profit+=h.result.netProfit||0;m[k].count++;
-    });
-    return Object.values(m).slice(-6);
-  })();
-  const maxSales=Math.max(...monthly.map(m=>m.sales),1);
+  const resetData = async(type:"simulations"|"monthly"|"menus"|"all")=>{
+    const labels:Record<string,string>={
+      simulations:"시뮬레이션 기록",
+      monthly:"월별 매출 데이터",
+      menus:"메뉴 원가 데이터",
+      all:"모든 데이터",
+    };
+    if(!confirm(`${labels[type]}을 모두 삭제할까요?\n이 작업은 되돌릴 수 없어요.`)) return;
+    const {data:{user}}=await sb.auth.getUser();
+    if(!user)return;
+    if(type==="simulations"||type==="all") await sb.from("simulation_history").delete().eq("user_id",user.id);
+    if(type==="monthly"||type==="all")    await sb.from("monthly_snapshots").delete().eq("user_id",user.id);
+    if(type==="menus"||type==="all")      await sb.from("menu_costs").delete().eq("user_id",user.id);
+    if(type==="simulations"||type==="all") setHistory([]);
+    setResetMsg(`✅ ${labels[type]} 초기화 완료`);
+    setTimeout(()=>setResetMsg(""),3000);
+  };
 
-  const displayName=user?.user_metadata?.nickname||user?.user_metadata?.full_name||user?.email?.split("@")[0]||"사용자";
+  const deleteAccount = async()=>{
+    if(!confirm("정말로 탈퇴하시겠어요?\n모든 데이터가 영구 삭제되며 복구가 불가능합니다.")) return;
+    if(!confirm("마지막 확인: 계정과 모든 데이터를 삭제합니다.")) return;
+    const {data:{user}}=await sb.auth.getUser();
+    if(!user)return;
+    await Promise.all([
+      sb.from("simulation_history").delete().eq("user_id",user.id),
+      sb.from("monthly_snapshots").delete().eq("user_id",user.id),
+      sb.from("menu_costs").delete().eq("user_id",user.id),
+    ]);
+    await sb.auth.signOut();
+    window.location.href="/";
+  };
 
-  if(loading)return<div className="min-h-screen bg-slate-50 flex items-center justify-center"><p className="text-slate-400">불러오는 중...</p></div>;
-  if(!user)return<div className="min-h-screen bg-slate-50 flex items-center justify-center"><Link href="/login" className="rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white">로그인</Link></div>;
+  const displayName = user?.user_metadata?.nickname||user?.user_metadata?.full_name||user?.email?.split("@")[0]||"사용자";
 
-  return(
+  if(loading) return (
+    <div className="min-h-screen bg-slate-50"><NavBar/>
+      <div className="flex items-center justify-center h-[80vh]"><p className="text-slate-400">불러오는 중...</p></div>
+    </div>
+  );
+  if(!user) return (
+    <div className="min-h-screen bg-slate-50"><NavBar/>
+      <div className="flex items-center justify-center h-[80vh]">
+        <Link href="/login" className="rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white">로그인</Link>
+      </div>
+    </div>
+  );
+
+  return (
     <div className="min-h-screen bg-slate-50">
       <NavBar/>
       <main className="px-4 py-8 md:px-8">
-        <div className="mx-auto max-w-4xl space-y-6">
+        <div className="mx-auto max-w-2xl space-y-5">
 
-          {/* 프로필 카드 */}
-          <section className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
-            <div className="flex items-center gap-5 flex-wrap">
-              {/* 아바타 */}
-              <button onClick={()=>fileRef.current?.click()} className="group relative flex-shrink-0">
-                {avatar
-                  ?<img src={avatar} alt="프로필" className="h-16 w-16 rounded-full object-cover"/>
-                  :<div className="h-16 w-16 rounded-full bg-slate-900 flex items-center justify-center text-white text-2xl font-bold">{displayName[0]?.toUpperCase()??"U"}</div>
-                }
-                <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs">변경</div>
-              </button>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatar}/>
-
-              {/* 이름/닉네임 */}
-              <div className="flex-1 min-w-0">
-                {editNick?(
-                  <div className="flex items-center gap-2">
-                    <input value={nickname} onChange={e=>setNickname(e.target.value)} onKeyDown={e=>e.key==="Enter"&&saveNick()}
-                      className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500" autoFocus/>
-                    <button onClick={saveNick} disabled={savingNick} className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white">{savingNick?"저장 중...":"저장"}</button>
-                    <button onClick={()=>setEditNick(false)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-500">취소</button>
+          {/* 상단 프로필 카드 */}
+          <div className="rounded-3xl bg-white p-5 ring-1 ring-slate-200 flex items-center gap-4 flex-wrap">
+            <button onClick={()=>fileRef.current?.click()} className="group relative flex-shrink-0">
+              {avatar
+                ? <img src={avatar} alt="프로필" className="h-14 w-14 rounded-full object-cover"/>
+                : <div className="h-14 w-14 rounded-full bg-slate-900 flex items-center justify-center text-white text-xl font-bold">
+                    {displayName[0]?.toUpperCase()??"U"}
                   </div>
-                ):(
-                  <div className="flex items-center gap-2">
-                    <p className="text-lg font-bold text-slate-900">{displayName}</p>
-                    <button onClick={()=>setEditNick(true)} className="rounded-lg border border-slate-200 px-2 py-0.5 text-xs text-slate-400 hover:text-slate-700">닉네임 변경</button>
-                  </div>
-                )}
-                <p className="text-sm text-slate-400 mt-0.5">{user.email??user.phone}</p>
+              }
+              <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-medium">
+                변경
               </div>
-
-              {/* 액션 버튼 */}
-              <div className="flex gap-2 flex-shrink-0">
-                <Link href="/simulator" className="rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition">시뮬레이터 →</Link>
-                <button onClick={()=>sb.auth.signOut().then(()=>window.location.href="/")} className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">로그아웃</button>
-              </div>
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatar}/>
+            <div className="flex-1 min-w-0">
+              <p className="text-lg font-bold text-slate-900">{displayName}</p>
+              <p className="text-sm text-slate-400">{user.email}</p>
             </div>
-          </section>
+            <div className="flex gap-2 flex-shrink-0">
+              <Link href="/dashboard" className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition">
+                대시보드
+              </Link>
+              <button onClick={()=>sb.auth.signOut().then(()=>window.location.href="/")}
+                className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
+                로그아웃
+              </button>
+            </div>
+          </div>
 
           {/* 탭 */}
-          <div className="flex gap-1 rounded-2xl bg-white p-1 ring-1 ring-slate-200 overflow-x-auto">
+          <div className="flex gap-1 rounded-2xl bg-white p-1 ring-1 ring-slate-200">
             {([
-              {k:"overview" as Tab,l:"📊 내 가게 현황"},
-              {k:"history" as Tab,l:"📋 시뮬레이션 기록"},
-              {k:"monthly" as Tab,l:"📈 월별 매출"},
-              {k:"menu_cost" as Tab,l:"🍽️ 원가 현황"},
+              {k:"profile" as Tab, l:"⚙️ 프로필 설정"},
+              {k:"history" as Tab, l:"📋 시뮬레이션 기록"},
+              {k:"account" as Tab, l:"🛡️ 계정 관리"},
             ]).map(t=>(
               <button key={t.k} onClick={()=>setTab(t.k)}
-                className={`flex-1 whitespace-nowrap rounded-xl py-2.5 px-3 text-sm font-semibold transition ${tab===t.k?"bg-slate-900 text-white shadow-sm":"text-slate-500 hover:text-slate-800"}`}>
+                className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition ${tab===t.k?"bg-slate-900 text-white":"text-slate-500 hover:text-slate-800"}`}>
                 {t.l}
               </button>
             ))}
           </div>
 
-          {/* 내 가게 현황 */}
-          {tab==="overview"&&(
-            <section className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
-              {history.length===0?(
-                <div className="text-center py-12">
-                  <p className="text-3xl mb-3">📊</p>
-                  <p className="text-slate-500 text-sm mb-4">아직 저장된 시뮬레이션이 없습니다.</p>
-                  <Link href="/simulator" className="rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white">시뮬레이터 시작</Link>
-                </div>
-              ):(
-                <div className="space-y-6">
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-slate-400">최근 분석 결과</h3>
-                      <span className="text-xs text-slate-400">{history[0].label}</span>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {[
-                        {l:"월 매출",v:fmt(history[0].result.totalSales)+"원",c:"text-slate-900"},
-                        {l:"순이익",v:fmt(history[0].result.netProfit)+"원",c:history[0].result.netProfit>=0?"text-emerald-600":"text-red-500"},
-                        {l:"순이익률",v:(history[0].result.netMargin||0).toFixed(1)+"%",c:"text-blue-600"},
-                        {l:"원가율",v:(history[0].form?.cogsRate||0)+"%",c:(history[0].form?.cogsRate||0)>40?"text-red-500":"text-emerald-600"},
-                      ].map(s=>(
-                        <div key={s.l} className="rounded-2xl bg-slate-50 p-4">
-                          <p className="text-xs text-slate-400 mb-1">{s.l}</p>
-                          <p className={`text-base font-bold ${s.c}`}>{s.v}</p>
-                        </div>
-                      ))}
-                    </div>
+          {/* ── 프로필 설정 탭 ── */}
+          {tab==="profile" && (
+            <div className="space-y-4">
+
+              {/* 닉네임 */}
+              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200 space-y-3">
+                <h3 className="text-sm font-bold text-slate-900">닉네임 변경</h3>
+                {editNick ? (
+                  <div className="flex gap-2">
+                    <input value={nickname} onChange={e=>setNickname(e.target.value)}
+                      onKeyDown={e=>e.key==="Enter"&&saveNick()}
+                      className="flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-slate-400"
+                      autoFocus/>
+                    <button onClick={saveNick} disabled={savingNick}
+                      className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                      {savingNick?"저장 중...":"저장"}
+                    </button>
+                    <button onClick={()=>setEditNick(false)}
+                      className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-500">
+                      취소
+                    </button>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-400 mb-3">원가율 추이 (최근 5회)</h3>
-                    <div className="space-y-2">
-                      {history.slice(0,5).map(h=>(
-                        <div key={h.id} className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3">
-                          <span>{II[h.form?.industry]??"📊"}</span>
-                          <span className="text-sm font-medium text-slate-700 flex-1 truncate">{h.label}</span>
-                          <span className="text-xs text-slate-400">{new Date(h.created_at).toLocaleDateString("ko-KR",{month:"short",day:"numeric"})}</span>
-                          <span className={`text-sm font-bold ${(h.form?.cogsRate||0)>40?"text-red-500":"text-emerald-600"}`}>원가 {h.form?.cogsRate||0}%</span>
-                        </div>
-                      ))}
-                    </div>
+                ) : (
+                  <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+                    <span className="text-sm font-medium text-slate-800">{displayName}</span>
+                    <button onClick={()=>setEditNick(true)} className="text-xs font-semibold text-blue-500 hover:text-blue-700">변경</button>
                   </div>
+                )}
+              </div>
+
+              {/* 프로필 사진 */}
+              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200 space-y-3">
+                <h3 className="text-sm font-bold text-slate-900">프로필 사진</h3>
+                <div className="flex items-center gap-4">
+                  {avatar
+                    ? <img src={avatar} alt="프로필" className="h-16 w-16 rounded-full object-cover"/>
+                    : <div className="h-16 w-16 rounded-full bg-slate-900 flex items-center justify-center text-white text-2xl font-bold">
+                        {displayName[0]?.toUpperCase()??"U"}
+                      </div>
+                  }
+                  <button onClick={()=>fileRef.current?.click()}
+                    className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
+                    사진 변경
+                  </button>
                 </div>
-              )}
-            </section>
+              </div>
+
+              {/* 비밀번호 변경 */}
+              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200 space-y-3">
+                <h3 className="text-sm font-bold text-slate-900">비밀번호 변경</h3>
+                <div className="space-y-2">
+                  {[{key:"next",label:"새 비밀번호"},{key:"confirm",label:"새 비밀번호 확인"}].map(({key,label})=>(
+                    <div key={key}>
+                      <label className="text-xs font-semibold text-slate-500 block mb-1">{label}</label>
+                      <input type="password" value={pwForm[key as keyof typeof pwForm]}
+                        onChange={e=>setPwForm(f=>({...f,[key]:e.target.value}))}
+                        placeholder="••••••••"
+                        className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-slate-400"/>
+                    </div>
+                  ))}
+                </div>
+                {pwMsg && (
+                  <p className={`text-sm font-medium ${pwMsg.startsWith("✅")?"text-emerald-600":"text-red-500"}`}>{pwMsg}</p>
+                )}
+                <button onClick={changePassword} disabled={savingPw||!pwForm.next||!pwForm.confirm}
+                  className="w-full rounded-xl bg-slate-900 py-2.5 text-sm font-semibold text-white disabled:opacity-40 transition">
+                  {savingPw?"변경 중...":"비밀번호 변경"}
+                </button>
+              </div>
+            </div>
           )}
 
-          {/* 시뮬레이션 기록 */}
-          {tab==="history"&&(
-            <section className="rounded-3xl bg-white ring-1 ring-slate-200 overflow-hidden">
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          {/* ── 시뮬레이션 기록 탭 ── */}
+          {tab==="history" && (
+            <div className="rounded-3xl bg-white ring-1 ring-slate-200 overflow-hidden">
+              <div className="p-5 border-b border-slate-100 flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900">시뮬레이션 기록</h2>
-                  <p className="text-sm text-slate-400 mt-1">클라우드에 저장된 분석 결과</p>
+                  <h3 className="text-sm font-bold text-slate-900">시뮬레이션 기록</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">클라우드에 저장된 분석 결과 ({history.length}개)</p>
                 </div>
-                <Link href="/simulator" className="rounded-2xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white">+ 새 시뮬레이션</Link>
+                <Link href="/simulator" className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 transition">
+                  + 새 시뮬레이션
+                </Link>
               </div>
-              {history.length===0?(
-                <div className="p-12 text-center">
+              {history.length===0 ? (
+                <div className="text-center py-12">
                   <p className="text-3xl mb-3">📊</p>
-                  <p className="text-slate-500 text-sm">아직 저장된 시뮬레이션이 없습니다.</p>
-                  <Link href="/simulator" className="mt-4 inline-block rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white">시뮬레이터 시작</Link>
+                  <p className="text-slate-500 text-sm mb-4">아직 저장된 시뮬레이션이 없어요</p>
+                  <Link href="/simulator" className="rounded-2xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white inline-block">
+                    시뮬레이터 시작
+                  </Link>
                 </div>
-              ):(
+              ) : (
                 <ul className="divide-y divide-slate-100">
                   {history.map(h=>(
-                    <li key={h.id} className="flex items-center gap-4 p-5 hover:bg-slate-50 transition">
-                      <span className="text-2xl">{II[h.form?.industry]??"📊"}</span>
+                    <li key={h.id} className="flex items-center gap-3 p-5 hover:bg-slate-50 transition">
+                      <span className="text-xl flex-shrink-0">{II[h.form?.industry]??"📊"}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-900 text-sm">{h.label}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">{new Date(h.created_at).toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric",hour:"2-digit",minute:"2-digit"})}</p>
-                        <div className="flex gap-3 mt-1.5 flex-wrap">
+                        <p className="font-semibold text-slate-900 text-sm truncate">{h.label}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          {new Date(h.created_at).toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric"})}
+                        </p>
+                        <div className="flex gap-3 mt-1 flex-wrap">
                           <span className="text-xs text-slate-600">매출 <b>{fmt(h.result.totalSales)}원</b></span>
-                          <span className={`text-xs font-semibold ${h.result.netProfit>=0?"text-emerald-600":"text-red-500"}`}>순이익 {fmt(h.result.netProfit)}원</span>
+                          <span className={`text-xs font-semibold ${h.result.netProfit>=0?"text-emerald-600":"text-red-500"}`}>
+                            순이익 {fmt(h.result.netProfit)}원
+                          </span>
                           <span className="text-xs text-slate-400">이익률 {(h.result.netMargin||0).toFixed(1)}%</span>
                         </div>
                       </div>
                       <div className="flex gap-2 flex-shrink-0">
-                        <Link href={`/result?historyId=${h.id}`} className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white">보기</Link>
-                        <button onClick={()=>delHistory(h.id)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-500 hover:bg-red-50 hover:text-red-500">삭제</button>
+                        <Link href={`/result?historyId=${h.id}`}
+                          className="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white">
+                          보기
+                        </Link>
+                        <button onClick={()=>delHistory(h.id)}
+                          className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs text-red-400 hover:bg-red-50 transition">
+                          삭제
+                        </button>
                       </div>
                     </li>
                   ))}
                 </ul>
               )}
-            </section>
+            </div>
           )}
 
-          {/* 월별 매출 */}
-          {tab==="monthly"&&(
-            <section className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">월별 매출 현황</h2>
-                  <p className="text-sm text-slate-400 mt-1">시뮬레이션 저장 기준 월별 집계</p>
-                </div>
-                <Link href="/simulator" className="rounded-2xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white">+ 매출 등록</Link>
-              </div>
-              {monthly.length===0?(
-                <div className="text-center py-12">
-                  <p className="text-3xl mb-3">📈</p>
-                  <p className="text-slate-500 text-sm mb-4">시뮬레이터에서 분석을 저장하면 월별 추이가 표시됩니다.</p>
-                  <Link href="/simulator" className="rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white">시뮬레이터로 등록하기</Link>
-                </div>
-              ):(
-                <div className="space-y-6">
-                  {/* 막대 차트 */}
-                  <div className="flex items-end gap-2 h-36 px-2">
-                    {monthly.map(m=>(
-                      <div key={m.label} className="flex-1 flex flex-col items-center gap-1">
-                        <span className={`text-xs font-bold ${m.profit>=0?"text-emerald-600":"text-red-500"}`} style={{fontSize:"10px"}}>
-                          {m.profit>=0?"+":""}{Math.round(m.profit/10000)}만
-                        </span>
-                        <div className="w-full rounded-t-lg bg-blue-500" style={{height:`${Math.max(4,(m.sales/maxSales)*100)}px`}}/>
-                        <span className="text-center text-slate-400 leading-tight" style={{fontSize:"9px"}}>{m.label.replace("년 ","\n")}</span>
-                      </div>
-                    ))}
-                  </div>
-                  {/* 테이블 */}
-                  <div className="rounded-2xl border border-slate-100 overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead className="bg-slate-50"><tr>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">월</th>
-                        <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500">총 매출</th>
-                        <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500">순이익</th>
-                        <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500">분석 수</th>
-                      </tr></thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {monthly.map(m=>(
-                          <tr key={m.label} className="hover:bg-slate-50">
-                            <td className="px-4 py-3 font-medium text-slate-700">{m.label}</td>
-                            <td className="px-4 py-3 text-right text-slate-700">{fmt(m.sales)}원</td>
-                            <td className={`px-4 py-3 text-right font-semibold ${m.profit>=0?"text-emerald-600":"text-red-500"}`}>{m.profit>=0?"+":""}{fmt(m.profit)}원</td>
-                            <td className="px-4 py-3 text-right text-slate-400">{m.count}회</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </section>
-          )}
+          {/* ── 계정 관리 탭 ── */}
+          {tab==="account" && (
+            <div className="space-y-4">
 
-          {/* 원가 현황 */}
-          {tab==="menu_cost"&&(
-            <section className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
-              <div className="mb-6">
-                <h2 className="text-lg font-bold text-slate-900">원가 현황</h2>
-                <p className="text-sm text-slate-400 mt-1">시뮬레이션별 원가율 추이 (최근 10회)</p>
-              </div>
-              {history.length===0?(
-                <div className="text-center py-12"><p className="text-3xl mb-3">🍽️</p><p className="text-slate-500 text-sm">저장된 시뮬레이션이 없습니다.</p></div>
-              ):(
-                <div className="space-y-3">
-                  {history.slice(0,10).map(h=>{
-                    const cr=h.form?.cogsRate||0;
-                    return(
-                      <div key={h.id} className="rounded-2xl bg-slate-50 p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span>{II[h.form?.industry]??"📊"}</span>
-                            <div>
-                              <p className="text-sm font-semibold text-slate-800">{h.label}</p>
-                              <p className="text-xs text-slate-400">{new Date(h.created_at).toLocaleDateString("ko-KR",{month:"short",day:"numeric"})} · 매출 {fmt(h.result.totalSales)}원</p>
-                            </div>
-                          </div>
-                          <span className={`text-sm font-bold px-3 py-1 rounded-full ${cr>40?"bg-red-100 text-red-600":cr>30?"bg-amber-100 text-amber-700":"bg-emerald-100 text-emerald-700"}`}>
-                            원가율 {cr}%
-                          </span>
-                        </div>
-                        <div>
-                          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div className={`h-full rounded-full ${cr>40?"bg-red-400":cr>30?"bg-amber-400":"bg-emerald-400"}`} style={{width:`${Math.min(cr*2,100)}%`}}/>
-                          </div>
-                          <div className="flex justify-between text-xs text-slate-400 mt-1">
-                            <span>0%</span><span className="text-red-400">위험 40%</span><span>50%</span>
-                          </div>
-                        </div>
+              {/* 데이터 초기화 */}
+              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200 space-y-3">
+                <h3 className="text-sm font-bold text-slate-900">데이터 초기화</h3>
+                <p className="text-xs text-slate-400">선택한 데이터를 영구 삭제합니다. 되돌릴 수 없어요.</p>
+                {resetMsg && <p className="text-sm font-medium text-emerald-600">{resetMsg}</p>}
+                <div className="space-y-2">
+                  {[
+                    {type:"simulations" as const, label:"시뮬레이션 기록 초기화", desc:"저장된 분석 결과 전체 삭제"},
+                    {type:"monthly" as const,     label:"월별 매출 데이터 초기화", desc:"대시보드 직접 등록 데이터 삭제"},
+                    {type:"menus" as const,       label:"메뉴 원가 데이터 초기화", desc:"원가 계산기 등록 메뉴 전체 삭제"},
+                    {type:"all" as const,         label:"모든 데이터 초기화",      desc:"위 모든 데이터 한 번에 삭제"},
+                  ].map(item=>(
+                    <div key={item.type} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+                      <div>
+                        <p className="text-sm font-medium text-slate-800">{item.label}</p>
+                        <p className="text-xs text-slate-400">{item.desc}</p>
                       </div>
-                    );
-                  })}
+                      <button onClick={()=>resetData(item.type)}
+                        className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition flex-shrink-0 ml-3 ${
+                          item.type==="all"
+                            ?"border-red-200 text-red-500 hover:bg-red-50"
+                            :"border-slate-200 text-slate-500 hover:bg-slate-100"
+                        }`}>
+                        초기화
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </section>
+              </div>
+
+              {/* 로그아웃 */}
+              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+                <h3 className="text-sm font-bold text-slate-900 mb-3">로그아웃</h3>
+                <button onClick={()=>sb.auth.signOut().then(()=>window.location.href="/")}
+                  className="w-full rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
+                  로그아웃
+                </button>
+              </div>
+
+              {/* 회원 탈퇴 */}
+              <div className="rounded-3xl bg-white p-6 ring-1 ring-red-100">
+                <h3 className="text-sm font-bold text-red-500 mb-1">회원 탈퇴</h3>
+                <p className="text-xs text-slate-400 mb-4">
+                  계정과 모든 데이터가 영구 삭제됩니다. 이 작업은 되돌릴 수 없어요.
+                </p>
+                <button onClick={deleteAccount}
+                  className="w-full rounded-xl border border-red-200 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-50 transition">
+                  탈퇴하기
+                </button>
+              </div>
+
+            </div>
           )}
 
         </div>
