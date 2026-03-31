@@ -3,15 +3,14 @@
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
-import NavBar from "@/components/NavBar";
 import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   LineChart, Line, Legend,
 } from "recharts";
 import {
-  INDUSTRY_CONFIG, sanitizeFullForm, calcResult, calcSimulation,
-  calcStrategies, calcAnalysis, saveHistory, loadHistory, deleteHistory,
+  INDUSTRY_CONFIG, INDUSTRY_BENCHMARK, sanitizeFullForm, calcResult, calcSimulation,
+  calcStrategies, calcAnalysis, calcReverse, saveHistory, loadHistory, deleteHistory,
   fmt, pct,
   type FullForm, type HistoryRecord,
 } from "@/lib/vela";
@@ -458,7 +457,12 @@ function ResultContent() {
   const searchParams = useSearchParams();
   const [userId, setUserId] = useState<string | null>(null);
   const [saveMsg, setSaveMsg] = useState("");
-  const simTitle = searchParams.get("title") ?? "";
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareTitle, setShareTitle] = useState("");
+  const [shareMemo, setShareMemo] = useState("");
+  const [sharing, setSharing] = useState(false);
+  const [shareMsg, setShareMsg] = useState("");
+  const autoSavedRef = React.useRef(false);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -481,59 +485,61 @@ function ResultContent() {
   useEffect(() => { saveHistory(form, result); }, [form, result]);
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
+  // 자동 클라우드 저장 (로그인 시 시뮬레이션 실행마다 자동 저장)
+  useEffect(() => {
+    if (!userId || autoSavedRef.current) return;
+    autoSavedRef.current = true;
+    const supabase = createSupabaseBrowserClient();
+    const now = new Date();
+    const label = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} (자동저장)`;
+    supabase.from("simulation_history").insert({
+      user_id: userId, label, form,
+      result: { totalSales: result.totalSales, profit: result.profit, netProfit: result.netProfit, netMargin: result.netMargin, bep: result.bep, recoveryMonthsActual: result.recoveryMonthsActual, cogsRate: form.cogsRate, laborRate: result.laborCost > 0 ? Math.round((result.laborCost / result.totalSales) * 100) : 0 },
+    }).then(() => {});
+  }, [userId, form, result]);
+
   const saveToCloud = async () => {
     if (!userId) { router.push("/login"); return; }
     const supabase = createSupabaseBrowserClient();
     const now = new Date();
-    const autoLabel = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-    const label = simTitle.trim() ? simTitle.trim() : autoLabel;
+    const label = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
     const { error } = await supabase.from("simulation_history").insert({
-      user_id: userId,
-      label,
-      form,
-      result: {
-        totalSales: result.totalSales,
-        profit: result.profit,
-        netProfit: result.netProfit,
-        netMargin: result.netMargin,
-        bep: result.bep,
-        recoveryMonthsActual: result.recoveryMonthsActual,
-      },
+      user_id: userId, label, form,
+      result: { totalSales: result.totalSales, profit: result.profit, netProfit: result.netProfit, netMargin: result.netMargin, bep: result.bep, recoveryMonthsActual: result.recoveryMonthsActual },
     });
     if (error) { setSaveMsg("저장 실패. 다시 시도해주세요."); return; }
     setSaveMsg("클라우드에 저장되었습니다 ✓");
     setTimeout(() => setSaveMsg(""), 3000);
   };
 
-  const [shareDesc, setShareDesc] = useState("");
-  const [showShareModal, setShowShareModal] = useState(false);
-
-  const shareToCommunity = async () => {
-    if (!userId) { router.push("/login?next=/community"); return; }
+  // 커뮤니티 공유
+  const shareToComm = async () => {
+    if (!userId) { router.push("/login"); return; }
+    if (!shareTitle.trim()) { alert("제목을 입력해주세요."); return; }
+    setSharing(true);
     const supabase = createSupabaseBrowserClient();
-    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", userId).single();
-    const authorName = profile?.full_name ?? "익명";
-    const title = simTitle.trim() || `${config.label} 수익 분석`;
-    const { error } = await supabase.from("shared_simulations").insert({
+    const { data: { user } } = await supabase.auth.getUser();
+    const nick = user?.user_metadata?.nickname || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "익명 사장님";
+    const { error } = await supabase.from("simulation_shares").insert({
       user_id: userId,
-      title,
-      description: shareDesc.trim(),
+      nickname: nick,
       industry: form.industry,
-      form,
-      result: {
-        totalSales: result.totalSales,
-        profit: result.profit,
-        netMargin: result.netMargin,
-        bep: result.bep,
-      },
-      author_name: authorName,
-      is_public: true,
+      title: shareTitle.trim(),
+      total_sales: result.totalSales,
+      profit: result.profit,
+      net_profit: result.netProfit,
+      net_margin: result.netMargin,
+      cogs_ratio: form.cogsRate,
+      labor_ratio: result.laborCost > 0 ? Math.round((result.laborCost / result.totalSales) * 100) : 0,
+      bep: result.bep,
+      memo: shareMemo.trim(),
     });
-    if (error) { setSaveMsg("공유 실패. 다시 시도해주세요."); setShowShareModal(false); return; }
-    setSaveMsg("커뮤니티에 공유됐습니다 ✓");
+    setSharing(false);
+    if (error) { alert("공유 실패. 다시 시도해주세요."); return; }
+    setShareMsg("커뮤니티에 공유됐어요! 🎉");
     setShowShareModal(false);
-    setShareDesc("");
-    setTimeout(() => setSaveMsg(""), 3000);
+    setShareTitle(""); setShareMemo("");
+    setTimeout(() => setShareMsg(""), 4000);
   };
 
   const pieData = useMemo(() => {
@@ -549,45 +555,7 @@ function ResultContent() {
   }, [result, form, isProfit]);
 
   return (
-    <>
-    <NavBar />
-
-    {/* 커뮤니티 공유 모달 */}
-    {showShareModal && (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.5)" }}>
-        <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
-          <h3 className="text-lg font-extrabold text-slate-900 mb-1">커뮤니티에 공유하기</h3>
-          <p className="text-sm text-slate-400 mb-5">다른 사장님들이 참고할 수 있도록 간단한 소개를 남겨보세요.</p>
-          <div className="mb-4">
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">제목</label>
-            <p className="text-sm font-semibold text-slate-700 bg-slate-50 rounded-xl px-4 py-2.5">
-              {simTitle.trim() || `${config.label} 수익 분석`}
-            </p>
-          </div>
-          <div className="mb-5">
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">한줄 소개 (선택)</label>
-            <textarea
-              value={shareDesc}
-              onChange={e => setShareDesc(e.target.value)}
-              placeholder="예) 홍대 카페 창업 전 시뮬레이션입니다. 피드백 환영해요!"
-              rows={3}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-slate-400 focus:bg-white transition resize-none"
-            />
-          </div>
-          <div className="flex gap-3">
-            <button onClick={() => setShowShareModal(false)}
-              className="flex-1 rounded-2xl border border-slate-200 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
-              취소
-            </button>
-            <button onClick={shareToCommunity}
-              className="flex-1 rounded-2xl bg-slate-900 py-3 text-sm font-bold text-white hover:bg-slate-700 transition">
-              공유하기
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
-    <main className="min-h-screen bg-slate-50 px-4 pt-20 pb-6 md:px-8 print:bg-white print:px-0 print:pt-0">
+    <main className="min-h-screen bg-slate-50 px-4 py-6 md:px-8 print:bg-white print:px-0">
       <div className="mx-auto max-w-7xl space-y-6">
 
         {/* 헤더 */}
@@ -599,9 +567,7 @@ function ResultContent() {
                 <div className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{config.label}</div>
                 <div className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{form.businessType === "new" ? "창업 예정" : "운영 중"}</div>
               </div>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                {simTitle ? `${simTitle} 분석 결과` : "분석 결과"}
-              </h1>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900">분석 결과</h1>
               <p className="mt-2 text-slate-500">입력하신 수치를 {config.label} 기준으로 분석했습니다.</p>
             </div>
             <div className={`inline-flex h-fit rounded-full px-4 py-2 text-sm font-semibold ${isProfit ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
@@ -612,19 +578,66 @@ function ResultContent() {
             <button onClick={() => router.push("/simulator")} className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">← 입력으로 돌아가기</button>
             <button onClick={() => window.print()} className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">PDF로 저장</button>
             <button onClick={() => navigator.clipboard.writeText(window.location.href).catch(console.error)} className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-500">링크 공유</button>
-            <button onClick={() => userId ? setShowShareModal(true) : router.push("/login?next=/community")} className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-3 text-sm font-semibold text-blue-600 hover:bg-blue-100 transition">
-              👥 커뮤니티 공유
+            <button onClick={() => { if (!userId) { router.push("/login"); return; } setShareTitle(`${config.label} 분석 결과 공유`); setShowShareModal(true); }} className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-500">
+              👥 커뮤니티에 공유
             </button>
             <button onClick={saveToCloud} className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700">
               {userId ? "☁️ 클라우드 저장" : "🔒 로그인 후 저장"}
             </button>
             {saveMsg && <span className="self-center text-sm font-medium text-emerald-600">{saveMsg}</span>}
+            {shareMsg && <span className="self-center text-sm font-medium text-emerald-600">{shareMsg}</span>}
             {userId && (
               <button onClick={() => router.push("/profile")} className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                내 히스토리 →
+                대시보드 →
               </button>
             )}
           </div>
+
+          {/* 커뮤니티 공유 모달 */}
+          {showShareModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setShowShareModal(false)}>
+              <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">커뮤니티에 공유하기</h3>
+                    <p className="text-xs text-slate-400 mt-1">분석 결과를 사장님 커뮤니티에 공유하세요</p>
+                  </div>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{config.icon} {config.label}</span>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 mb-1 block">게시글 제목 (수정 가능)</label>
+                    <input value={shareTitle} onChange={e => setShareTitle(e.target.value)} placeholder="제목을 입력하세요"
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-slate-400" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-50 p-3">
+                    {[
+                      { l: "월 총 매출", v: `${result.totalSales.toLocaleString()}원` },
+                      { l: "세후 순이익", v: `${result.netProfit.toLocaleString()}원`, c: result.netProfit >= 0 ? "text-emerald-600" : "text-red-500" },
+                      { l: "순이익률", v: `${result.netMargin.toFixed(1)}%` },
+                      { l: "원가율", v: `${form.cogsRate}%` },
+                    ].map(s => (
+                      <div key={s.l}>
+                        <p className="text-xs text-slate-400">{s.l}</p>
+                        <p className={`text-sm font-bold ${s.c ?? "text-slate-800"}`}>{s.v}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 mb-1 block">한 마디 (선택)</label>
+                    <textarea value={shareMemo} onChange={e => setShareMemo(e.target.value)} placeholder="요즘 어떤가요? 한 마디 남겨보세요 (선택)"
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-slate-400 resize-none h-16" />
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <button onClick={() => setShowShareModal(false)} className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">취소</button>
+                  <button onClick={shareToComm} disabled={sharing || !shareTitle.trim()} className="flex-2 flex-grow-[2] rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50">
+                    {sharing ? "공유 중..." : "👥 공유하기"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* 핵심 요약 — 6개 */}
@@ -637,6 +650,198 @@ function ResultContent() {
           <SummaryCard title="투자금 회수" value={result.recoveryMonthsActual === 999 ? "불가" : `${result.recoveryMonthsActual}개월`}
             sub={`목표 ${form.recoveryMonths}개월`} highlight={result.recoveryMonthsActual <= form.recoveryMonths ? "good" : result.recoveryMonthsActual === 999 ? "bad" : "info"} />
         </section>
+
+        {/* 업종 평균 벤치마크 */}
+        {(() => {
+          const bench = INDUSTRY_BENCHMARK[form.industry];
+          const metrics = [
+            { label: "원가율", mine: result.cogsRatio, avg: bench.cogsRate, lowerBetter: true },
+            { label: "인건비율", mine: result.laborRatio, avg: bench.laborRate, lowerBetter: true },
+            { label: "임대료율", mine: result.rentRatio, avg: bench.rentRate, lowerBetter: true },
+            { label: "순이익률", mine: result.netMargin, avg: bench.netMargin, lowerBetter: false },
+          ];
+          return (
+            <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">업종 평균 비교</h2>
+                  <p className="mt-1 text-sm text-slate-500">{config.label} 업종 평균과 내 매장을 비교합니다.</p>
+                </div>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{config.label} 평균</span>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {metrics.map(({ label, mine, avg, lowerBetter }) => {
+                  const diff = mine - avg;
+                  const good = lowerBetter ? diff <= 0 : diff >= 0;
+                  const color = good ? "text-emerald-600" : "text-red-500";
+                  const barColor = good ? "#10b981" : "#ef4444";
+                  const maxVal = Math.max(mine, avg) * 1.3;
+                  return (
+                    <div key={label} className="rounded-2xl bg-slate-50 p-4">
+                      <p className="text-xs text-slate-500">{label}</p>
+                      <div className="mt-2 flex items-end gap-2">
+                        <span className="text-2xl font-bold text-slate-900">{pct(mine)}</span>
+                        <span className={`mb-0.5 text-xs font-semibold ${color}`}>
+                          {diff > 0 ? "+" : ""}{pct(diff)}
+                        </span>
+                      </div>
+                      {/* 게이지 */}
+                      <div className="mt-3 space-y-1.5">
+                        <div>
+                          <div className="mb-0.5 flex justify-between text-[10px] text-slate-400">
+                            <span>내 매장</span><span>{pct(mine)}</span>
+                          </div>
+                          <div className="h-1.5 w-full rounded-full bg-slate-200">
+                            <div className="h-1.5 rounded-full" style={{ width: `${Math.min(mine / maxVal * 100, 100)}%`, backgroundColor: barColor }} />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="mb-0.5 flex justify-between text-[10px] text-slate-400">
+                            <span>업종 평균</span><span>{pct(avg)}</span>
+                          </div>
+                          <div className="h-1.5 w-full rounded-full bg-slate-200">
+                            <div className="h-1.5 rounded-full bg-slate-400" style={{ width: `${Math.min(avg / maxVal * 100, 100)}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })()}
+
+        {/* 비용 구조 차트 */}
+        {(() => {
+          const breakdown = result.costBreakdown ?? {
+            labor: result.laborCost + result.insuranceCost,
+            cogs: result.cogs,
+            rent: form.rent,
+            utilities: form.utilities + form.telecom,
+            cardFee: result.cardFee,
+            royalty: 0,
+            marketing: form.marketing,
+            other: form.supplies + form.maintenance + form.etc,
+          };
+          const items = [
+            { name: "인건비", value: breakdown.labor, color: "#0f172a" },
+            { name: "원가", value: breakdown.cogs, color: "#334155" },
+            { name: "임대료", value: breakdown.rent, color: "#475569" },
+            { name: "공과금·통신", value: breakdown.utilities, color: "#64748b" },
+            { name: "카드수수료", value: breakdown.cardFee, color: "#94a3b8" },
+            { name: "마케팅", value: breakdown.marketing, color: "#b0bec5" },
+            { name: "기타", value: breakdown.other, color: "#cbd5e1" },
+          ].filter(i => i.value > 0);
+          const total = items.reduce((s, i) => s + i.value, 0);
+          return (
+            <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+              <h2 className="mb-1 text-xl font-bold text-slate-900">비용 구조</h2>
+              <p className="mb-5 text-sm text-slate-500">월 총 비용 {fmt(total)}원의 구성</p>
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
+                {/* 파이차트 */}
+                <div className="flex-shrink-0" style={{ width: 220, height: 220 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={items} dataKey="value" nameKey="name" innerRadius={60} outerRadius={95} paddingAngle={2}>
+                        {items.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
+                      </Pie>
+                      <Tooltip formatter={(v) => [`${fmt(Number(v ?? 0))}원`, ""]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                {/* 범례 + 바 */}
+                <div className="flex-1 space-y-2">
+                  {items.map(item => (
+                    <div key={item.name}>
+                      <div className="flex justify-between text-xs text-slate-600 mb-1">
+                        <span className="flex items-center gap-1.5">
+                          <span className="inline-block h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                          {item.name}
+                        </span>
+                        <span className="font-semibold">{fmt(item.value)}원 ({total > 0 ? ((item.value / total) * 100).toFixed(1) : 0}%)</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-slate-100">
+                        <div className="h-1.5 rounded-full transition-all" style={{ width: `${total > 0 ? (item.value / total) * 100 : 0}%`, backgroundColor: item.color }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          );
+        })()}
+
+        {/* 민감도 슬라이더 */}
+        {(() => {
+          const [sensitivity, setSensitivity] = React.useState({ avgSpend: form.avgSpend, turnover: form.turnover, cogsRate: form.cogsRate });
+          const simResult = useMemo(() => calcResult({ ...form, ...sensitivity }), [sensitivity]);
+          const profitDiff = simResult.profit - result.profit;
+          return (
+            <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+              <div className="mb-5">
+                <h2 className="text-xl font-bold text-slate-900">민감도 분석</h2>
+                <p className="mt-1 text-sm text-slate-500">슬라이더를 조절해 수익 변화를 즉시 확인하세요.</p>
+              </div>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div className="space-y-5">
+                  {[
+                    { key: "avgSpend" as const, label: "객단가", min: Math.round(form.avgSpend * 0.5), max: Math.round(form.avgSpend * 2), step: 100, suffix: "원" },
+                    { key: "turnover" as const, label: "회전율", min: 0.1, max: config.maxTurnover, step: 0.1, suffix: "회" },
+                    { key: "cogsRate" as const, label: "원가율", min: 5, max: 70, step: 0.5, suffix: "%" },
+                  ].map(({ key, label, min, max, step, suffix }) => (
+                    <div key={key}>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="font-semibold text-slate-700">{label}</span>
+                        <span className="font-bold text-slate-900">{sensitivity[key]}{suffix}</span>
+                      </div>
+                      <input
+                        type="range" min={min} max={max} step={step}
+                        value={sensitivity[key]}
+                        onChange={(e) => setSensitivity(prev => ({ ...prev, [key]: Number(e.target.value) }))}
+                        className="w-full accent-slate-900"
+                      />
+                      <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+                        <span>{min}{suffix}</span><span>{max}{suffix}</span>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => setSensitivity({ avgSpend: form.avgSpend, turnover: form.turnover, cogsRate: form.cogsRate })}
+                    className="text-xs text-slate-400 hover:text-slate-600 underline"
+                  >초기값으로 리셋</button>
+                </div>
+                <div className="flex flex-col justify-center rounded-2xl bg-slate-50 p-5 gap-4">
+                  <div>
+                    <p className="text-xs text-slate-500">세전 순이익</p>
+                    <p className={`text-3xl font-bold mt-1 ${simResult.profit >= 0 ? "text-slate-900" : "text-red-500"}`}>{fmt(simResult.profit)}원</p>
+                    <p className={`text-sm font-semibold mt-1 ${profitDiff >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                      {profitDiff >= 0 ? "▲" : "▼"} {fmt(Math.abs(profitDiff))}원 ({profitDiff >= 0 ? "+" : ""}{result.profit !== 0 ? ((profitDiff / Math.abs(result.profit)) * 100).toFixed(1) : "0"}%)
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-xl bg-white p-3">
+                      <p className="text-xs text-slate-400">세후 실수령</p>
+                      <p className="font-bold text-slate-900 mt-0.5">{fmt(simResult.netProfit)}원</p>
+                    </div>
+                    <div className="rounded-xl bg-white p-3">
+                      <p className="text-xs text-slate-400">총 매출</p>
+                      <p className="font-bold text-slate-900 mt-0.5">{fmt(simResult.totalSales)}원</p>
+                    </div>
+                    <div className="rounded-xl bg-white p-3">
+                      <p className="text-xs text-slate-400">손익분기점</p>
+                      <p className={`font-bold mt-0.5 ${simResult.bepGap >= 0 ? "text-emerald-600" : "text-red-500"}`}>{simResult.bepGap >= 0 ? "✓ 달성" : "✗ 미달"}</p>
+                    </div>
+                    <div className="rounded-xl bg-white p-3">
+                      <p className="text-xs text-slate-400">순이익률</p>
+                      <p className="font-bold text-slate-900 mt-0.5">{pct(simResult.netMargin)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          );
+        })()}
 
         {/* 운영 진단 */}
         <section className="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
@@ -792,7 +997,6 @@ function ResultContent() {
       {/* 플로팅 AI 채팅 */}
       <VelaChat context={{ form: form as unknown as Record<string, unknown>, result: result as unknown as Record<string, unknown> }} />
     </main>
-    </>
   );
 }
 
