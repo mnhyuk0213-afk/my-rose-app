@@ -2,6 +2,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
+import NavBarComponent from "@/components/NavBar";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -357,21 +358,8 @@ function gradeOf(sc: number) {
 }
 
 // ── NavBar ──────────────────────────────────────────────────
-function NavBar() {
-  return (
-    <nav style={{background:"#fff",borderBottom:"1px solid "+G200,padding:"0 20px",height:60,display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:100,fontFamily:"system-ui,sans-serif"}}>
-      <Link href="/" style={{fontSize:24,fontWeight:800,color:G900,textDecoration:"none",letterSpacing:-0.5}}>
-        VELA<span style={{color:B}}>.</span>
-      </Link>
-      <div style={{display:"flex",alignItems:"center",gap:20}}>
-        <Link href="/simulator" style={{fontSize:15,color:G600,textDecoration:"none"}}>시뮬레이터</Link>
-        <Link href="/community" style={{fontSize:15,color:G600,textDecoration:"none"}}>커뮤니티</Link>
-        <Link href="/pricing"   style={{fontSize:15,color:G600,textDecoration:"none"}}>요금제</Link>
-        <Link href="/game"      style={{fontSize:15,color:B,fontWeight:700,textDecoration:"none",background:BL,padding:"7px 16px",borderRadius:100}}>🎮 게임</Link>
-      </div>
-    </nav>
-  );
-}
+// ── NavBar: 공통 컴포넌트 사용 (랜딩페이지와 동일)
+const NavBar = () => <NavBarComponent />;
 
 // ── 메인 메뉴 ───────────────────────────────────────────────
 function Menu({onNew,onLoad,saved}:{onNew:()=>void;onLoad:()=>void;saved:S|null}) {
@@ -422,32 +410,50 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
   const [step, setStep]   = useState<0|1|2>(0);
   const [ind,  setInd]    = useState<Industry>("cafe");
   const [sname,setSname]  = useState("");
-  const [cap,  setCap]    = useState(20000000);
+  const [capStr, setCapStr] = useState("20000000"); // string으로 관리해서 입력 버그 방지
   const [spend,setSpend]  = useState(7000);
   const [cogs, setCogs]   = useState(28);
   const [simLoaded, setSimLoaded] = useState(false);
+  const [showSimPicker, setShowSimPicker] = useState(false);
+  const [simSaves, setSimSaves] = useState<{id:string;name:string;industry:string;avgSpend:number;cogsRate:number;savedAt:string}[]>([]);
+
+  const cap = Math.max(0, Number(capStr.replace(/[^0-9]/g,"")) || 0);
 
   useEffect(()=>{ setSpend(IND[ind].spend); setCogs(IND[ind].cogs); },[ind]);
 
-  // 시뮬레이터 결과 불러오기
-  const loadFromSimulator = () => {
+  // 저장된 시뮬레이션 목록 불러오기
+  const openSimPicker = () => {
     try {
-      const raw = localStorage.getItem("vela-form-v3");
-      if (!raw) { alert("저장된 시뮬레이션 결과가 없어요.\n시뮬레이터에서 먼저 분석을 완료해주세요!"); return; }
-      const form = JSON.parse(raw);
-      if (form.industry && IND[form.industry as Industry]) setInd(form.industry as Industry);
-      if (form.avgSpend) setSpend(Number(form.avgSpend));
-      if (form.cogsRate) setCogs(Number(form.cogsRate));
-      setSimLoaded(true);
-      alert("✅ 시뮬레이터 값이 적용됐어요!\n업종, 객단가, 원가율이 자동으로 설정됐어요.");
+      const saves = JSON.parse(localStorage.getItem("vela-saves-v1") || "[]");
+      const current = localStorage.getItem("vela-form-v3");
+      const all = [];
+      if (current) {
+        const f = JSON.parse(current);
+        all.push({ id:"current", name:"최근 시뮬레이션", industry:f.industry||"restaurant", avgSpend:Number(f.avgSpend||0), cogsRate:Number(f.cogsRate||0), savedAt:"현재" });
+      }
+      saves.forEach((s: {id:string;name?:string;form:{industry?:string;avgSpend?:number;cogsRate?:number};savedAt?:string}) => {
+        all.push({ id:s.id, name:s.name||"저장된 시뮬레이션", industry:s.form?.industry||"restaurant", avgSpend:Number(s.form?.avgSpend||0), cogsRate:Number(s.form?.cogsRate||0), savedAt:s.savedAt||"" });
+      });
+      if (all.length===0) { alert("저장된 시뮬레이션 결과가 없어요.\n시뮬레이터에서 먼저 분석을 완료해주세요!"); return; }
+      setSimSaves(all);
+      setShowSimPicker(true);
     } catch { alert("불러오기 실패. 다시 시도해주세요."); }
+  };
+
+  const applySimSave = (save: typeof simSaves[0]) => {
+    if (save.industry && IND[save.industry as Industry]) setInd(save.industry as Industry);
+    if (save.avgSpend) setSpend(save.avgSpend);
+    if (save.cogsRate) setCogs(save.cogsRate);
+    setSimLoaded(true);
+    setShowSimPicker(false);
   };
 
   const cfg = IND[ind];
   const start = () => {
+    const finalCap = cap < 100000 ? 1000000 : cap;
     const name = sname.trim() || (cfg.icon+" 나의 "+cfg.label);
     onStart({
-      day:1, maxDays:90, cash:cap, rep:60, phase:"morning",
+      day:1, maxDays:90, cash:finalCap, rep:60, phase:"morning",
       ind, name, base:cfg.base, spend, cogs, rent:cfg.rent, util:cfg.util,
       staff:cfg.staff.map(s=>({...s})), ev:null, efx:[],
       totalRev:0, totalProfit:0, logs:[],
@@ -499,17 +505,50 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
         <h2 style={{fontSize:24,fontWeight:800,color:G900,marginBottom:6}}>게임 조건을 설정하세요</h2>
         <p style={{fontSize:15,color:G600,marginBottom:20}}>내 맘대로 조정 가능해요</p>
 
-        {/* 시뮬레이터 불러오기 */}
-        <button onClick={loadFromSimulator} style={{width:"100%",padding:"13px 16px",borderRadius:14,border:"2px dashed "+(simLoaded?GN:G200),background:simLoaded?GNL:"#fff",color:simLoaded?GN:G600,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"inherit",marginBottom:14,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-          {simLoaded?"✅ 시뮬레이터 값 적용됨":"📊 내 시뮬레이터 결과 불러오기 →"}
+        {/* 시뮬레이터 저장값 선택 */}
+        <button onClick={openSimPicker} style={{width:"100%",padding:"13px 16px",borderRadius:14,border:"2px dashed "+(simLoaded?GN:G200),background:simLoaded?GNL:"#fff",color:simLoaded?GN:G600,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"inherit",marginBottom:14,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+          {simLoaded ? "✅ 시뮬레이터 값 적용됨 (다시 선택하기)" : "📊 내 시뮬레이터 결과 불러오기 →"}
         </button>
+
+        {/* 시뮬레이션 선택 모달 */}
+        {showSimPicker && (
+          <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16,marginBottom:14,boxShadow:"0 4px 20px rgba(0,0,0,0.08)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+              <p style={{fontSize:14,fontWeight:700,color:G900,margin:0}}>📊 시뮬레이션 결과 선택</p>
+              <button onClick={()=>setShowSimPicker(false)} style={{fontSize:13,color:G400,background:"none",border:"none",cursor:"pointer"}}>✕</button>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {simSaves.map(s=>(
+                <button key={s.id} onClick={()=>applySimSave(s)} style={{padding:"12px 14px",borderRadius:12,border:"1px solid "+G200,background:G50,cursor:"pointer",textAlign:"left",fontFamily:"inherit",transition:"background 0.1s"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div>
+                      <p style={{fontSize:14,fontWeight:700,color:G900,margin:"0 0 2px"}}>{s.name}</p>
+                      <p style={{fontSize:12,color:G400,margin:0}}>
+                        {IND[s.industry as Industry]?.icon} {IND[s.industry as Industry]?.label||s.industry} · 객단가 {s.avgSpend.toLocaleString()}원 · 원가율 {s.cogsRate}%
+                      </p>
+                    </div>
+                    <span style={{fontSize:12,color:G400}}>{s.savedAt==="현재"?"현재":s.savedAt?new Date(s.savedAt).toLocaleDateString("ko-KR"):""}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
           <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16}}>
             <p style={{fontSize:15,fontWeight:700,color:G900,marginBottom:10}}>💰 초기 자본금</p>
-            <input type="number" value={cap} onChange={e=>setCap(Math.max(1000000,Number(e.target.value)))} step={500000} min={1000000} max={500000000} placeholder="자본금 직접 입력"
+            <input
+              type="text"
+              inputMode="numeric"
+              value={capStr}
+              onChange={e => setCapStr(e.target.value.replace(/[^0-9]/g,""))}
+              onFocus={e => e.target.select()}
+              placeholder="예: 20000000"
               style={{width:"100%",padding:"12px 14px",borderRadius:12,border:"1px solid "+G200,fontSize:16,outline:"none",fontFamily:"inherit",boxSizing:"border-box" as const,color:G900}} />
-            <p style={{fontSize:13,color:B,marginTop:6,fontWeight:600}}>{cap.toLocaleString("ko-KR")}원으로 시작</p>
+            <p style={{fontSize:13,color:B,marginTop:6,fontWeight:600}}>
+              {cap>0 ? cap.toLocaleString("ko-KR")+"원으로 시작" : "금액을 입력하세요"}
+            </p>
           </div>
           <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
