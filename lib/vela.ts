@@ -622,3 +622,13 @@ export const fmt = (n: number) =>
   new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 }).format(Number.isFinite(n) ? n : 0);
 
 export const pct = (n: number) => `${Number.isFinite(n) ? n.toFixed(1) : "0.0"}%`;
+export const INDUSTRY_BENCHMARK: Record<string, {
+  avgSales: number; avgProfit: number; avgMargin: number;
+  avgCogs: number; avgLabor: number; avgRent: number;
+}> = {
+  cafe:       { avgSales:8500000,  avgProfit:1200000, avgMargin:14.1, avgCogs:28.0, avgLabor:28.5, avgRent:12.0 },
+  restaurant: { avgSales:15000000, avgProfit:1800000, avgMargin:12.0, avgCogs:33.0, avgLabor:27.0, avgRent:10.5 },
+  bar:        { avgSales:12000000, avgProfit:2100000, avgMargin:17.5, avgCogs:22.0, avgLabor:25.0, avgRent:11.0 },
+  finedining: { avgSales:18000000, avgProfit:3200000, avgMargin:17.8, avgCogs:34.0, avgLabor:26.0, avgRent:9.5  },
+  fastfood:   { avgSales:20000000, avgProfit:2200000, avgMargin:11.0, avgCogs:30.0, avgLabor:29.0, avgRent:11.5 },
+};
