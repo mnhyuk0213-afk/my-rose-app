@@ -494,28 +494,29 @@ import type { User } from "@supabase/supabase-js";
 
 function StockTicker() {
   useEffect(() => {
-    // 이미 로드된 경우 스킵
-    if (document.getElementById("tv-ticker-script")) return;
     const container = document.getElementById("tv-ticker-container");
     if (!container) return;
+    // 이미 위젯 로드된 경우 스킵
+    if (container.querySelector("iframe")) return;
     container.innerHTML = "";
-    const widget = document.createElement("div");
-    widget.className = "tradingview-widget-container__widget";
-    container.appendChild(widget);
+    const widgetDiv = document.createElement("div");
+    widgetDiv.className = "tradingview-widget-container__widget";
+    container.appendChild(widgetDiv);
     const script = document.createElement("script");
-    script.id = "tv-ticker-script";
     script.type = "text/javascript";
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js";
     script.async = true;
     script.innerHTML = JSON.stringify({
       symbols: [
-        { proName: "KRX:KOSPI",  title: "코스피" },
-        { proName: "KRX:KOSDAQ", title: "코스닥" },
-        { proName: "FX_IDC:USDKRW", title: "달러/원" },
-        { proName: "COMEX:GC1!", title: "금" },
+        { proName: "KRX:KOSPI",      title: "코스피"  },
+        { proName: "KRX:KOSDAQ",     title: "코스닥"  },
+        { proName: "OANDA:USDKRW",   title: "달러/원" },
+        { proName: "CAPITALCOM:OIL", title: "국제유가" },
+        { proName: "OANDA:XAUUSD",   title: "금"      },
+        { proName: "INDEX:SPX",      title: "S&P500"  },
       ],
       showSymbolLogo: false,
-      isTransparent: true,
+      isTransparent: false,
       displayMode: "adaptive",
       colorTheme: "light",
       locale: "kr",
@@ -524,8 +525,8 @@ function StockTicker() {
   }, []);
 
   return (
-    <div className="rounded-2xl bg-white ring-1 ring-slate-200 overflow-hidden">
-      <div id="tv-ticker-container" className="tradingview-widget-container" style={{height:46}} />
+    <div className="rounded-2xl bg-white ring-1 ring-slate-200 overflow-hidden" style={{minHeight:46}}>
+      <div id="tv-ticker-container" className="tradingview-widget-container" style={{minHeight:46}} />
     </div>
   );
 }
@@ -536,7 +537,6 @@ function MemberHome() {
   const [news,    setNews]    = useState<NewsItem[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
   const [thisMonthSnap, setThisMonthSnap] = useState<{total_sales:number;net_profit:number;month:string}|null|undefined>(undefined);
-  const [latestSim, setLatestSim] = useState<{id:string;label:string;result:{totalSales:number;netProfit:number};form:{industry:string}}|null>(null);
 
   useEffect(() => {
     const sb = createSupabaseBrowserClient();
@@ -549,7 +549,6 @@ function MemberHome() {
           sb.from("simulation_history").select("id,label,result,form").eq("user_id", data.user.id).order("created_at",{ascending:false}).limit(1),
         ]);
         setThisMonthSnap(snap ?? null);
-        setLatestSim(sims?.[0] ?? null);
       }
       setLoading(false);
     });
@@ -649,24 +648,6 @@ function MemberHome() {
             </div>
           )}
 
-          {/* 9. 최근 시뮬레이션 미리보기 */}
-          {latestSim && (
-            <div className="rounded-2xl bg-white ring-1 ring-slate-200 px-5 py-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="text-xl">📊</span>
-                <div>
-                  <p className="text-xs text-slate-400">최근 시뮬레이션</p>
-                  <p className="text-sm font-bold text-slate-900 mt-0.5 truncate max-w-[200px] sm:max-w-none">{latestSim.label}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    매출 {fmtN(latestSim.result?.totalSales||0)}원 · 순이익 <span className={(latestSim.result?.netProfit||0)>=0?"text-emerald-600":"text-red-500"}>{(latestSim.result?.netProfit||0)>=0?"+":""}{fmtN(latestSim.result?.netProfit||0)}원</span>
-                  </p>
-                </div>
-              </div>
-              <Link href={`/result?historyId=${latestSim.id}`} className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-700 transition whitespace-nowrap">
-                결과 보기 →
-              </Link>
-            </div>
-          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
 
