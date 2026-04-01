@@ -62,3 +62,19 @@ body {
         .vela-dropdown-label{font-size:13px;font-weight:600;color:#191F28;margin:0 0 2px;font-family:inherit}
         .vela-dropdown-desc{font-size:11px;color:#9EA6B3;margin:0;font-family:inherit}
         @media(max-width:768px){.vela-nav-links,.vela-nav-actions{display:none}.vela-hamburger{display:flex}}
+
+/* ── 페이지 전환 애니메이션 ─────────────────────────────── */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+main,
+.min-h-screen {
+  animation: pageIn 0.18s ease-out;
+}
+
+/* 페이지 로딩 중 배경 유지 */
+html, body {
+  background: #F9FAFB !important;
+}
