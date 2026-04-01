@@ -37,7 +37,7 @@ export default function QuickInputModal() {
   useEffect(() => {
     // 로그인 여부 먼저 확인
     const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data: { user } }: { data: { user: { id: string; email?: string } | null } }) => {
       if (!user) return; // 비로그인 시 모달 표시 안 함
 
       // 이번 달 이미 입력했으면 표시 안 함

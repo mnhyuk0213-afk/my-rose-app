@@ -41,7 +41,7 @@ export default function ReviewReplyPage() {
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(({ data }) => setIsLoggedIn(!!data.user));
+    supabase.auth.getUser().then(({ data }: { data: { user: unknown } }) => setIsLoggedIn(!!data.user));
   }, []);
 
   const [platform, setPlatform] = useState<Platform>("naver");

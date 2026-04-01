@@ -30,22 +30,23 @@ export default function ProfilePage() {
   const [savingPw, setSavingPw] = useState(false);
   const [resetMsg, setResetMsg] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
-  const sb = typeof window !== "undefined" ? createSupabaseBrowserClient() : null as any;
+  const sb = typeof window !== "undefined" ? createSupabaseBrowserClient() : null;
 
   useEffect(()=>{
-    sb.auth.getUser().then(({data:{user}})=>{
+    if (!sb) return;
+    sb.auth.getUser().then(({data:{user}}:{data:{user:User|null}})=>{
       setUser(user);
       if(!user){setLoading(false);return;}
       setNickname(user.user_metadata?.nickname||user.user_metadata?.full_name||user.email?.split("@")[0]||"");
       setAvatar(user.user_metadata?.avatar_url||null);
       sb.from("simulation_history").select("id,label,created_at,result,form")
         .eq("user_id",user.id).order("created_at",{ascending:false}).limit(24)
-        .then(({data})=>{setHistory(data??[]);setLoading(false);});
+        .then(({data}:{data:HistoryRow[]|null})=>{setHistory(data??[]);setLoading(false);});
     });
   },[sb]);
 
   const saveNick = async()=>{
-    if(!user||!nickname.trim())return;
+    if(!sb||!user||!nickname.trim())return;
     setSavingNick(true);
     await sb.auth.updateUser({data:{nickname:nickname.trim()}});
     setSavingNick(false); setEditNick(false);
@@ -53,7 +54,7 @@ export default function ProfilePage() {
 
   const handleAvatar = async(e:React.ChangeEvent<HTMLInputElement>)=>{
     const f=e.target.files?.[0];
-    if(!f||!user)return;
+    if(!f||!user||!sb)return;
     const ext=f.name.split(".").pop();
     const path=`avatars/${user.id}.${ext}`;
     const {error}=await sb.storage.from("avatars").upload(path,f,{upsert:true});
@@ -65,6 +66,7 @@ export default function ProfilePage() {
   };
 
   const changePassword = async()=>{
+    if(!sb) return;
     if(!pwForm.next||pwForm.next!==pwForm.confirm){ setPwMsg("새 비밀번호가 일치하지 않아요."); return; }
     if(pwForm.next.length<6){ setPwMsg("비밀번호는 6자 이상이어야 해요."); return; }
     setSavingPw(true);
@@ -76,11 +78,13 @@ export default function ProfilePage() {
   };
 
   const delHistory = async(id:string)=>{
+    if(!sb) return;
     await sb.from("simulation_history").delete().eq("id",id);
     setHistory(p=>p.filter(h=>h.id!==id));
   };
 
   const resetData = async(type:"simulations"|"monthly"|"menus"|"all")=>{
+    if(!sb) return;
     const labels:Record<string,string>={
       simulations:"시뮬레이션 기록",
       monthly:"월별 매출 데이터",
@@ -99,6 +103,7 @@ export default function ProfilePage() {
   };
 
   const deleteAccount = async()=>{
+    if(!sb) return;
     if(!confirm("정말로 탈퇴하시겠어요?\n모든 데이터가 영구 삭제되며 복구가 불가능합니다.")) return;
     if(!confirm("마지막 확인: 계정과 모든 데이터를 삭제합니다.")) return;
     const {data:{user}}=await sb.auth.getUser();
@@ -155,7 +160,7 @@ export default function ProfilePage() {
               <Link href="/dashboard" className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition">
                 대시보드
               </Link>
-              <button onClick={()=>sb.auth.signOut().then(()=>window.location.href="/")}
+              <button onClick={()=>sb?.auth.signOut().then(()=>window.location.href="/")}
                 className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
                 로그아웃
               </button>
@@ -340,7 +345,7 @@ export default function ProfilePage() {
               {/* 로그아웃 */}
               <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
                 <h3 className="text-sm font-bold text-slate-900 mb-3">로그아웃</h3>
-                <button onClick={()=>sb.auth.signOut().then(()=>window.location.href="/")}
+                <button onClick={()=>sb?.auth.signOut().then(()=>window.location.href="/")}
                   className="w-full rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
                   로그아웃
                 </button>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import NavBarComponent from "@/components/NavBar";
 
-const supabase = createSupabaseBrowserClient();
+const supabase = typeof window !== "undefined" ? createSupabaseBrowserClient() : null as any;
 
 type Industry = "cafe" | "restaurant" | "bar" | "finedining" | "gogi";
 type Weather  = "sunny" | "rainy" | "cloudy" | "hot" | "snow";

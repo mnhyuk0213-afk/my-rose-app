@@ -63,7 +63,7 @@ export default function PricingPage() {
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(({ data }: { data: { user: { id: string; email?: string } | null } }) => {
       setIsLoggedIn(!!data.user);
       setUserId(data.user?.id ?? null);
     });

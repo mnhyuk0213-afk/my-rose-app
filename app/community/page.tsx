@@ -390,7 +390,7 @@ function PostDetail({ post, userId, onBack }: { post: BoardPost; userId: string 
 
   useEffect(() => {
     const sb = createSupabaseBrowserClient();
-    sb.from("comments").select("*").eq("post_id", post.id).order("created_at").then(({ data }) => setComments(data ?? []));
+    sb.from("comments").select("*").eq("post_id", post.id).order("created_at").then(({ data }: { data: Comment[] | null }) => setComments(data ?? []));
     sb.rpc("increment_views", { table_name: "posts", row_id: post.id });
   }, [post.id]);
 
@@ -760,7 +760,7 @@ export default function CommunityPage() {
 
   useEffect(() => {
     const sb = createSupabaseBrowserClient();
-    sb.auth.getUser().then(({ data }) => {
+    sb.auth.getUser().then(({ data }: { data: { user: { id: string; email?: string } | null } }) => {
       setUserId(data.user?.id ?? null);
       const email = data.user?.email ?? "";
       setIsAdmin(ADMIN_EMAILS.includes(email));

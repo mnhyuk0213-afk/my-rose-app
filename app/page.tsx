@@ -37,7 +37,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(({ data }) => setIsLoggedIn(!!data.user));
+    supabase.auth.getUser().then(({ data }: { data: { user: unknown } }) => setIsLoggedIn(!!data.user));
   }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

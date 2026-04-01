@@ -27,9 +27,10 @@ export default function DashboardPage() {
   const [showInput, setShowInput] = useState(false);
   const [form, setForm] = useState({ month: new Date().toISOString().slice(0,7), industry: "cafe", total_sales: "", cogs: "", labor_cost: "", rent: "", other_cost: "", memo: "" });
   const [saving, setSaving] = useState(false);
-  const sb = typeof window !== "undefined" ? createSupabaseBrowserClient() : null as any;
+  const sb = typeof window !== "undefined" ? createSupabaseBrowserClient() : null;
 
   const load = useCallback(async () => {
+    if (!sb) return;
     setLoading(true);
     const { data: { user } } = await sb.auth.getUser();
     if (!user) { setLoading(false); return; }
@@ -45,6 +46,7 @@ export default function DashboardPage() {
   useEffect(() => { load(); }, [load]);
 
   const saveSnapshot = async () => {
+    if (!sb) return;
     if (!form.month || !form.total_sales) return alert("월과 매출은 필수입니다.");
     setSaving(true);
     const { data: { user } } = await sb.auth.getUser();
@@ -63,6 +65,7 @@ export default function DashboardPage() {
   };
 
   const delSnapshot = async (id: string) => {
+    if (!sb) return;
     if (!confirm("이 데이터를 삭제할까요?")) return;
     await sb.from("monthly_snapshots").delete().eq("id", id);
     load();

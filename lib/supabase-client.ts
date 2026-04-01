@@ -5,6 +5,9 @@ export function createSupabaseBrowserClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
+    if (typeof window === "undefined") {
+      return null as any;
+    }
     throw new Error("Supabase 환경변수가 설정되지 않았습니다.");
   }
 
