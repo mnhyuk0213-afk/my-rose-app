@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import NavBar from "@/components/NavBar";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 
 const PLANS = [
@@ -81,11 +80,11 @@ export default function PricingPage() {
     if (!selectedPlan || !userId) return;
     setPayLoading(true);
     try {
-      // 토스페이먼츠 SDK CDN 동적 로드
+      // 토스페이먼츠 SDK v1 (API 개별 연동)
       if (!(window as any).TossPayments) {
         await new Promise<void>((resolve, reject) => {
           const script = document.createElement("script");
-          script.src = "https://js.tosspayments.com/v2/standard";
+          script.src = "https://js.tosspayments.com/v1/payment";
           script.onload = () => resolve();
           script.onerror = () => reject(new Error("토스페이먼츠 SDK 로드 실패"));
           document.head.appendChild(script);
@@ -93,18 +92,15 @@ export default function PricingPage() {
       }
 
       const toss = (window as any).TossPayments(process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY!);
-      const payment = toss.payment({ customerKey: userId });
-
       const orderId = `VELA-${selectedPlan.id}-${Date.now()}`;
-      await payment.requestPayment({
-        method: "CARD",
-        amount: { currency: "KRW", value: selectedPlan.price },
+
+      await toss.requestPayment("카드", {
+        amount: selectedPlan.price,
         orderId,
         orderName: `VELA ${selectedPlan.name} 플랜`,
+        customerName: "VELA 사용자",
         successUrl: `${window.location.origin}/payment/success`,
         failUrl: `${window.location.origin}/payment/fail`,
-        customerEmail: undefined,
-        card: { useEscrow: false, flowMode: "DEFAULT", useCardPoint: false, useAppCardOnly: false },
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "결제 중 오류가 발생했습니다.";
@@ -169,7 +165,7 @@ export default function PricingPage() {
         @media(max-width:768px){.plans-grid{grid-template-columns:1fr}}
       `}</style>
 
-      <NavBar />
+      
 
       {showModal && selectedPlan && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}>
