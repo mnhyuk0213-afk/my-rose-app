@@ -1708,6 +1708,9 @@ export default function Page() {
   const [saveMessage, setSaveMessage] = useState("");
   const [stepError, setStepError] = useState("");
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showCloudSave, setShowCloudSave] = useState(false);
+  const [cloudSaveTitle, setCloudSaveTitle] = useState("");
+  const [cloudSaving, setCloudSaving] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showMessage = (msg: string) => {
@@ -1893,11 +1896,62 @@ export default function Page() {
           </div>
           <div className="mt-5 flex flex-wrap gap-3">
             <button type="button" onClick={() => { const label = saveSlot(form); showMessage(`${label} 저장 완료`); }} className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white">현재 값 저장</button>
+            <button type="button" onClick={() => { setCloudSaveTitle(""); setShowCloudSave(true); }} className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white">☁️ 클라우드 저장</button>
             <button type="button" onClick={() => setShowSaveModal(true)} className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700">저장값 불러오기</button>
             <button type="button" onClick={() => { setForm(createEmptyForm(form.industry)); setStep(1); setStepError(""); showMessage("초기화가 완료되었습니다."); }} className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700">초기화</button>
-            <button type="button" onClick={async () => { try { const url = `${window.location.origin}${window.location.pathname}?${buildQuery(form)}`; await navigator.clipboard.writeText(url); showMessage("링크가 복사되었습니다."); } catch (error) { console.error(error); showMessage("링크 복사에 실패했습니다."); } }} className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white">링크 공유</button>
+            <button type="button" onClick={async () => { try { const url = `${window.location.origin}${window.location.pathname}?${buildQuery(form)}`; await navigator.clipboard.writeText(url); showMessage("링크가 복사되었습니다."); } catch (error) { console.error(error); showMessage("링크 복사에 실패했습니다."); } }} className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-white" style={{background:"#3182F6",color:"#fff"}}>링크 공유</button>
           </div>
           {saveMessage && <p className="mt-3 text-sm font-medium text-slate-500">{saveMessage}</p>}
+
+          {/* 클라우드 저장 모달 */}
+          {showCloudSave && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={e => { if(e.target===e.currentTarget) setShowCloudSave(false); }}>
+              <div className="w-full max-w-sm rounded-3xl bg-white shadow-xl p-6 space-y-4">
+                <h3 className="text-base font-bold text-slate-900">☁️ 클라우드에 저장</h3>
+                <p className="text-xs text-slate-400">나중에 불러올 수 있도록 제목을 입력해주세요.</p>
+                <input
+                  value={cloudSaveTitle}
+                  onChange={e => setCloudSaveTitle(e.target.value)}
+                  onKeyDown={e => e.key==="Enter" && cloudSaveTitle.trim() && (async()=>{
+                    setCloudSaving(true);
+                    try {
+                      const sb = createSupabaseBrowserClient();
+                      const {data:{user}} = await sb.auth.getUser() as {data:{user:{id:string}|null}};
+                      if(!user){alert("로그인이 필요합니다."); setShowCloudSave(false); setCloudSaving(false); return;}
+                      await sb.from("simulation_history").insert({ user_id:user.id, label:cloudSaveTitle.trim(), form });
+                      showMessage(`'${cloudSaveTitle.trim()}' 클라우드 저장 완료 ✓`);
+                      setShowCloudSave(false);
+                    } catch { showMessage("저장 실패. 다시 시도해주세요."); }
+                    setCloudSaving(false);
+                  })()}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-slate-400"
+                  placeholder="예: 홍대 카페 2026년 4월"
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button onClick={() => setShowCloudSave(false)} className="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">취소</button>
+                  <button
+                    disabled={!cloudSaveTitle.trim() || cloudSaving}
+                    onClick={async () => {
+                      setCloudSaving(true);
+                      try {
+                        const sb = createSupabaseBrowserClient();
+                        const {data:{user}} = await sb.auth.getUser() as {data:{user:{id:string}|null}};
+                        if(!user){alert("로그인이 필요합니다."); setShowCloudSave(false); setCloudSaving(false); return;}
+                        await sb.from("simulation_history").insert({ user_id:user.id, label:cloudSaveTitle.trim(), form });
+                        showMessage(`'${cloudSaveTitle.trim()}' 클라우드 저장 완료 ✓`);
+                        setShowCloudSave(false);
+                      } catch { showMessage("저장 실패. 다시 시도해주세요."); }
+                      setCloudSaving(false);
+                    }}
+                    className="flex-2 flex-grow-[2] rounded-xl bg-blue-600 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+                  >
+                    {cloudSaving ? "저장 중..." : "저장하기"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* 모바일 플로팅 미리보기 — 스크롤 시 상단 고정 */}
