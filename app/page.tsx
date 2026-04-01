@@ -535,54 +535,46 @@ function MemberHome() {
   const [loading, setLoading] = useState(true);
   const [news,    setNews]    = useState<NewsItem[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
+  const [thisMonthSnap, setThisMonthSnap] = useState<{total_sales:number;net_profit:number;month:string}|null|undefined>(undefined);
+  const [latestSim, setLatestSim] = useState<{id:string;label:string;result:{totalSales:number;netProfit:number};form:{industry:string}}|null>(null);
 
   useEffect(() => {
     const sb = createSupabaseBrowserClient();
-    sb.auth.getUser().then(({ data }: { data: { user: User|null } }) => {
+    sb.auth.getUser().then(async ({ data }: { data: { user: User|null } }) => {
       setUser(data.user);
+      if (data.user) {
+        const thisMonth = new Date().toISOString().slice(0,7);
+        const [{ data: snap }, { data: sims }] = await Promise.all([
+          sb.from("monthly_snapshots").select("total_sales,net_profit,month").eq("user_id", data.user.id).eq("month", thisMonth).single(),
+          sb.from("simulation_history").select("id,label,result,form").eq("user_id", data.user.id).order("created_at",{ascending:false}).limit(1),
+        ]);
+        setThisMonthSnap(snap ?? null);
+        setLatestSim(sims?.[0] ?? null);
+      }
       setLoading(false);
     });
   }, []);
 
-  // Claude API로 오늘의 외식업 뉴스 가져오기
+  // 뉴스 /api/home 라우트로 가져오기 (API 키 노출 방지 + 캐싱)
   useEffect(() => {
-    const today = new Date().toLocaleDateString("ko-KR", { year:"numeric", month:"long", day:"numeric" });
-    fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        tools: [{ type: "web_search_20250305", name: "web_search" }],
-        system: `당신은 외식업·자영업 사장님을 위한 뉴스 큐레이터입니다.
-오늘(${today}) 기준 외식업, 자영업, 소상공인, 경제 관련 뉴스 3개를 검색해서 JSON 배열로만 응답하세요.
-형식: [{"title":"뉴스 제목","summary":"한 줄 요약(30자 이내)","source":"출처명","url":"기사 실제 URL"}]
-JSON 외 다른 텍스트, 마크다운 절대 없이 JSON만 출력하세요.`,
-        messages: [{ role: "user", content: `오늘 ${today} 외식업·자영업 관련 주요 뉴스 3개 알려줘` }],
-      }),
-    })
-    .then(r => r.json())
-    .then(d => {
-      const text = (d.content || []).filter((c: {type:string}) => c.type==="text").map((c: {text:string}) => c.text).join("");
-      const cleaned = text.replace(/```json|```/g,"").trim();
-      const parsed: NewsItem[] = JSON.parse(cleaned);
-      setNews(parsed);
-    })
-    .catch(() => setNews([
-      { title:"최저임금 인상 논의 본격화", summary:"2027년 적용 최저임금 심의 시작", source:"고용노동부", url:"https://www.moel.go.kr" },
-      { title:"배달앱 수수료 인하 정책 발표", summary:"소상공인 부담 완화 방안 논의 중", source:"공정거래위원회", url:"https://www.ftc.go.kr" },
-      { title:"외식물가 상승세 지속", summary:"식재료비·인건비 동반 상승 영향", source:"통계청", url:"https://kostat.go.kr" },
-    ]))
-    .finally(() => setNewsLoading(false));
-
+    fetch("/api/home")
+      .then(r => r.json())
+      .then(d => { if (d.news) setNews(d.news); })
+      .catch(() => setNews([
+        { title:"최저임금 인상 논의 본격화", summary:"2027년 적용 최저임금 심의 시작", source:"고용노동부", url:"https://www.moel.go.kr" },
+        { title:"배달앱 수수료 인하 정책 발표", summary:"소상공인 부담 완화 방안 논의 중", source:"공정거래위원회", url:"https://www.ftc.go.kr" },
+        { title:"외식물가 상승세 지속", summary:"식재료비·인건비 동반 상승 영향", source:"통계청", url:"https://kostat.go.kr" },
+      ]))
+      .finally(() => setNewsLoading(false));
   }, []);
 
   const name = user?.user_metadata?.nickname || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "사장님";
+  const fmtN = (n: number) => Math.round(n).toLocaleString("ko-KR");
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "좋은 아침이에요" : hour < 18 ? "안녕하세요" : "오늘도 수고하셨어요";
 
   if (loading) return (
-    <div className="min-h-screen bg-white"><NavBar />
+    <div className="min-h-screen bg-slate-50"><NavBar />
       <div className="flex items-center justify-center h-[80vh]">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
       </div>
@@ -596,29 +588,85 @@ JSON 외 다른 텍스트, 마크다운 절대 없이 JSON만 출력하세요.`,
         <div className="mx-auto max-w-4xl space-y-6">
 
           {/* 인사말 */}
-          <div className="flex items-start justify-between flex-wrap gap-3">
-            <div>
-              <p className="text-sm text-slate-400">{new Date().toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric",weekday:"long"})}</p>
-              <h1 className="text-2xl font-bold text-slate-900 mt-1">{greeting}, {name}님! 👋</h1>
-            </div>
+          <div>
+            <p className="text-sm text-slate-400">{new Date().toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric",weekday:"long"})}</p>
+            <h1 className="text-2xl font-bold text-slate-900 mt-1">{greeting}, {name}님! 👋</h1>
           </div>
 
           {/* 빠른 실행 버튼 4개 */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { icon:"📊", label:"시뮬레이터", sub:"수익 분석하기", href:"/simulator", bg:"bg-slate-900", text:"text-white", subText:"text-slate-400" },
+              { icon:"📊", label:"시뮬레이터", sub:"수익 분석하기",   href:"/simulator", bg:"bg-slate-900", text:"text-white", subText:"text-slate-400" },
               { icon:"🎮", label:"경영 게임",  sub:"90일 운영해보기", href:"/game",      bg:"bg-blue-600",  text:"text-white", subText:"text-blue-200" },
               { icon:"📈", label:"대시보드",   sub:"매출 현황 보기",  href:"/dashboard", bg:"bg-white",     text:"text-slate-900", subText:"text-slate-400" },
               { icon:"👥", label:"커뮤니티",   sub:"사장님들과 소통", href:"/community", bg:"bg-white",     text:"text-slate-900", subText:"text-slate-400" },
             ].map(b=>(
               <Link key={b.href} href={b.href}
-                className={`${b.bg} ${b.text} rounded-2xl p-5 ring-1 ring-slate-200 hover:opacity-90 transition block`}>
+                className={`${b.bg} ${b.text} rounded-2xl p-4 sm:p-5 ring-1 ring-slate-200 hover:opacity-90 transition block`}>
                 <p className="text-2xl mb-2">{b.icon}</p>
                 <p className="text-sm font-bold">{b.label}</p>
-                <p className={`text-xs mt-0.5 ${b.subText}`}>{b.sub}</p>
+                <p className={`text-xs mt-0.5 ${b.subText} hidden sm:block`}>{b.sub}</p>
               </Link>
             ))}
           </div>
+
+          {/* 6. TradingView 티커 */}
+          <StockTicker />
+
+          {/* 8. 이번 달 매출 미등록 알림 */}
+          {thisMonthSnap === null && (
+            <div className="rounded-2xl bg-amber-50 border border-amber-200 px-5 py-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">📋</span>
+                <div>
+                  <p className="text-sm font-semibold text-amber-800">이번 달 매출을 아직 등록하지 않으셨어요</p>
+                  <p className="text-xs text-amber-600 mt-0.5">매출을 등록하면 월별 현황과 순이익을 한눈에 볼 수 있어요</p>
+                </div>
+              </div>
+              <Link href="/dashboard" className="rounded-xl bg-amber-500 px-4 py-2 text-xs font-semibold text-white whitespace-nowrap hover:bg-amber-600 transition">
+                등록하기 →
+              </Link>
+            </div>
+          )}
+
+          {/* 이번 달 매출 등록된 경우 간단 요약 */}
+          {thisMonthSnap && (
+            <div className="rounded-2xl bg-white ring-1 ring-slate-200 px-5 py-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">📈</span>
+                <div>
+                  <p className="text-xs text-slate-400">{thisMonthSnap.month} 매출 현황</p>
+                  <p className="text-sm font-bold text-slate-900 mt-0.5">
+                    매출 <span className="text-blue-600">{fmtN(thisMonthSnap.total_sales)}원</span>
+                    <span className="text-slate-300 mx-2">·</span>
+                    순이익 <span className={thisMonthSnap.net_profit>=0?"text-emerald-600":"text-red-500"}>{thisMonthSnap.net_profit>=0?"+":""}{fmtN(thisMonthSnap.net_profit)}원</span>
+                  </p>
+                </div>
+              </div>
+              <Link href="/dashboard" className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition whitespace-nowrap">
+                상세보기 →
+              </Link>
+            </div>
+          )}
+
+          {/* 9. 최근 시뮬레이션 미리보기 */}
+          {latestSim && (
+            <div className="rounded-2xl bg-white ring-1 ring-slate-200 px-5 py-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">📊</span>
+                <div>
+                  <p className="text-xs text-slate-400">최근 시뮬레이션</p>
+                  <p className="text-sm font-bold text-slate-900 mt-0.5 truncate max-w-[200px] sm:max-w-none">{latestSim.label}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    매출 {fmtN(latestSim.result?.totalSales||0)}원 · 순이익 <span className={(latestSim.result?.netProfit||0)>=0?"text-emerald-600":"text-red-500"}>{(latestSim.result?.netProfit||0)>=0?"+":""}{fmtN(latestSim.result?.netProfit||0)}원</span>
+                  </p>
+                </div>
+              </div>
+              <Link href={`/result?historyId=${latestSim.id}`} className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-700 transition whitespace-nowrap">
+                결과 보기 →
+              </Link>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
 
@@ -706,8 +754,11 @@ export default function HomePage() {
   }, []);
 
   if (!checked) return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
+    <div className="min-h-screen bg-white">
+      <NavBar />
+      <div className="flex items-center justify-center h-[80vh]">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
+      </div>
     </div>
   );
 
