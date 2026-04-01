@@ -489,31 +489,50 @@ const TOOLS_HOME = [
 type NewsItem = { title:string; summary:string; source:string; url:string };
 import type { User } from "@supabase/supabase-js";
 
+type StockData = {
+  price:string; diff:string; pct:string; up:boolean;
+} | null;
+
 function StockTicker() {
-  const ref = useRef<HTMLDivElement>(null);
+  const [stocks, setStocks] = useState<{
+    kospi:StockData; kosdaq:StockData; usdkrw:StockData;
+  } | null>(null);
+
   useEffect(() => {
-    if (!ref.current || ref.current.querySelector("iframe")) return;
-    ref.current.innerHTML = '<div class="tradingview-widget-container__widget"></div>';
-    const s = document.createElement("script");
-    s.type = "text/javascript";
-    s.src = "https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js";
-    s.async = true;
-    s.innerHTML = JSON.stringify({
-      symbols:[
-        {proName:"AMEX:EWY",        title:"코스피(EWY)"},
-        {proName:"FX_IDC:USDKRW",   title:"달러/원"},
-        {proName:"COMEX:GC1!",      title:"금"},
-        {proName:"NYMEX:CL1!",      title:"국제유가"},
-        {proName:"AMEX:SPY",        title:"S&P500"},
-        {proName:"NASDAQ:QQQ",      title:"나스닥"},
-        {proName:"BITSTAMP:BTCUSD", title:"비트코인"},
-      ],
-      showSymbolLogo:false, isTransparent:false,
-      displayMode:"adaptive", colorTheme:"light", locale:"kr",
-    });
-    ref.current.appendChild(s);
+    fetch("/api/home")
+      .then(r => r.json())
+      .then(d => { if (d.stocks) setStocks(d.stocks); })
+      .catch(() => {});
   }, []);
-  return <div ref={ref} className="tradingview-widget-container rounded-2xl bg-white ring-1 ring-slate-200 overflow-hidden" style={{minHeight:50}} />;
+
+  const cards = [
+    { label:"KOSPI",   data: stocks?.kospi  },
+    { label:"KOSDAQ",  data: stocks?.kosdaq },
+    { label:"달러/원",  data: stocks?.usdkrw },
+  ];
+
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      {cards.map(({label, data}) => (
+        <div key={label} className="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3 text-center">
+          <p className="text-xs text-slate-400 mb-1">{label}</p>
+          {data ? (
+            <>
+              <p className="text-sm font-bold text-slate-900">{data.price}</p>
+              <p className={`text-xs font-semibold mt-0.5 ${data.up ? "text-red-500" : "text-blue-500"}`}>
+                {data.diff} ({data.pct})
+              </p>
+            </>
+          ) : (
+            <div className="animate-pulse space-y-1 mt-1">
+              <div className="h-4 bg-slate-100 rounded w-16 mx-auto" />
+              <div className="h-3 bg-slate-100 rounded w-12 mx-auto" />
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function MemberHome() {
