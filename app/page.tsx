@@ -500,11 +500,13 @@ function StockTicker() {
     s.async = true;
     s.innerHTML = JSON.stringify({
       symbols:[
-        {proName:"KRX:KOSPI",    title:"코스피"},
-        {proName:"KRX:KOSDAQ",   title:"코스닥"},
-        {proName:"OANDA:USDKRW", title:"달러/원"},
-        {proName:"OANDA:XAUUSD", title:"금"},
-        {proName:"INDEX:SPX",    title:"S&P500"},
+        {proName:"AMEX:EWY",        title:"코스피(EWY)"},
+        {proName:"FX_IDC:USDKRW",   title:"달러/원"},
+        {proName:"COMEX:GC1!",      title:"금"},
+        {proName:"NYMEX:CL1!",      title:"국제유가"},
+        {proName:"AMEX:SPY",        title:"S&P500"},
+        {proName:"NASDAQ:QQQ",      title:"나스닥"},
+        {proName:"BITSTAMP:BTCUSD", title:"비트코인"},
       ],
       showSymbolLogo:false, isTransparent:false,
       displayMode:"adaptive", colorTheme:"light", locale:"kr",
