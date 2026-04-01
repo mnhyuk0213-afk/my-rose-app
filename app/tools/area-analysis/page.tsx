@@ -5,13 +5,14 @@ import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
 
-type Industry = "cafe" | "restaurant" | "bar" | "finedining";
+type Industry = "cafe" | "restaurant" | "bar" | "finedining" | "gogi";
 
 const INDUSTRIES: { id: Industry; label: string; emoji: string }[] = [
   { id: "cafe", label: "카페", emoji: "☕" },
   { id: "restaurant", label: "음식점", emoji: "🍽️" },
   { id: "bar", label: "술집/바", emoji: "🍺" },
   { id: "finedining", label: "파인다이닝", emoji: "✨" },
+  { id: "gogi", label: "고깃집", emoji: "🥩" },
 ];
 
 const AREA_TYPES = ["주거지역", "오피스 밀집", "대학가", "관광지", "번화가/유흥가", "로드샵/외곽", "복합쇼핑몰 내"];
@@ -45,7 +46,7 @@ export default function AreaAnalysisPage() {
     setResult("");
 
     const industryLabels: Record<Industry, string> = {
-      cafe: "카페", restaurant: "일반 음식점", bar: "술집/바", finedining: "파인다이닝",
+      cafe: "카페", restaurant: "일반 음식점", bar: "술집/바", finedining: "파인다이닝", gogi: "고깃집",
     };
 
     const prompt = `당신은 외식업 상권 분석 전문 컨설턴트입니다.
