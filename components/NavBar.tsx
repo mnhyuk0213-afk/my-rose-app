@@ -108,7 +108,7 @@ export default function NavBar() {
                 <Link href="/profile" className="vela-user-name">
                   {user.user_metadata?.nickname ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "내 계정"}
                 </Link>
-                <Link href="/profile" className="vela-btn-dashboard">대시보드</Link>
+                <Link href="/dashboard" className="vela-btn-dashboard">대시보드</Link>
                 <button className="vela-btn-logout" onClick={handleLogout}>로그아웃</button>
                 <Link href="/simulator" className="vela-btn-start">시뮬레이터 →</Link>
               </>
@@ -143,7 +143,7 @@ export default function NavBar() {
         <a href="/#contact" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>문의</a>
         {user ? (
           <>
-            <Link href="/profile" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>대시보드</Link>
+            <Link href="/dashboard" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>대시보드</Link>
             <button className="vela-mobile-link" style={{ background:"none", border:"none", textAlign:"left", cursor:"pointer", fontFamily:"inherit", fontSize:"15px", fontWeight:"500", color:"#333D4B", padding:"12px 0" }} onClick={() => { handleLogout(); setMenuOpen(false); }}>로그아웃</button>
           </>
         ) : (
