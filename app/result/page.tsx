@@ -462,6 +462,9 @@ function ResultContent() {
   const [shareMemo, setShareMemo] = useState("");
   const [sharing, setSharing] = useState(false);
   const [shareMsg, setShareMsg] = useState("");
+  const [showCloudSave, setShowCloudSave] = useState(false);
+  const [cloudSaveTitle, setCloudSaveTitle] = useState("");
+  const [cloudSaving, setCloudSaving] = useState(false);
   const autoSavedRef = React.useRef(false);
 
   useEffect(() => {
@@ -498,18 +501,27 @@ function ResultContent() {
     }).then(() => {});
   }, [userId, form, result]);
 
-  const saveToCloud = async () => {
+  const saveToCloud = async (title?: string) => {
     if (!userId) { router.push("/login"); return; }
     const supabase = createSupabaseBrowserClient();
     const now = new Date();
-    const label = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const label = title || `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
     const { error } = await supabase.from("simulation_history").insert({
       user_id: userId, label, form,
       result: { totalSales: result.totalSales, profit: result.profit, netProfit: result.netProfit, netMargin: result.netMargin, bep: result.bep, recoveryMonthsActual: result.recoveryMonthsActual },
     });
     if (error) { setSaveMsg("저장 실패. 다시 시도해주세요."); return; }
-    setSaveMsg("클라우드에 저장되었습니다 ✓");
+    setSaveMsg(`'${label}' 저장 완료 ✓`);
     setTimeout(() => setSaveMsg(""), 3000);
+  };
+
+  const handleCloudSaveSubmit = async () => {
+    if (!cloudSaveTitle.trim()) return;
+    setCloudSaving(true);
+    await saveToCloud(cloudSaveTitle.trim());
+    setCloudSaving(false);
+    setShowCloudSave(false);
+    setCloudSaveTitle("");
   };
 
   // 커뮤니티 공유
@@ -581,7 +593,7 @@ function ResultContent() {
             <button onClick={() => { if (!userId) { router.push("/login"); return; } setShareTitle(`${config.label} 분석 결과 공유`); setShowShareModal(true); }} className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-500">
               👥 커뮤니티에 공유
             </button>
-            <button onClick={saveToCloud} className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700">
+            <button onClick={() => { if (!userId) { router.push("/login"); return; } setCloudSaveTitle(""); setShowCloudSave(true); }} className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700">
               {userId ? "☁️ 클라우드 저장" : "🔒 로그인 후 저장"}
             </button>
             {saveMsg && <span className="self-center text-sm font-medium text-emerald-600">{saveMsg}</span>}
@@ -592,6 +604,31 @@ function ResultContent() {
               </button>
             )}
           </div>
+
+          {/* 클라우드 저장 모달 */}
+          {showCloudSave && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setShowCloudSave(false)}>
+              <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+                <h3 className="text-base font-bold text-slate-900">☁️ 클라우드에 저장</h3>
+                <p className="text-xs text-slate-400">나중에 불러올 수 있도록 제목을 입력해주세요.</p>
+                <input
+                  value={cloudSaveTitle}
+                  onChange={e => setCloudSaveTitle(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") handleCloudSaveSubmit(); }}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-slate-400"
+                  placeholder="예: 홍대 카페 2026년 4월"
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button onClick={() => setShowCloudSave(false)} className="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">취소</button>
+                  <button onClick={handleCloudSaveSubmit} disabled={!cloudSaveTitle.trim() || cloudSaving}
+                    className="flex-1 rounded-xl bg-slate-900 py-2.5 text-sm font-semibold text-white disabled:opacity-40">
+                    {cloudSaving ? "저장 중..." : "저장하기"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* 커뮤니티 공유 모달 */}
           {showShareModal && (
