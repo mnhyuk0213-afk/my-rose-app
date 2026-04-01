@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import { useSearchParams, Suspense } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 
 function FailContent() {
