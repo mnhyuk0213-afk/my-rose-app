@@ -2,7 +2,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
-import NavBarComponent from "@/components/NavBar";
 
 
 
@@ -357,15 +356,11 @@ function gradeOf(sc: number) {
   return {g:"D",c:RD,e:"💸"};
 }
 
-// ── NavBar ──────────────────────────────────────────────────
-// ── NavBar: 공통 컴포넌트 사용 (랜딩페이지와 동일)
-const NavBar = () => <NavBarComponent />;
-
 // ── 메인 메뉴 ───────────────────────────────────────────────
 function Menu({onNew,onLoad,saved}:{onNew:()=>void;onLoad:()=>void;saved:S|null}) {
   return (
     <div style={{minHeight:"100vh",background:G50,fontFamily:"'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif"}}>
-      <NavBar />
+      
       <div style={{maxWidth:480,margin:"0 auto",padding:"48px 20px"}}>
         <div style={{textAlign:"center",marginBottom:40}}>
           <div style={{fontSize:60,marginBottom:12}}>🏪</div>
@@ -543,7 +538,7 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
   ];
 
   if (step===0) return (
-    <div style={{minHeight:"100vh",background:G50,fontFamily:"'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif"}}><NavBar />
+    <div style={{minHeight:"100vh",background:G50,fontFamily:"'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif"}}>
       <div style={{maxWidth:520,margin:"0 auto",padding:"32px 20px"}}>
         {bar}
         <h2 style={{fontSize:24,fontWeight:800,color:G900,marginBottom:6,fontFamily:"inherit"}}>게임 모드를 선택하세요</h2>
@@ -572,7 +567,7 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
   );
 
   if (step===1) return (
-    <div style={{minHeight:"100vh",background:G50,fontFamily:"'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif"}}><NavBar />
+    <div style={{minHeight:"100vh",background:G50,fontFamily:"'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif"}}>
       <div style={{maxWidth:520,margin:"0 auto",padding:"32px 20px"}}>
         {bar}
         <h2 style={{fontSize:24,fontWeight:800,color:G900,marginBottom:6,fontFamily:"inherit"}}>어떤 업종으로 시작할까요?</h2>
@@ -603,7 +598,7 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
   );
 
   if (step===2) return (
-    <div style={{minHeight:"100vh",background:G50,fontFamily:"'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif"}}><NavBar />
+    <div style={{minHeight:"100vh",background:G50,fontFamily:"'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif"}}>
       <div style={{maxWidth:520,margin:"0 auto",padding:"32px 20px"}}>
         {bar}
         <h2 style={{fontSize:24,fontWeight:800,color:G900,marginBottom:6,fontFamily:"inherit"}}>게임 조건을 설정하세요</h2>
@@ -757,7 +752,7 @@ function Setup({onStart}:{onStart:(s:S)=>void}) {
 
   if (step!==3) return null;
   return (
-    <div style={{minHeight:"100vh",background:G50,fontFamily:"'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif"}}><NavBar />
+    <div style={{minHeight:"100vh",background:G50,fontFamily:"'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif"}}>
       <div style={{maxWidth:520,margin:"0 auto",padding:"32px 20px"}}>
         {bar}
         {/* 모드 뱃지 */}
@@ -908,7 +903,7 @@ function Play({s, setS, onOver}:{s:S; setS:React.Dispatch<React.SetStateAction<S
         @keyframes rain{0%{opacity:0;transform:translateY(-10px)}80%{opacity:.5}100%{transform:translateY(185px);opacity:0}}
         @keyframes snow{0%{opacity:0;transform:translateY(-10px)rotate(0)}100%{opacity:0;transform:translateY(185px)rotate(360deg)}}
       `}</style>
-      <NavBar />
+      
       <div style={{maxWidth:500,margin:"0 auto",padding:14,display:"flex",flexDirection:"column",gap:10}}>
 
         {/* HUD */}
@@ -1150,7 +1145,7 @@ function Over({s, onMenu, onRestart}:{s:S; onMenu:()=>void; onRestart:()=>void})
 
   return (
     <div style={{minHeight:"100vh",background:G50,fontFamily:"'Pretendard','Apple SD Gothic Neo',system-ui,sans-serif"}}>
-      <NavBar />
+      
       <div style={{maxWidth:480,margin:"0 auto",padding:"28px 20px"}}>
         <div style={{textAlign:"center",marginBottom:20}}>
           <div style={{fontSize:60,marginBottom:8}}>{e}</div>

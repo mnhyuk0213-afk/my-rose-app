@@ -2,7 +2,6 @@
 
 import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
-import NavBar from "@/components/NavBar";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 
 function useInView() {
@@ -205,7 +204,7 @@ function LandingContent() {
         @media(max-width:640px){.features-grid,.pricing-grid,.testi-grid,.steps-grid{grid-template-columns:1fr}.hero-stats{flex-direction:column;gap:20px}.form-row{grid-template-columns:1fr}.footer-top{flex-direction:column;gap:24px}.footer-bottom{flex-direction:column;gap:16px;text-align:center}.hero-actions{flex-direction:column}}
       `}</style>
 
-      <NavBar />
+      
 
 
       {/* HERO */}
@@ -554,7 +553,7 @@ function MemberHome() {
   const fmtN = (n: number) => Math.round(n).toLocaleString("ko-KR");
 
   if (loading) return (
-    <div className="min-h-screen bg-slate-50"><NavBar />
+    <div className="min-h-screen bg-slate-50">
       <div className="flex items-center justify-center h-[80vh]">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
       </div>
@@ -563,7 +562,7 @@ function MemberHome() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <NavBar />
+      
       <main className="px-4 py-8 md:px-8">
         <div className="mx-auto max-w-4xl space-y-5">
 

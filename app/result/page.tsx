@@ -3,7 +3,6 @@
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
-import NavBar from "@/components/NavBar";
 import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -569,7 +568,7 @@ function ResultContent() {
 
   return (
     <div className="min-h-screen bg-slate-50 print:bg-white">
-      <NavBar />
+      
       <main className="px-4 py-6 md:px-8 print:px-0">
       <div className="mx-auto max-w-7xl space-y-6">
 

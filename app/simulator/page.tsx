@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
-import NavBar from "@/components/NavBar";
 import {
   INDUSTRY_CONFIG,
   VALID_INDUSTRIES,
@@ -1865,7 +1864,7 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <NavBar />
+      
       <main className="px-4 py-6 md:px-8">
       <div className="mx-auto max-w-7xl">
 

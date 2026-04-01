@@ -2,7 +2,6 @@
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import NavBar from "@/components/NavBar";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import type { User } from "@supabase/supabase-js";
 
@@ -65,7 +64,7 @@ export default function DashboardHome() {
 
   if (loading) return (
     <div className="min-h-screen bg-slate-50">
-      <NavBar />
+      
       <div className="mx-auto max-w-5xl px-4 py-8 md:px-8 space-y-4 animate-pulse">
         <div className="h-8 bg-slate-200 rounded-2xl w-48" />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -78,7 +77,7 @@ export default function DashboardHome() {
   );
 
   if (!user) return (
-    <div className="min-h-screen bg-slate-50"><NavBar />
+    <div className="min-h-screen bg-slate-50">
       <div className="flex flex-col items-center justify-center h-[80vh] gap-4">
         <p className="text-xl font-bold text-slate-900">로그인 후 이용하세요</p>
         <Link href="/login" className="rounded-2xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white">로그인</Link>
@@ -88,7 +87,7 @@ export default function DashboardHome() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <NavBar />
+      
       <main className="px-4 py-8 md:px-8">
         <div className="mx-auto max-w-6xl space-y-6">
 
