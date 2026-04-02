@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient, supabaseAdmin } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    /* ── 2. 인증된 사용자 확인 ── */
+    /* ── 2. 인증된 사용자 확인 (쿠키 기반) ── */
     const supabase = await createSupabaseServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -52,10 +52,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    /* ── 3. payments 테이블에 결제 내역 저장 ── */
+    /* ── 3. payments 테이블에 결제 내역 저장 (admin: RLS 우회) ── */
     const plan = parsePlan(orderId);
 
-    const { error: insertError } = await supabase.from("payments").insert({
+    const { error: insertError } = await supabaseAdmin.from("payments").insert({
       user_id: user.id,
       plan,
       amount: Number(amount),
@@ -66,7 +66,6 @@ export async function POST(req: NextRequest) {
 
     if (insertError) {
       console.error("Payment insert error:", insertError);
-      // 결제는 성공했으므로 에러를 삼키지 않되, 사용자에게 알림
       return NextResponse.json({
         success: true,
         payment: tossData,
@@ -74,15 +73,14 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    /* ── 4. profiles 테이블의 plan 필드 업데이트 ── */
-    const { error: updateError } = await supabase
+    /* ── 4. profiles 테이블의 plan 필드 업데이트 (admin: RLS 우회) ── */
+    const { error: updateError } = await supabaseAdmin
       .from("profiles")
       .update({ plan })
       .eq("id", user.id);
 
     if (updateError) {
       console.error("Profile plan update error:", updateError);
-      // payments에는 저장됐으므로 치명적이지 않음
     }
 
     return NextResponse.json({ success: true, payment: tossData });
