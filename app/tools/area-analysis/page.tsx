@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
+import PlanGate from "@/components/PlanGate";
 
 type Industry = "cafe" | "restaurant" | "bar" | "finedining" | "gogi";
 
@@ -120,6 +121,7 @@ export default function AreaAnalysisPage() {
     <>
       <NavBar />
       <ToolNav />
+      <PlanGate>
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:pl-60">
         <div className="mx-auto max-w-3xl">
           <div className="flex items-center gap-3 mb-8 mt-4">
@@ -282,6 +284,7 @@ export default function AreaAnalysisPage() {
           </div>
         </div>
       </main>
+      </PlanGate>
     </>
   );
 }

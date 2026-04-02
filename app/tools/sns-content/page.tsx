@@ -6,6 +6,7 @@ import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
 import { useSimulatorData } from "@/lib/useSimulatorData";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
+import PlanGate from "@/components/PlanGate";
 
 type Tone = "warm" | "trendy" | "professional" | "fun";
 type Platform = "instagram" | "naver-blog" | "kakao";
@@ -124,6 +125,7 @@ ${simContext}
     <>
       <NavBar />
       <ToolNav />
+      <PlanGate>
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:pl-60">
         <div className="mx-auto max-w-3xl">
           <div className="flex items-center gap-3 mb-8 mt-4">
@@ -354,6 +356,7 @@ ${simContext}
           </div>
         </div>
       </main>
+      </PlanGate>
     </>
   );
 }

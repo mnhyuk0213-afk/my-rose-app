@@ -5,6 +5,7 @@ import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
+import PlanGate from "@/components/PlanGate";
 import { useSimulatorData } from "@/lib/useSimulatorData";
 
 type ReplyTone = "apologetic" | "grateful" | "professional" | "friendly";
@@ -123,6 +124,7 @@ ${review}
     <>
       <NavBar />
       <ToolNav />
+      <PlanGate>
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:pl-60">
         <div className="mx-auto max-w-3xl">
           <div className="flex items-center gap-3 mb-8 mt-4">
@@ -302,6 +304,7 @@ ${review}
           </div>
         </div>
       </main>
+      </PlanGate>
     </>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import { useSimulatorData } from "@/lib/useSimulatorData";
+import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 
 const TOOLS = [
   {
@@ -59,6 +60,7 @@ const TOOLS = [
     color: "#DB2777",
     bg: "#FDF2F8",
     badge: "AI",
+    paid: true,
   },
   {
     href: "/tools/review-reply",
@@ -68,6 +70,7 @@ const TOOLS = [
     color: "#EA580C",
     bg: "#FFF7ED",
     badge: "AI",
+    paid: true,
   },
   {
     href: "/tools/area-analysis",
@@ -77,12 +80,26 @@ const TOOLS = [
     color: "#65A30D",
     bg: "#F7FEE7",
     badge: "AI",
+    paid: true,
   },
-];
+] as const;
 
 export default function ToolsPage() {
   const simData = useSimulatorData();
   const fmt = (n: number) => n.toLocaleString("ko-KR");
+  const [plan, setPlan] = useState<string>("free");
+
+  useEffect(() => {
+    const sb = createSupabaseBrowserClient();
+    sb.auth.getUser().then(({ data: { user } }: { data: { user: { id: string } | null } }) => {
+      if (!user) return;
+      sb.from("payments").select("plan").eq("user_id", user.id).eq("status", "done")
+        .order("created_at", { ascending: false }).limit(1)
+        .then(({ data }: { data: { plan: string }[] | null }) => {
+          if (data && data.length > 0) setPlan(data[0].plan);
+        });
+    });
+  }, []);
 
   const industryLabel: Record<string, string> = {
     cafe: "카페", restaurant: "음식점", bar: "술집/바", finedining: "파인다이닝", gogi: "고깃집",
@@ -141,40 +158,62 @@ export default function ToolsPage() {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {TOOLS.map((tool) => (
-              <Link
-                key={tool.href}
-                href={tool.href}
-                className="group rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 p-6 flex gap-4 items-start hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-              >
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
-                  style={{ background: tool.bg }}
+            {TOOLS.map((tool) => {
+              const locked = "paid" in tool && tool.paid && plan === "free";
+              const Wrapper = locked ? "div" : Link;
+              return (
+                <Wrapper
+                  key={tool.href}
+                  {...(locked ? {} : { href: tool.href })}
+                  className={`group rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 p-6 flex gap-4 items-start transition-all duration-200 relative ${
+                    locked
+                      ? "opacity-75 cursor-not-allowed"
+                      : "hover:shadow-md hover:-translate-y-0.5"
+                  }`}
                 >
-                  {tool.emoji}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-slate-900 text-base">{tool.title}</span>
-                    {tool.badge && (
-                      <span
-                        className="text-xs font-bold px-1.5 py-0.5 rounded-md"
-                        style={{ background: tool.bg, color: tool.color }}
-                      >
-                        {tool.badge}
-                      </span>
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+                    style={{ background: tool.bg }}
+                  >
+                    {locked ? "🔒" : tool.emoji}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-bold text-slate-900 text-base">{tool.title}</span>
+                      {tool.badge && (
+                        <span
+                          className="text-xs font-bold px-1.5 py-0.5 rounded-md"
+                          style={{ background: tool.bg, color: tool.color }}
+                        >
+                          {tool.badge}
+                        </span>
+                      )}
+                    </div>
+                    {locked ? (
+                      <div>
+                        <p className="text-sm text-slate-400 mb-2">{tool.desc}</p>
+                        <Link
+                          href="/pricing"
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 transition"
+                        >
+                          스탠다드 플랜으로 업그레이드 →
+                        </Link>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-500 leading-relaxed">{tool.desc}</p>
                     )}
                   </div>
-                  <p className="text-sm text-slate-500 leading-relaxed">{tool.desc}</p>
-                </div>
-                <svg
-                  className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition flex-shrink-0 mt-1"
-                  viewBox="0 0 16 16" fill="none"
-                >
-                  <path d="M5 3l6 5-6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </Link>
-            ))}
+                  {!locked && (
+                    <svg
+                      className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition flex-shrink-0 mt-1"
+                      viewBox="0 0 16 16" fill="none"
+                    >
+                      <path d="M5 3l6 5-6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </Wrapper>
+              );
+            })}
           </div>
 
           <div className="mt-8 rounded-2xl bg-slate-900 px-6 py-5 flex items-center gap-4">
