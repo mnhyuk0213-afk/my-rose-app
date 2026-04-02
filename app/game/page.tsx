@@ -1116,12 +1116,19 @@ function Over({s, onMenu, onRestart}:{s:S; onMenu:()=>void; onRestart:()=>void})
   const [submitted, setSubmitted] = useState(false);
   const [myRank, setMyRank] = useState<number|null>(null);
   const [nick, setNick] = useState("익명 사장님");
+  const [topRanks, setTopRanks] = useState<{nickname:string;score:number;grade:string;industry_icon:string}[]>([]);
 
   useEffect(()=>{
     delSave();
     (async()=>{
       try {
         const sb2 = createSupabaseBrowserClient();
+        // Top 10 리더보드 불러오기
+        sb2.from("game_rankings").select("nickname,score,grade,industry_icon")
+          .order("score",{ascending:false}).limit(10)
+          .then(({data}:{data:{nickname:string;score:number;grade:string;industry_icon:string}[]|null})=>{
+            if(data) setTopRanks(data);
+          });
         const {data:{user}} = await sb2.auth.getUser();
         let n = "익명 사장님";
         if (user) {
@@ -1185,6 +1192,27 @@ function Over({s, onMenu, onRestart}:{s:S; onMenu:()=>void; onRestart:()=>void})
             <p style={{fontSize:14,color:G600,margin:0}}>랭킹 등록 중...</p>
           )}
         </div>
+
+        {/* 글로벌 Top 10 리더보드 */}
+        {topRanks.length > 0 && (
+          <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16,marginBottom:14}}>
+            <p style={{fontSize:15,fontWeight:700,color:G900,margin:"0 0 12px"}}>🏆 글로벌 랭킹 Top 10</p>
+            {topRanks.map((r,i)=>{
+              const isMe = r.nickname === nick && r.score === sc;
+              return (
+                <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderTop:i>0?"1px solid "+G100:"none",background:isMe?"#EBF3FF":"transparent",borderRadius:isMe?8:0,margin:isMe?"-4px -8px":0,padding:isMe?"8px 8px":"8px 0"}}>
+                  <span style={{width:24,textAlign:"center",fontSize:i<3?16:13,fontWeight:700,color:i===0?"#F59E0B":i===1?"#9CA3AF":i===2?"#CD7F32":G400}}>
+                    {i<3?["🥇","🥈","🥉"][i]:`${i+1}`}
+                  </span>
+                  <span style={{fontSize:16}}>{r.industry_icon||"🏪"}</span>
+                  <span style={{flex:1,fontSize:14,fontWeight:isMe?700:500,color:isMe?B:G900,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.nickname}</span>
+                  <span style={{fontSize:13,fontWeight:700,color:G600}}>{r.score.toLocaleString()}점</span>
+                  <span style={{fontSize:12,fontWeight:700,color:gradeOf(r.score).c}}>{r.grade}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <div style={{background:"#fff",border:"1px solid "+G200,borderRadius:16,padding:16,marginBottom:14}}>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
