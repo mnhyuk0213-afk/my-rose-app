@@ -538,7 +538,15 @@ function WriteAnonForm({ userId, onDone, onCancel }: { userId: string | null; on
     if (!form.title.trim() || !form.content.trim()) return alert("제목과 내용을 입력해주세요.");
     setLoading(true);
     const sb = createSupabaseBrowserClient();
-    await sb.from("anonymous_posts").insert({ user_id: userId ?? null, ...form });
+    const { data } = await sb.from("anonymous_posts").insert({ user_id: userId ?? null, ...form }).select("id").single();
+    // 백그라운드에서 AI 답변 생성 (fire-and-forget)
+    if (data?.id) {
+      fetch("/api/anon-ai-reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId: data.id }),
+      }).catch(() => {});
+    }
     setLoading(false);
     onDone();
   };
@@ -577,45 +585,40 @@ function AnonDetail({ post, userId, onBack }: { post: AnonPost; userId: string |
   const [aiLoading, setAiLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const loadComments = useCallback(async () => {
     const sb = createSupabaseBrowserClient();
     const { data } = await sb.from("anonymous_comments").select("*").eq("post_id", post.id).order("created_at");
     setComments(data ?? []);
-    // 첫 로딩 시 AI 답변 없으면 자동 생성
-    if ((data ?? []).length === 0) generateAIReply();
-  }, [post.id]);
 
-  useEffect(() => { loadComments(); }, [loadComments]);
-
-  const generateAIReply = async () => {
-    setAiLoading(true);
-    try {
-      const res = await fetch("/api/chat", {
+    const hasAI = (data ?? []).some((c: AnonComment) => c.is_ai);
+    if (!hasAI) {
+      // AI 답변이 없으면 서버에 생성 요청 + 폴링
+      setAiLoading(true);
+      fetch("/api/anon-ai-reply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [{ role: "user", content: `${post.title}\n\n${post.content}` }],
-          context: { industry: post.industry, isAnonymousConsult: true },
-        }),
-      });
-      if (!res.ok || !res.body) return;
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let aiText = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        aiText += decoder.decode(value, { stream: true });
+        body: JSON.stringify({ postId: post.id }),
+      }).catch(() => {});
+
+      // 3초마다 AI 답변이 들어왔는지 확인
+      if (!pollRef.current) {
+        pollRef.current = setInterval(async () => {
+          const { data: fresh } = await sb.from("anonymous_comments").select("*").eq("post_id", post.id).order("created_at");
+          if (fresh && fresh.some((c: AnonComment) => c.is_ai)) {
+            setComments(fresh);
+            setAiLoading(false);
+            if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+          }
+        }, 3000);
       }
-      if (aiText.trim()) {
-        const sb = createSupabaseBrowserClient();
-        await sb.from("anonymous_comments").insert({ post_id: post.id, content: aiText, is_ai: true });
-        await loadComments();
-      }
-    } catch { /* skip */ } finally {
+    } else {
       setAiLoading(false);
     }
-  };
+  }, [post.id]);
+
+  useEffect(() => { loadComments(); return () => { if (pollRef.current) clearInterval(pollRef.current); }; }, [loadComments]);
 
   const submitComment = async () => {
     if (!input.trim()) return;
