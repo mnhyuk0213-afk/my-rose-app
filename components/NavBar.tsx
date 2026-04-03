@@ -14,6 +14,7 @@ const TOOLS = [
   { icon:"📱", label:"SNS 콘텐츠 생성기",  desc:"인스타 캡션 AI 자동 생성",         href:"/tools/sns-content" },
   { icon:"💬", label:"리뷰 답변 생성기",    desc:"AI 맞춤 답변 초안 작성",           href:"/tools/review-reply" },
   { icon:"🗺️", label:"상권 분석 도우미",   desc:"AI 상권 적합도 평가 리포트",       href:"/tools/area-analysis" },
+  { icon:"🎮", label:"경영 시뮬레이션 게임", desc:"90일 가상 매장 운영 체험",      href:"/game" },
 ] as const;
 
 export default function NavBar() {
@@ -59,10 +60,7 @@ export default function NavBar() {
             </div>
             <Link href="/community">커뮤니티</Link>
             <Link href="/guide">가이드</Link>
-            <Link href="/dashboard">노트</Link>
-            <Link href="/game">🎮 게임</Link>
             <Link href="/pricing">요금제</Link>
-            <a href="/#contact">문의</a>
           </div>
 
           <div className="vela-nav-actions">
@@ -102,10 +100,7 @@ export default function NavBar() {
         </div>
         <Link href="/community" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>커뮤니티</Link>
         <Link href="/guide" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>📖 가이드</Link>
-        <Link href="/dashboard" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>📝 노트</Link>
-        <Link href="/game" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>🎮 게임</Link>
         <Link href="/pricing" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>요금제</Link>
-        <a href="/#contact" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>문의</a>
         {user ? (
           <>
             <Link href="/dashboard" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>대시보드</Link>
