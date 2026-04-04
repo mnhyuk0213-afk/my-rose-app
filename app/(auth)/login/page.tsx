@@ -124,6 +124,17 @@ function LoginForm() {
               className="w-full rounded-2xl bg-slate-900 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50">
               {loading ? "로그인 중..." : "이메일로 로그인"}
             </button>
+            <button type="button" onClick={async () => {
+              if (!email) { setError("이메일을 입력해주세요."); return; }
+              const supabase = createSupabaseBrowserClient();
+              const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/reset-password`,
+              });
+              if (error) setError(error.message);
+              else setError("비밀번호 재설정 이메일을 보냈습니다. 메일을 확인해주세요.");
+            }} className="w-full text-xs text-slate-400 hover:text-slate-600 py-2 transition">
+              비밀번호를 잊으셨나요?
+            </button>
           </form>
 
           <p className="mt-5 text-center text-sm text-slate-400">
