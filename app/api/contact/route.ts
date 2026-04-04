@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
 
+function esc(s: string) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
 export async function POST(req: NextRequest) {
   try {
     const { name, email, message } = await req.json();
@@ -10,6 +12,10 @@ export async function POST(req: NextRequest) {
     if (!name || !email || !message) {
       return NextResponse.json({ error: "필드를 모두 입력해 주세요." }, { status: 400 });
     }
+
+    const safeName = esc(String(name).slice(0, 100));
+    const safeEmail = esc(String(email).slice(0, 200));
+    const safeMessage = esc(String(message).slice(0, 5000));
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -21,22 +27,22 @@ export async function POST(req: NextRequest) {
         from: "VELA 문의 <contact@velaanalytics.com>",
         to: ["mnhyuk@velaanalytics.com"],
         reply_to: email,
-        subject: `[VELA 문의] ${name}님의 문의`,
+        subject: `[VELA 문의] ${safeName}님의 문의`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
             <h2 style="color: #3182F6; margin-bottom: 24px;">새 문의가 도착했습니다</h2>
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #666; width: 80px;">이름</td>
-                <td style="padding: 12px 0; border-bottom: 1px solid #eee; font-weight: 600;">${name}</td>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee; font-weight: 600;">${safeName}</td>
               </tr>
               <tr>
                 <td style="padding: 12px 0; border-bottom: 1px solid #eee; color: #666;">이메일</td>
-                <td style="padding: 12px 0; border-bottom: 1px solid #eee;">${email}</td>
+                <td style="padding: 12px 0; border-bottom: 1px solid #eee;">${safeEmail}</td>
               </tr>
               <tr>
                 <td style="padding: 12px 16px 12px 0; color: #666; vertical-align: top;">문의</td>
-                <td style="padding: 12px 0; white-space: pre-wrap;">${message}</td>
+                <td style="padding: 12px 0; white-space: pre-wrap;">${safeMessage}</td>
               </tr>
             </table>
             <p style="margin-top: 24px; color: #999; font-size: 13px;">

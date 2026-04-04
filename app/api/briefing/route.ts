@@ -3,7 +3,12 @@ import { NextRequest } from "next/server";
 export const runtime = "edge";
 
 export async function POST(req: NextRequest) {
-  const { form, result } = await req.json();
+  try {
+  const body = await req.json().catch(() => null);
+  if (!body?.form || !body?.result) {
+    return new Response(JSON.stringify({ error: "입력값이 올바르지 않습니다." }), { status: 400 });
+  }
+  const { form, result } = body;
 
   const industryLabels: Record<string, string> = {
     cafe: "카페", restaurant: "일반 음식점", bar: "술집/바", finedining: "파인다이닝",
@@ -71,5 +76,9 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify(parsed), { headers: { "Content-Type": "application/json" } });
   } catch {
     return new Response(JSON.stringify({ error: "응답 파싱 실패" }), { status: 500 });
+  }
+  } catch (e) {
+    console.error("Briefing error:", e);
+    return new Response(JSON.stringify({ error: "서버 오류" }), { status: 500 });
   }
 }

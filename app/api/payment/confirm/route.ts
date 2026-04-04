@@ -54,8 +54,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    /* ── 3. payments 테이블에 결제 내역 저장 (인증된 클라이언트 + RLS) ── */
+    /* ── 3. 결제 금액 검증 ── */
     const plan = parsePlan(orderId);
+    const PLAN_PRICES: Record<string, number> = { standard: 9900, pro: 29900 };
+    const expectedPrice = PLAN_PRICES[plan];
+    if (expectedPrice && Number(amount) !== expectedPrice) {
+      console.error("Payment amount mismatch:", { plan, expected: expectedPrice, actual: amount });
+      return NextResponse.json({ error: "결제 금액이 올바르지 않습니다." }, { status: 400 });
+    }
 
     // 이미 저장된 결제인지 확인 (중복 방지)
     const { data: existing } = await supabase
