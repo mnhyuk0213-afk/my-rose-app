@@ -105,13 +105,6 @@ function LoginForm() {
               </svg>
               카카오로 시작하기
             </button>
-            <button
-              onClick={() => handleSocialLogin("naver")}
-              className="w-full flex items-center justify-center gap-3 rounded-2xl bg-[#03C75A] px-4 py-3 text-sm font-semibold text-white transition hover:brightness-95"
-            >
-              <span className="text-base font-black leading-none">N</span>
-              네이버로 시작하기
-            </button>
           </div>
 
           <div className="relative mb-6">

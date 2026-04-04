@@ -128,7 +128,6 @@ function SignUpForm() {
               <div className="space-y-2">
                 {[
                   { provider: "kakao", label: "카카오로 시작하기", bg: "#FEE500", color: "#191919", emoji: "💛" },
-                  { provider: "naver", label: "네이버로 시작하기", bg: "#03C75A", color: "#fff", emoji: "N" },
                 ].map(({ provider, label, bg, color, emoji }) => (
                   <button key={provider}
                     onClick={async () => {
