@@ -51,11 +51,13 @@ export default function ToolsPage() {
   const simData = useSimulatorData();
   const fmt = (n: number) => n.toLocaleString("ko-KR");
   const [plan, setPlan] = useState<string>("free");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const sb = createSupabaseBrowserClient();
     sb.auth.getUser().then(({ data: { user } }: { data: { user: { id: string } | null } }) => {
       if (!user) return;
+      setIsLoggedIn(true);
       sb.from("payments").select("plan").eq("user_id", user.id).eq("status", "done")
         .order("created_at", { ascending: false }).limit(1)
         .then(({ data }: { data: { plan: string }[] | null }) => {
@@ -88,8 +90,8 @@ export default function ToolsPage() {
             </p>
           </div>
 
-          {/* 시뮬레이터 연계 배너 */}
-          {simData ? (
+          {/* 시뮬레이터 연계 배너 (로그인 시에만) */}
+          {isLoggedIn && simData ? (
             <div className="rounded-2xl bg-slate-900 px-5 py-4 mb-6 flex items-center gap-4 flex-wrap">
               <div className="flex-1">
                 <p className="text-xs text-slate-400 mb-1">
@@ -111,14 +113,14 @@ export default function ToolsPage() {
                 시뮬레이터 →
               </Link>
             </div>
-          ) : (
+          ) : isLoggedIn ? (
             <div className="rounded-2xl bg-slate-100 px-5 py-4 mb-6 flex items-center gap-3">
               <span className="text-slate-400 text-sm">💡 시뮬레이터를 먼저 실행하면 도구들과 데이터가 연결됩니다.</span>
               <Link href="/simulator" className="ml-auto flex-shrink-0 rounded-xl bg-slate-900 text-white text-xs font-semibold px-3 py-2">
                 시뮬레이터 →
               </Link>
             </div>
-          )}
+          ) : null}
 
           {CATEGORIES.map((cat) => (
             <div key={cat.key} className="mb-8">
