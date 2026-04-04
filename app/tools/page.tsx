@@ -43,7 +43,8 @@ const CATEGORIES = [
     ],
   },
 ];
-const TOOLS = CATEGORIES.flatMap(c => c.tools);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const TOOLS = CATEGORIES.flatMap(c => c.tools) as any[];
 
 export default function ToolsPage() {
   const simData = useSimulatorData();
