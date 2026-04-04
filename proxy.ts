@@ -9,6 +9,8 @@ const PROTECTED_PATHS = [
   "/monthly-input",
   "/my-store",
   "/payment",
+  "/stores",
+  "/team",
 ];
 
 // 관리자만 접근 가능

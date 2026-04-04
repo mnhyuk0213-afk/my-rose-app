@@ -5,6 +5,7 @@ import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
+import PlanGate from "@/components/PlanGate";
 
 type SimHistory = { id: string; label: string; form: Record<string, number | string>; result: Record<string, number> };
 type MonthSnap = { month: string; monthly_sales: number; rent: number; labor_cost: number; utilities: number; marketing: number; etc: number; cogs_rate: number; profit: number; industry: string };
@@ -192,7 +193,7 @@ export default function PLReportPage() {
       `}</style>
       <div className="no-print"><NavBar /></div>
       <ToolNav />
-
+      <PlanGate>
       <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:pl-60">
         <div className="mx-auto max-w-5xl">
           {/* 헤더 */}
@@ -435,6 +436,7 @@ export default function PLReportPage() {
           </div>
         </div>
       </main>
+      </PlanGate>
     </>
   );
 }
