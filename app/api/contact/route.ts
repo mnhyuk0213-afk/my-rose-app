@@ -24,8 +24,8 @@ export async function POST(req: NextRequest) {
         Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "VELA 문의 <contact@velaanalytics.com>",
-        to: ["mnhyuk@velaanalytics.com"],
+        from: "VELA 문의 <onboarding@resend.dev>",
+        to: ["mnhyuk0213@gmail.com"],
         reply_to: email,
         subject: `[VELA 문의] ${safeName}님의 문의`,
         html: `

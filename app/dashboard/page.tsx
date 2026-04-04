@@ -34,6 +34,9 @@ export default function DashboardHome() {
   const [menus, setMenus]         = useState<MenuCost[]>([]);
   const [feed, setFeed]           = useState<FeedPost[]>([]);
   const [loading, setLoading]     = useState(true);
+  const [monthlyGoal, setMonthlyGoal] = useState<number|null>(null);
+  const [goalInput, setGoalInput]     = useState("");
+  const [showGoalModal, setShowGoalModal] = useState(false);
   const sb = typeof window !== "undefined" ? createSupabaseBrowserClient() : null;
 
   useEffect(() => {
@@ -55,6 +58,97 @@ export default function DashboardHome() {
       setLoading(false);
     });
   }, [sb]);
+
+  // 목표 달성 게이지: localStorage에서 목표 불러오기
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem("vela-monthly-goal");
+    if (saved) setMonthlyGoal(Number(saved));
+  }, []);
+
+  const handleSetGoal = () => {
+    const val = Number(goalInput.replace(/[^0-9]/g, ""));
+    if (val > 0) {
+      localStorage.setItem("vela-monthly-goal", String(val));
+      setMonthlyGoal(val);
+      setShowGoalModal(false);
+      setGoalInput("");
+    }
+  };
+
+  // 알림 센터: 알림 생성
+  const generateAlerts = () => {
+    const alerts: { type: "warning"|"critical"|"good"; message: string }[] = [];
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const hasCurrentMonth = snapshots.some(s => s.month === currentMonth);
+
+    if (!hasCurrentMonth) {
+      alerts.push({ type: "warning", message: "📋 이번 달 매출을 아직 등록하지 않았어요" });
+    }
+
+    if (latestSnap) {
+      const costRate = latestSnap.cogs / (latestSnap.total_sales || 1) * 100;
+      const benchmarkCostRate = 35;
+      if (costRate > benchmarkCostRate) {
+        alerts.push({ type: "critical", message: "⚠️ 원가율이 업계 평균보다 높습니다" });
+      }
+    }
+
+    const sorted = [...snapshots].sort((a, b) => a.month.localeCompare(b.month));
+    if (sorted.length >= 3) {
+      const last3 = sorted.slice(-3);
+      if (last3[2].net_profit < last3[1].net_profit && last3[1].net_profit < last3[0].net_profit) {
+        alerts.push({ type: "critical", message: "📉 순이익이 2개월 연속 감소 중입니다" });
+      }
+    }
+
+    if (alerts.length === 0) {
+      alerts.push({ type: "good", message: "✅ 매장이 건강하게 운영되고 있어요" });
+    }
+
+    return alerts.slice(0, 3);
+  };
+
+  // 매출 예측: 선형 회귀
+  const generatePredictions = () => {
+    const sorted = [...snapshots].sort((a, b) => a.month.localeCompare(b.month));
+    if (sorted.length < 3) return null;
+    const n = sorted.length;
+    const xs = sorted.map((_, i) => i);
+    const salesYs = sorted.map(s => s.total_sales);
+    const profitYs = sorted.map(s => s.net_profit);
+
+    const linearRegress = (ys: number[]) => {
+      const xMean = xs.reduce((a, b) => a + b, 0) / n;
+      const yMean = ys.reduce((a, b) => a + b, 0) / n;
+      let num = 0, den = 0;
+      for (let i = 0; i < n; i++) { num += (xs[i] - xMean) * (ys[i] - yMean); den += (xs[i] - xMean) ** 2; }
+      const slope = den === 0 ? 0 : num / den;
+      const intercept = yMean - slope * xMean;
+      return { slope, intercept };
+    };
+
+    const salesReg = linearRegress(salesYs);
+    const profitReg = linearRegress(profitYs);
+
+    const predictions: { month: string; sales: number; profit: number }[] = [];
+    const lastMonth = sorted[sorted.length - 1].month;
+    const [ly, lm] = lastMonth.split("-").map(Number);
+
+    for (let i = 1; i <= 3; i++) {
+      const mi = lm + i;
+      const y = ly + Math.floor((mi - 1) / 12);
+      const m = ((mi - 1) % 12) + 1;
+      const idx = n - 1 + i;
+      predictions.push({
+        month: `${y}-${String(m).padStart(2, "0")}`,
+        sales: Math.max(0, Math.round(salesReg.slope * idx + salesReg.intercept)),
+        profit: Math.round(profitReg.slope * idx + profitReg.intercept),
+      });
+    }
+    return predictions;
+  };
 
   const name = user?.user_metadata?.nickname || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "사장님";
   const hour = new Date().getHours();
@@ -106,6 +200,24 @@ export default function DashboardHome() {
             </div>
           </div>
 
+          {/* 알림 센터 */}
+          {(() => {
+            const alerts = generateAlerts();
+            return (
+              <div className="space-y-2">
+                {alerts.map((alert, i) => (
+                  <div key={i} className={`rounded-2xl px-4 py-3 text-sm font-medium ${
+                    alert.type === "critical" ? "bg-red-50 text-red-700 ring-1 ring-red-200" :
+                    alert.type === "warning" ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200" :
+                    "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                  }`}>
+                    {alert.message}
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
           {/* 핵심 지표 4개 */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
@@ -120,6 +232,65 @@ export default function DashboardHome() {
                 {s.sub && <p className="text-xs text-slate-400 mt-1">{s.sub}</p>}
               </div>
             ))}
+          </div>
+
+          {/* 목표 달성 게이지 */}
+          <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-bold text-slate-900">🎯 월 매출 목표</h2>
+              <button
+                onClick={() => { setGoalInput(monthlyGoal ? String(monthlyGoal) : ""); setShowGoalModal(true); }}
+                className="text-xs text-blue-500 font-semibold hover:text-blue-700"
+              >
+                목표 설정
+              </button>
+            </div>
+            {monthlyGoal ? (
+              (() => {
+                const current = latestSnap?.total_sales ?? 0;
+                const pct = Math.min(Math.round((current / monthlyGoal) * 100), 999);
+                return (
+                  <div>
+                    <div className="flex items-end justify-between mb-2">
+                      <span className="text-2xl font-bold text-slate-900">{pct}%</span>
+                      <span className="text-xs text-slate-400">목표 {fmt(monthlyGoal)}원</span>
+                    </div>
+                    <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${pct >= 100 ? "bg-emerald-500" : pct >= 60 ? "bg-blue-500" : "bg-amber-400"}`}
+                        style={{ width: `${Math.min(pct, 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-400 mt-2">
+                      {latestSnap ? `${latestSnap.month} 매출 기준` : "매출 데이터 없음"}
+                      {pct >= 100 ? " · 🎉 목표 달성!" : ` · 남은 금액 ${fmt(Math.max(0, monthlyGoal - current))}원`}
+                    </p>
+                  </div>
+                );
+              })()
+            ) : (
+              <p className="text-sm text-slate-400">월 매출 목표를 설정하면 달성률을 확인할 수 있어요</p>
+            )}
+            {showGoalModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowGoalModal(false)}>
+                <div className="bg-white rounded-3xl p-6 w-80 shadow-xl ring-1 ring-slate-200" onClick={e => e.stopPropagation()}>
+                  <h3 className="text-base font-bold text-slate-900 mb-3">월 매출 목표 설정</h3>
+                  <input
+                    type="text"
+                    placeholder="예: 30000000"
+                    value={goalInput}
+                    onChange={e => setGoalInput(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-800 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onKeyDown={e => e.key === "Enter" && handleSetGoal()}
+                  />
+                  <p className="text-xs text-slate-400 mb-4">{goalInput ? `${fmt(Number(goalInput.replace(/[^0-9]/g, "")))}원` : "숫자만 입력하세요"}</p>
+                  <div className="flex gap-2">
+                    <button onClick={() => setShowGoalModal(false)} className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600">취소</button>
+                    <button onClick={handleSetGoal} className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">저장</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -178,6 +349,64 @@ export default function DashboardHome() {
                     </div>
                   </div>
                 )}
+              </div>
+              </PlanGate>
+
+              {/* 매출 예측 — 스탠다드 이상 */}
+              <PlanGate>
+              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+                <h2 className="text-base font-bold text-slate-900 mb-4">🔮 매출 예측</h2>
+                {(() => {
+                  const predictions = generatePredictions();
+                  if (!predictions) {
+                    return (
+                      <div className="text-center py-8">
+                        <p className="text-3xl mb-2">📈</p>
+                        <p className="text-slate-400 text-sm">3개월 이상 매출 데이터가 있으면 예측이 가능합니다</p>
+                      </div>
+                    );
+                  }
+                  const allData = [
+                    ...[...snapshots].sort((a, b) => a.month.localeCompare(b.month)).slice(-3).map(s => ({ month: s.month, sales: s.total_sales, profit: s.net_profit, predicted: false })),
+                    ...predictions.map(p => ({ month: p.month, sales: p.sales, profit: p.profit, predicted: true })),
+                  ];
+                  const predMax = Math.max(...allData.map(d => d.sales), 1);
+                  return (
+                    <div className="space-y-4">
+                      <div className="flex items-end gap-2 h-32">
+                        {allData.map((d, i) => (
+                          <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                            <span className="text-xs font-bold text-slate-500" style={{ fontSize: "9px" }}>
+                              {Math.round(d.sales / 10000)}만
+                            </span>
+                            <div
+                              className={`w-full rounded-t-lg ${d.predicted ? "bg-purple-300 border-2 border-dashed border-purple-400" : "bg-blue-500"}`}
+                              style={{ height: `${Math.max(4, (d.sales / predMax) * 100)}px` }}
+                            />
+                            <span className="text-slate-400 text-center" style={{ fontSize: "9px" }}>
+                              {d.month.slice(2).replace("-", "/")}월
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-slate-400">
+                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-500 inline-block" /> 실제</span>
+                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-purple-300 border border-dashed border-purple-400 inline-block" /> 예측</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {predictions.map((p, i) => (
+                          <div key={i} className="rounded-xl bg-purple-50 px-3 py-2.5 text-center">
+                            <p className="text-xs text-purple-400">{p.month}</p>
+                            <p className="text-sm font-bold text-purple-700">{fmt(p.sales)}원</p>
+                            <p className={`text-xs font-semibold ${p.profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                              순이익 {p.profit >= 0 ? "+" : ""}{fmt(p.profit)}원
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
               </PlanGate>
 
