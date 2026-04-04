@@ -299,7 +299,7 @@ function LandingContent() {
                 <Link href="/signup" className="btn-primary">무료로 시작하기 →</Link>
                 <a href="#features" className="btn-secondary">서비스 알아보기</a>
               </div>
-              <p style={{fontSize:13,color:"var(--gray-400)",marginTop:12}}>신용카드 불필요 · 2분이면 가입 완료 · 평생 무료 플랜</p>
+              <p style={{fontSize:13,color:"var(--gray-400)",marginTop:12}}>카카오 로그인으로 3초 만에 시작 · 무료 플랜 제공</p>
               <div className="hero-stats">
                 <div><div className="stat-num">500<span>+</span></div><div className="stat-label">사장님 사용 중</div></div>
                 <div><div className="stat-num">5<span>개</span></div><div className="stat-label">업종 지원</div></div>
@@ -419,7 +419,7 @@ function LandingContent() {
         <div className="section-inner">
           <FadeIn>
             <h2 className="cta-title">지금 바로 내 매장을 분석해보세요</h2>
-            <p className="cta-desc">회원가입 후 무료로 시작할 수 있습니다. 신용카드 불필요.</p>
+            <p className="cta-desc">카카오 로그인으로 바로 시작하세요. 무료 플랜 제공.</p>
             <Link href="/signup" className="btn-white">무료로 시작하기 →</Link>
           </FadeIn>
         </div>
