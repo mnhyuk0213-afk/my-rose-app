@@ -128,7 +128,17 @@ export default function DashboardHome() {
               <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-bold text-slate-900">📈 월별 매출 현황</h2>
-                  <Link href="/monthly-input" className="text-xs text-blue-500 font-semibold hover:text-blue-700">상세보기 →</Link>
+                  <div className="flex gap-2">
+                    {snapshots.length > 0 && (
+                      <button onClick={() => {
+                        const header = "월,매출,순이익,순이익률\n";
+                        const rows = snapshots.map((s:{month:string;total_sales:number;net_profit:number;net_margin:number}) => `${s.month},${s.total_sales},${s.net_profit},${s.net_margin ?? 0}`).join("\n");
+                        const blob = new Blob(["\uFEFF" + header + rows], { type: "text/csv;charset=utf-8;" });
+                        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "VELA_월별매출.csv"; a.click();
+                      }} className="text-xs text-slate-400 font-semibold hover:text-slate-600">CSV ↓</button>
+                    )}
+                    <Link href="/monthly-input" className="text-xs text-blue-500 font-semibold hover:text-blue-700">상세보기 →</Link>
+                  </div>
                 </div>
                 {snapshots.length === 0 ? (
                   <div className="text-center py-10">

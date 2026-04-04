@@ -112,6 +112,10 @@ export default function NavBar() {
             <Link href="/signup" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>무료 시작</Link>
           </>
         )}
+        <div style={{borderTop:"1px solid #E5E8EB",marginTop:12,paddingTop:12,display:"flex",gap:16}}>
+          <Link href="/terms" className="vela-mobile-link" onClick={() => setMenuOpen(false)} style={{fontSize:12,color:"#9EA6B3",padding:0}}>이용약관</Link>
+          <Link href="/privacy" className="vela-mobile-link" onClick={() => setMenuOpen(false)} style={{fontSize:12,color:"#9EA6B3",padding:0}}>개인정보처리방침</Link>
+        </div>
       </div>
     </>
   );

@@ -354,6 +354,12 @@ export default function ProfilePage() {
                       {payments[0].amount.toLocaleString("ko-KR")}원
                     </p>
                   </div>
+                  <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <p className="text-xs text-slate-400">구독 관련 문의는 이메일로 연락해주세요.</p>
+                    <a href="mailto:mnhyuk@velaanalytics.com?subject=[VELA] 구독 취소 요청" className="text-xs font-semibold text-red-400 hover:text-red-500 transition">
+                      구독 취소 요청 →
+                    </a>
+                  </div>
                 )}
               </div>
 

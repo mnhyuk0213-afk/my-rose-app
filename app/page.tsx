@@ -216,12 +216,13 @@ function LandingContent() {
           <div>
             <div className="fade-init d1">
               <div className="hero-tag"><span className="hero-tag-dot" />외식업 경영 분석 플랫폼</div>
-              <h1 className="hero-title">외식업 사장님을 위한<br /><span>숫자 경영</span> 파트너</h1>
-              <p className="hero-desc">매출·원가·인건비·대출을 한 번에 시뮬레이션하고<br />AI 컨설턴트의 맞춤 전략을 받아보세요.</p>
+              <h1 className="hero-title">원가 모르면<br /><span>매달 수백만원</span> 손실</h1>
+              <p className="hero-desc">매출·원가·인건비를 3분 만에 시뮬레이션하고<br />AI가 찾아주는 절감 포인트로 순이익을 올리세요.</p>
               <div className="hero-actions">
                 <Link href="/signup" className="btn-primary">무료로 시작하기 →</Link>
                 <a href="#features" className="btn-secondary">서비스 알아보기</a>
               </div>
+              <p style={{fontSize:13,color:"var(--gray-400)",marginTop:12}}>신용카드 불필요 · 2분이면 가입 완료 · 평생 무료 플랜</p>
               <div className="hero-stats">
                 <div><div className="stat-num">500<span>+</span></div><div className="stat-label">사장님 사용 중</div></div>
                 <div><div className="stat-num">5<span>개</span></div><div className="stat-label">업종 지원</div></div>
