@@ -308,7 +308,7 @@ export default function InfoPage() {
                   <div className="pricing-plan">{p.plan}</div>
                   <div className="pricing-price">{p.price}<span>{p.unit}</span></div>
                   <div className="pricing-desc">{p.desc}</div>
-                  <ul className="pricing-features">{p.features.map((f) => <li key={f}><span className="pricing-check">✓</span>{f}</li>)}</ul>
+                  <ul className="pricing-features">{p.landingFeatures.map((f: string) => <li key={f}><span className="pricing-check">✓</span>{f}</li>)}</ul>
                   <Link href={p.href} className={`pricing-btn ${p.cls}`}>{p.btn}</Link>
                 </div>
               </FadeIn>

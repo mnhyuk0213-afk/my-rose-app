@@ -5,53 +5,12 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 
+import { PLANS as PLAN_DATA } from "@/lib/plans";
+
 const PLANS = [
-  {
-    id: "free", name: "무료", price: 0, unit: "원/월",
-    desc: "혼자 운영하는 소규모 매장에 적합",
-    color: "#6B7684",
-    features: [
-      { text: "수익 시뮬레이터 (무제한)", included: true },
-      { text: "월 3회 AI 브리핑", included: true },
-      { text: "기본 차트 및 분석", included: true },
-      { text: "링크 공유", included: true },
-      { text: "AI 전략 추천", included: false },
-      { text: "POS 파일 분석", included: false },
-      { text: "히스토리 12개월", included: false },
-      { text: "팀 멤버 초대", included: false },
-    ],
-  },
-  {
-    id: "standard", name: "스탠다드", price: 9900, unit: "원/월",
-    desc: "성장하는 매장을 위한 핵심 기능 모음",
-    color: "#3182F6",
-    popular: true,
-    features: [
-      { text: "수익 시뮬레이터 (무제한)", included: true },
-      { text: "무제한 AI 브리핑", included: true },
-      { text: "기본 차트 및 분석", included: true },
-      { text: "링크 공유", included: true },
-      { text: "AI 전략 추천 (무제한)", included: true },
-      { text: "POS 파일 분석", included: true },
-      { text: "히스토리 12개월", included: true },
-      { text: "팀 멤버 초대", included: false },
-    ],
-  },
-  {
-    id: "pro", name: "프로", price: 29900, unit: "원/월",
-    desc: "다점포·프랜차이즈 운영자를 위한 플랜",
-    color: "#6366F1",
-    features: [
-      { text: "수익 시뮬레이터 (무제한)", included: true },
-      { text: "무제한 AI 브리핑", included: true },
-      { text: "기본 차트 및 분석", included: true },
-      { text: "링크 공유", included: true },
-      { text: "AI 전략 추천 (무제한)", included: true },
-      { text: "POS 파일 분석", included: true },
-      { text: "히스토리 무제한", included: true },
-      { text: "팀 멤버 초대 (무제한)", included: true },
-    ],
-  },
+  { ...PLAN_DATA[0], name: "무료", price: 0, color: "#6B7684" },
+  { ...PLAN_DATA[1], name: "스탠다드", price: 9900, color: "#3182F6", popular: true },
+  { ...PLAN_DATA[2], name: "프로", price: 29900, color: "#6366F1" },
 ];
 
 export default function PricingPage() {

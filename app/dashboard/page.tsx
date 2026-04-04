@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import type { User } from "@supabase/supabase-js";
 import { NotesWidget } from "@/app/notes/page";
+import PlanGate from "@/components/PlanGate";
 
 const fmt = (n: number) => Math.round(n).toLocaleString("ko-KR");
 const IND: Record<string, string> = { cafe:"☕", restaurant:"🍽️", bar:"🍺", finedining:"✨", gogi:"🥩" };
@@ -124,7 +125,8 @@ export default function DashboardHome() {
             {/* 왼쪽 2/3 */}
             <div className="lg:col-span-2 space-y-5">
 
-              {/* 월별 매출 차트 */}
+              {/* 월별 매출 차트 — 스탠다드 이상 */}
+              <PlanGate>
               <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-base font-bold text-slate-900">📈 월별 매출 현황</h2>
@@ -175,6 +177,7 @@ export default function DashboardHome() {
                   </div>
                 )}
               </div>
+              </PlanGate>
 
               {/* 최근 시뮬레이션 */}
               <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">

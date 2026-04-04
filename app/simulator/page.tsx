@@ -1882,12 +1882,34 @@ export default function Page() {
     return validateStep3();
   };
 
+  const [showSimLimit, setShowSimLimit] = useState(false);
+
+  const SIM_USAGE_KEY = "vela-sim-usage";
+  const FREE_SIM_LIMIT = 3;
+
+  const getSimUsage = (): { count: number; month: string } => {
+    try { const raw = localStorage.getItem(SIM_USAGE_KEY); return raw ? JSON.parse(raw) : { count: 0, month: "" }; } catch { return { count: 0, month: "" }; }
+  };
+
   const goToResult = () => {
     const error = validateStep3();
     if (error) {
       setStepError(error);
       window.scrollTo(0, 0);
       return;
+    }
+
+    // 무료 플랜 월 3회 제한
+    if (plan === "free") {
+      const now = new Date();
+      const month = `${now.getFullYear()}-${now.getMonth() + 1}`;
+      const usage = getSimUsage();
+      const count = usage.month === month ? usage.count : 0;
+      if (count >= FREE_SIM_LIMIT) {
+        setShowSimLimit(true);
+        return;
+      }
+      localStorage.setItem(SIM_USAGE_KEY, JSON.stringify({ count: count + 1, month }));
     }
 
     setStepError("");
@@ -1897,7 +1919,8 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      
+      <UpgradeModal open={showSimLimit} onClose={() => setShowSimLimit(false)} title="이번 달 시뮬레이션 한도를 다 사용했어요" description="무료 플랜은 월 3회까지 시뮬레이션할 수 있어요. 스탠다드 플랜으로 업그레이드하면 무제한으로 분석 가능합니다." />
+
       <main className="px-4 py-6 md:px-8">
       <div className="mx-auto max-w-7xl">
 
