@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic";
+// 1시간마다 갱신 (캐싱으로 API 호출 절감)
+export const revalidate = 3600;
 
 async function getStocks() {
   const key = process.env.BOK_API_KEY;
@@ -40,9 +41,9 @@ async function getNews() {
         "anthropic-beta": "web-search-2025-03-05",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1500,
-        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 3 }],
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1000,
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 2 }],
         system: `Today is ${today}. Search for 6 latest Korean news articles. Include a mix of: food service industry news (2), small business/self-employed news (2), AND general Korean economic news like interest rates, inflation, consumer spending, employment (2). For each article, add a "tag" field with one of: "외식업", "소상공인", "경제". Also add an "insight" field: a one-sentence practical tip for a restaurant owner based on this news (under 40 chars, in Korean). IMPORTANT: The "url" field must be the ACTUAL article URL (not the site homepage). If you cannot find the exact URL, use the site's search page with the article keyword. Respond ONLY with a JSON array: [{"title":"Korean title","summary":"Korean summary under 30 chars","source":"media name","url":"actual article URL","tag":"category","insight":"사장님 한줄 인사이트"}]. No markdown, no extra text.`,
         messages: [{ role: "user", content: `${today} 외식업 소상공인 경제 금리 물가 고용 최신 뉴스 6개` }],
       }),
