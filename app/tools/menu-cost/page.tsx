@@ -127,12 +127,17 @@ function MenuCard({
   industry: string;
 }) {
   const [expanded, setExpanded] = useState(true);
-  const [saving, setSaving] = useState<"idle" | "saving" | "done" | "error">("idle");
+  const [saving, setSaving] = useState<"idle" | "saving" | "done" | "error" | "noname" | "noprice">("idle");
   const { price, costTotal, profit, costRatio, profitRatio } = calcMenu(item);
 
   async function handleSave() {
-    if (price <= 0 || !item.name.trim()) {
-      setSaving("error");
+    if (!item.name.trim()) {
+      setSaving("noname");
+      setTimeout(() => setSaving("idle"), 2000);
+      return;
+    }
+    if (price <= 0) {
+      setSaving("noprice");
       setTimeout(() => setSaving("idle"), 2000);
       return;
     }
@@ -140,7 +145,8 @@ function MenuCard({
     try {
       await onSave(item);
       setSaving("done");
-    } catch {
+    } catch (err) {
+      console.error("Menu save error:", err);
       setSaving("error");
     }
     setTimeout(() => setSaving("idle"), 2500);
@@ -226,7 +232,7 @@ function MenuCard({
             disabled={saving === "saving"}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
               saving === "done" ? "bg-emerald-100 text-emerald-600" :
-              saving === "error" ? "bg-red-100 text-red-500" :
+              saving === "error" || saving === "noname" || saving === "noprice" ? "bg-red-100 text-red-500" :
               saving === "saving" ? "bg-slate-100 text-slate-400" :
               price > 0 && item.name.trim() ? "bg-blue-50 text-blue-500 hover:bg-blue-100" : "bg-slate-50 text-slate-300"
             }`}
@@ -234,7 +240,9 @@ function MenuCard({
           >
             {saving === "saving" ? "저장 중..." :
              saving === "done" ? "✓ 저장됨" :
-             saving === "error" ? "입력 확인" :
+             saving === "noname" ? "메뉴명 입력" :
+             saving === "noprice" ? "판매가 입력" :
+             saving === "error" ? "저장 실패" :
              "💾 저장"}
           </button>
           <button
@@ -556,7 +564,7 @@ export default function MenuCostPage() {
       cost: totalCost,
       cogs_rate: parseFloat(cogsRate.toFixed(2)),
       margin: sellPrice - totalCost,
-      ingredients: m.ingredients.map(i => ({ name: i.name, cost: parseInt(i.cost) || 0 })),
+      ingredients: m.ingredients.map(i => ({ name: i.name, amount: "", cost: parseInt(i.cost) || 0 })),
       memo: "",
     };
   }
@@ -566,10 +574,10 @@ export default function MenuCostPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       window.location.href = "/login?next=/tools/menu-cost";
-      return;
+      throw new Error("로그인이 필요합니다.");
     }
     const row = buildMenuRow(m, user.id);
-    const { error } = await supabase.from("menu_costs").insert(row);
+    const { error } = await supabase.from("menu_costs").upsert(row);
     if (error) throw error;
   }
 
@@ -592,7 +600,7 @@ export default function MenuCostPage() {
       return;
     }
 
-    const { error } = await supabase.from("menu_costs").insert(toSave);
+    const { error } = await supabase.from("menu_costs").upsert(toSave);
     if (error) {
       setSaveStatus("error");
     } else {
