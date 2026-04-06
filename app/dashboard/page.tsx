@@ -25,7 +25,7 @@ const TOOLS = [
 
 type Snapshot   = { id:string; month:string; industry:string; total_sales:number; net_profit:number; cogs:number; };
 type SimHistory = { id:string; label:string; created_at:string; result:{totalSales:number;netProfit:number;netMargin:number}; form:{industry:string}; };
-type MenuCost   = { id:string; name:string; cogs_rate:number; margin:number; sell_price:number; };
+type MenuCost   = { id:string; name:string; sell_price:number; cost:number; cogs_rate:number; margin:number; };
 type FeedPost   = { id:string; nickname:string; industry:string; title:string; net_profit:number; total_sales:number; };
 
 export default function DashboardHome() {
@@ -51,12 +51,16 @@ export default function DashboardHome() {
       const [{ data: snaps }, { data: simData }, { data: menuData }, { data: posts }] = await Promise.all([
         sb.from("monthly_snapshots").select("id,month,industry,total_sales,net_profit,cogs").eq("user_id", user.id).order("month", { ascending: false }).limit(6),
         sb.from("simulation_history").select("id,label,created_at,result,form").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
-        sb.from("menu_costs").select("id,name,cogs_rate,margin,sell_price").eq("user_id", user.id).order("cogs_rate", { ascending: false }).limit(5),
+        sb.from("menu_costs").select("id,name,sell_price,cost").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
         sb.from("simulation_shares").select("id,nickname,industry,title,net_profit,total_sales").order("created_at", { ascending: false }).limit(4),
       ]);
       setSnapshots((snaps ?? []) as Snapshot[]);
       setSims((simData ?? []) as SimHistory[]);
-      setMenus((menuData ?? []) as MenuCost[]);
+      setMenus((menuData ?? []).map((m: any) => ({
+        ...m,
+        cogs_rate: m.sell_price > 0 ? (m.cost / m.sell_price) * 100 : 0,
+        margin: (m.sell_price || 0) - (m.cost || 0),
+      })) as MenuCost[]);
       setFeed((posts ?? []) as FeedPost[]);
       setLoading(false);
     });

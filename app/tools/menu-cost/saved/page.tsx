@@ -55,7 +55,14 @@ export default function MenuCostSavedPage() {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      setMenus(data ?? []);
+      const enriched = (data ?? []).map((m: any) => ({
+        ...m,
+        cogs_rate: m.sell_price > 0 ? (m.cost / m.sell_price) * 100 : 0,
+        margin: (m.sell_price || 0) - (m.cost || 0),
+        ingredients: m.ingredients ?? [],
+        memo: m.memo ?? "",
+      }));
+      setMenus(enriched);
       setLoading(false);
     }
     load();
