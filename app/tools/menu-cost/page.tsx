@@ -145,8 +145,9 @@ function MenuCard({
     try {
       await onSave(item);
       setSaving("done");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Menu save error:", err);
+      alert("저장 에러: " + (err?.message || JSON.stringify(err)));
       setSaving("error");
     }
     setTimeout(() => setSaving("idle"), 2500);
@@ -576,7 +577,7 @@ export default function MenuCostPage() {
       throw new Error("로그인이 필요합니다.");
     }
     const row = buildMenuRow(m, user.id);
-    const { error } = await supabase.from("menu_costs").upsert(row);
+    const { error } = await supabase.from("menu_costs").insert(row);
     if (error) throw error;
   }
 
@@ -599,7 +600,7 @@ export default function MenuCostPage() {
       return;
     }
 
-    const { error } = await supabase.from("menu_costs").upsert(toSave);
+    const { error } = await supabase.from("menu_costs").insert(toSave);
     if (error) {
       setSaveStatus("error");
     } else {
