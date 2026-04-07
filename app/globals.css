@@ -153,7 +153,7 @@ html.dark .vela-dropdown-btn:hover { color: #F1F5F9 !important; }
 html.dark .vela-dropdown-menu { background: #1E293B !important; border-color: #334155 !important; }
 html.dark .vela-dropdown-item:hover { background: #334155 !important; }
 html.dark .vela-dropdown-label { color: #F1F5F9 !important; }
-html.dark .vela-dropdown-desc { color: #64748B !important; }
+html.dark .vela-dropdown-desc { color: #94A3B8 !important; }
 html.dark .vela-btn-dashboard { background: #334155 !important; color: #E2E8F0 !important; }
 html.dark .vela-btn-dashboard:hover { background: #475569 !important; }
 html.dark .vela-btn-logout { border-color: #334155 !important; color: #94A3B8 !important; }
@@ -165,11 +165,11 @@ html.dark .vela-mobile-menu { background: #1E293B !important; border-bottom-colo
 html.dark .vela-mobile-link { color: #E2E8F0 !important; border-bottom-color: #334155 !important; }
 html.dark .vela-hamburger span { background: #E2E8F0 !important; }
 
-/* Dark mode: additional text overrides */
-html.dark .text-slate-500 { color: #94A3B8 !important; }
-html.dark .text-slate-400 { color: #64748B !important; }
-html.dark .text-gray-500 { color: #94A3B8 !important; }
-html.dark .text-gray-400 { color: #64748B !important; }
+/* Dark mode: additional text overrides — 가독성 강화 */
+html.dark .text-slate-500 { color: #CBD5E1 !important; }
+html.dark .text-slate-400 { color: #94A3B8 !important; }
+html.dark .text-gray-500 { color: #CBD5E1 !important; }
+html.dark .text-gray-400 { color: #94A3B8 !important; }
 
 /* Dark mode: border extras */
 html.dark .border-slate-100 { border-color: #1E293B !important; }
@@ -213,7 +213,7 @@ html.dark input:focus, html.dark textarea:focus, html.dark select:focus {
 
 /* Dark mode: placeholder text */
 html.dark input::placeholder, html.dark textarea::placeholder {
-  color: #64748B !important;
+  color: #94A3B8 !important;
 }
 
 /* Dark mode: scrollbar */
