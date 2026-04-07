@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { fmt } from "@/lib/vela";
-
-const STORAGE_KEY = "vela-competitor-pricing";
+import { useCloudSync } from "@/lib/useCloudSync";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 
 type Competitor = {
   id: string;
@@ -14,20 +14,13 @@ type Competitor = {
 };
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-function loadData(): Competitor[] {
-  if (typeof window === "undefined") return [];
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]"); } catch { return []; }
-}
-function saveData(data: Competitor[]) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
 export default function CompetitorPricingPage() {
-  const [competitors, setCompetitors] = useState<Competitor[]>([]);
+  const { data: competitors, update: setCompetitors, status, userId } = useCloudSync<Competitor[]>("vela-competitor-pricing", []);
   const [showAdd, setShowAdd] = useState(false);
   const [storeName, setStoreName] = useState("");
   const [menus, setMenus] = useState([{ name: "", price: "", note: "" }]);
   const [editId, setEditId] = useState<string | null>(null);
-
-  useEffect(() => { setCompetitors(loadData()); }, []);
 
   const handleSave = () => {
     if (!storeName.trim()) return;
@@ -43,7 +36,6 @@ export default function CompetitorPricingPage() {
 
     const updated = editId ? competitors.map((c) => (c.id === editId ? entry : c)) : [entry, ...competitors];
     setCompetitors(updated);
-    saveData(updated);
     setShowAdd(false);
     setStoreName("");
     setMenus([{ name: "", price: "", note: "" }]);
@@ -54,7 +46,6 @@ export default function CompetitorPricingPage() {
     if (!confirm("삭제할까요?")) return;
     const updated = competitors.filter((c) => c.id !== id);
     setCompetitors(updated);
-    saveData(updated);
   };
 
   const handleEdit = (c: Competitor) => {
@@ -77,7 +68,10 @@ export default function CompetitorPricingPage() {
           <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
             <span>🔍</span> 경쟁 분석
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">경쟁매장 가격 조사</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">경쟁매장 가격 조사</h1>
+            <CloudSyncBadge status={status} userId={userId} />
+          </div>
           <p className="text-slate-500 text-sm">주변 매장 메뉴 가격을 기록하고 내 가격과 비교하세요.</p>
         </div>
 

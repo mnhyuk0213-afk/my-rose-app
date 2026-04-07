@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
+import { useCloudSync } from "@/lib/useCloudSync";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 
 type CheckCategory = "basic" | "review" | "content" | "seo";
 
@@ -118,35 +120,12 @@ const CHECKLIST: CheckItem[] = [
   },
 ];
 
-const STORAGE_KEY = "vela-naver-place-checklist";
-
 export default function NaverPlacePage() {
-  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const { data: checked, update: setChecked, status, userId } = useCloudSync<Record<string, boolean>>("vela-naver-place-checklist", {});
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
 
-  // localStorage에서 불러오기
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        setChecked(JSON.parse(saved));
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  // localStorage에 저장
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(checked));
-    } catch {
-      // ignore
-    }
-  }, [checked]);
-
   const toggleCheck = (id: string) => {
-    setChecked((prev) => ({ ...prev, [id]: !prev[id] }));
+    setChecked({ ...checked, [id]: !checked[id] });
   };
 
   const totalItems = CHECKLIST.length;
@@ -181,9 +160,12 @@ export default function NaverPlacePage() {
             <div className="inline-flex items-center gap-2 bg-green-50 text-green-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>🟢</span> 무료 가이드
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
-              네이버 플레이스 최적화 체크리스트
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+                네이버 플레이스 최적화 체크리스트
+              </h1>
+              <CloudSyncBadge status={status} userId={userId} />
+            </div>
             <p className="text-slate-500 text-sm">
               15개 항목을 하나씩 실행하면 네이버 플레이스 검색 노출이 크게 개선됩니다.
             </p>

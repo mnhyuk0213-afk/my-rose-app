@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import ToolNav from "@/components/ToolNav";
+import { useCloudSync } from "@/lib/useCloudSync";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 
 type CheckItem = {
   id: string;
@@ -160,34 +162,49 @@ const INDUSTRIES = [
   { id: "gogi", label: "고깃집", emoji: "🥩" },
 ];
 
+type StartupChecklistData = {
+  industry: string;
+  checked: Record<string, boolean>;
+  memos: Record<string, string>;
+};
+
+const defaultChecklistData: StartupChecklistData = {
+  industry: "cafe",
+  checked: {},
+  memos: {},
+};
+
 export default function StartupChecklistPage() {
-  const [industry, setIndustry] = useState("cafe");
-  const [phases, setPhases] = useState(() => buildState(PHASES_BASE, "cafe"));
+  const { data: savedData, update: updateSavedData, status, userId } = useCloudSync<StartupChecklistData>("vela-startup-checklist", defaultChecklistData);
+
+  const industry = savedData.industry || "cafe";
+  const checkedMap = savedData.checked || {};
+  const memoMap = savedData.memos || {};
+
+  const phases = buildState(PHASES_BASE, industry).map(phase => ({
+    ...phase,
+    items: phase.items.map(item => ({ ...item, done: !!checkedMap[item.id] })),
+  }));
+
   const [expandedPhase, setExpandedPhase] = useState<string | null>("planning");
-  const [memoMap, setMemoMap] = useState<Record<string, string>>({});
   const [openMemo, setOpenMemo] = useState<string | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
-  const changeIndustry = (ind: string) => {
-    setIndustry(ind);
-    setPhases(buildState(PHASES_BASE, ind));
-  };
+  const changeIndustry = useCallback((ind: string) => {
+    updateSavedData({ ...savedData, industry: ind, checked: {}, memos: {} });
+  }, [savedData, updateSavedData]);
 
-  const updateMemo = (itemId: string, value: string) => {
-    setMemoMap(prev => ({ ...prev, [itemId]: value }));
-  };
+  const updateMemo = useCallback((itemId: string, value: string) => {
+    updateSavedData({ ...savedData, memos: { ...memoMap, [itemId]: value } });
+  }, [savedData, memoMap, updateSavedData]);
 
   const handlePrint = () => {
     window.print();
   };
 
-  const toggleItem = (phaseId: string, itemId: string) => {
-    setPhases(prev => prev.map(p =>
-      p.id === phaseId
-        ? { ...p, items: p.items.map(i => i.id === itemId ? { ...i, done: !i.done } : i) }
-        : p
-    ));
-  };
+  const toggleItem = useCallback((_phaseId: string, itemId: string) => {
+    updateSavedData({ ...savedData, checked: { ...checkedMap, [itemId]: !checkedMap[itemId] } });
+  }, [savedData, checkedMap, updateSavedData]);
 
   const totalItems = phases.flatMap(p => p.items).length;
   const doneItems = phases.flatMap(p => p.items).filter(i => i.done).length;
@@ -223,7 +240,10 @@ export default function StartupChecklistPage() {
               <div className="inline-flex items-center gap-2 bg-cyan-50 text-cyan-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
                 <span>✅</span> 창업 체크리스트
               </div>
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">창업 체크리스트</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">창업 체크리스트</h1>
+                <CloudSyncBadge status={status} userId={userId} />
+              </div>
               <p className="text-slate-500 text-sm">업종별 인허가·준비사항을 단계별로 확인하세요.</p>
             </div>
             <button

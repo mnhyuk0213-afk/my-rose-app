@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { fmt } from "@/lib/vela";
+import { useCloudSync } from "@/lib/useCloudSync";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 
-const STORAGE_KEY = "vela-daily-sales";
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 type DayRecord = {
@@ -14,21 +15,13 @@ type DayRecord = {
   memo: string;
 };
 
-function loadData(): DayRecord[] {
-  if (typeof window === "undefined") return [];
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]"); } catch { return []; }
-}
-function saveData(data: DayRecord[]) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
-
 export default function DailySalesPage() {
-  const [records, setRecords] = useState<DayRecord[]>([]);
+  const { data: records, update: setRecords, status, userId } = useCloudSync<DayRecord[]>("vela-daily-sales", []);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [sales, setSales] = useState("");
   const [customers, setCustomers] = useState("");
   const [memo, setMemo] = useState("");
   const [view, setView] = useState<"input" | "stats">("input");
-
-  useEffect(() => { setRecords(loadData()); }, []);
 
   const handleSave = () => {
     if (!sales) return;
@@ -36,7 +29,6 @@ export default function DailySalesPage() {
     updated.push({ date, sales: Number(sales), customers: Number(customers) || 0, memo });
     updated.sort((a, b) => b.date.localeCompare(a.date));
     setRecords(updated);
-    saveData(updated);
     setSales(""); setCustomers(""); setMemo("");
   };
 
@@ -70,7 +62,10 @@ export default function DailySalesPage() {
           <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
             <span>📝</span> 일일 매출
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">일일 매출 기록</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">일일 매출 기록</h1>
+            <CloudSyncBadge status={status} userId={userId} />
+          </div>
           <p className="text-slate-500 text-sm">매일 매출과 고객수만 입력하면 월간 자동 집계 + 요일별 패턴을 분석합니다.</p>
         </div>
 

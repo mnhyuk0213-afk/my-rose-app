@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-
-const STORAGE_KEY = "vela-handover-checklist";
+import { useCloudSync } from "@/lib/useCloudSync";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 
 const SECTIONS = [
   {
@@ -72,19 +72,13 @@ const SECTIONS = [
 type CheckState = Record<string, boolean>;
 
 export default function HandoverPage() {
-  const [checks, setChecks] = useState<CheckState>({});
+  const { data: checks, update: setChecks, status, userId } = useCloudSync<CheckState>("vela-handover-checklist", {});
   const total = SECTIONS.reduce((a, s) => a + s.items.length, 0);
   const done = Object.values(checks).filter(Boolean).length;
   const progress = total > 0 ? Math.round((done / total) * 100) : 0;
 
-  useEffect(() => {
-    try { setChecks(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}")); } catch { /* */ }
-  }, []);
-
   const toggle = (key: string) => {
-    const updated = { ...checks, [key]: !checks[key] };
-    setChecks(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    setChecks({ ...checks, [key]: !checks[key] });
   };
 
   return (
@@ -96,7 +90,10 @@ export default function HandoverPage() {
           <div className="inline-flex items-center gap-2 bg-cyan-50 text-cyan-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
             <span>🔄</span> 인수인계
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">매장 인수인계 체크리스트</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">매장 인수인계 체크리스트</h1>
+            <CloudSyncBadge status={status} userId={userId} />
+          </div>
           <p className="text-slate-500 text-sm">매장 양도양수 시 빠뜨리면 안 되는 항목들을 체크하세요.</p>
         </div>
 
@@ -139,7 +136,7 @@ export default function HandoverPage() {
           })}
         </div>
 
-        <button onClick={() => { setChecks({}); localStorage.removeItem(STORAGE_KEY); }} className="mt-6 w-full rounded-2xl border border-slate-200 py-3 text-sm font-semibold text-slate-400 hover:text-red-500 hover:border-red-200 transition">초기화</button>
+        <button onClick={() => { setChecks({}); }} className="mt-6 w-full rounded-2xl border border-slate-200 py-3 text-sm font-semibold text-slate-400 hover:text-red-500 hover:border-red-200 transition">초기화</button>
       </div>
     </main>
   );
