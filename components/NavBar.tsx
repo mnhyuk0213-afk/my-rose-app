@@ -40,6 +40,11 @@ export default function NavBar() {
   const [user, setUser] = useState<User | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [locale, setLocaleState] = useState<Locale>("ko");
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+  }, []);
 
   useEffect(() => { setLocaleState(getLocale()); }, []);
 
@@ -56,6 +61,13 @@ export default function NavBar() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
     window.location.href = "/";
+  };
+
+  const toggleDarkMode = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("vela-theme", next ? "dark" : "light");
   };
 
   return (
@@ -103,6 +115,9 @@ export default function NavBar() {
             )}
           </div>
 
+          <button onClick={toggleDarkMode} className="vela-theme-toggle" aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"} title={isDark ? "라이트 모드" : "다크 모드"}>
+            {isDark ? "\u2600\uFE0F" : "\uD83C\uDF19"}
+          </button>
           <button onClick={() => setLocale(locale === "ko" ? "en" : "ko")} className="vela-nav-lang" style={{fontSize:12,color:"#9EA6B3",background:"none",border:"1px solid #E5E8EB",borderRadius:4,padding:"2px 8px",cursor:"pointer",marginRight:8}}>
             {locale === "ko" ? "EN" : "한국어"}
           </button>
@@ -140,7 +155,10 @@ export default function NavBar() {
         <div style={{borderTop:"1px solid #E5E8EB",marginTop:12,paddingTop:12,display:"flex",gap:16,alignItems:"center"}}>
           <Link href="/terms" className="vela-mobile-link" onClick={() => setMenuOpen(false)} style={{fontSize:12,color:"#9EA6B3",padding:0}}>이용약관</Link>
           <Link href="/privacy" className="vela-mobile-link" onClick={() => setMenuOpen(false)} style={{fontSize:12,color:"#9EA6B3",padding:0}}>개인정보처리방침</Link>
-          <button onClick={() => setLocale(locale === "ko" ? "en" : "ko")} style={{marginLeft:"auto",fontSize:12,color:"#9EA6B3",background:"none",border:"1px solid #E5E8EB",borderRadius:4,padding:"2px 8px",cursor:"pointer"}}>
+          <button onClick={toggleDarkMode} className="vela-theme-toggle" style={{marginLeft:"auto"}} aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}>
+            {isDark ? "\u2600\uFE0F" : "\uD83C\uDF19"}
+          </button>
+          <button onClick={() => setLocale(locale === "ko" ? "en" : "ko")} style={{fontSize:12,color:"#9EA6B3",background:"none",border:"1px solid #E5E8EB",borderRadius:4,padding:"2px 8px",cursor:"pointer"}}>
             {locale === "ko" ? "EN" : "한국어"}
           </button>
         </div>

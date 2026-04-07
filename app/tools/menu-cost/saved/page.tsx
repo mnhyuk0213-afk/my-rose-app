@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ToolNav from "@/components/ToolNav";
+import EmptyState from "@/components/EmptyState";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import { fmt } from "@/lib/vela";
 
@@ -112,14 +113,14 @@ export default function MenuCostSavedPage() {
           </div>
 
           {menus.length === 0 ? (
-            <div className="rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 p-16 text-center">
-              <div className="text-5xl mb-4">🧮</div>
-              <h2 className="text-lg font-bold text-slate-900 mb-2">아직 저장된 메뉴가 없어요</h2>
-              <p className="text-slate-500 text-sm mb-6">원가 계산기에서 메뉴를 계산하고 저장해보세요.</p>
-              <Link href="/tools/menu-cost"
-                className="inline-block rounded-2xl bg-slate-900 px-8 py-3.5 text-sm font-bold text-white hover:bg-slate-700 transition">
-                원가 계산하러 가기 →
-              </Link>
+            <div className="rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
+              <EmptyState
+                icon="🧮"
+                title="저장된 메뉴가 없어요"
+                description="메뉴 원가 계산기에서 메뉴를 저장해보세요"
+                action={() => router.push("/tools/menu-cost")}
+                actionLabel="원가 계산하러 가기"
+              />
             </div>
           ) : (
             <>

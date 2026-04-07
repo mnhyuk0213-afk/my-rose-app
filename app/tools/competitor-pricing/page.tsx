@@ -6,6 +6,7 @@ import { fmt } from "@/lib/vela";
 import { useCloudSync } from "@/lib/useCloudSync";
 import CloudSyncBadge from "@/components/CloudSyncBadge";
 import ToolNav from "@/components/ToolNav";
+import EmptyState from "@/components/EmptyState";
 
 type Competitor = {
   id: string;
@@ -111,6 +112,15 @@ export default function CompetitorPricingPage() {
           </div>
         )}
 
+        {competitors.length === 0 && !showAdd ? (
+          <EmptyState
+            icon="🔍"
+            title="경쟁 매장을 추가해보세요"
+            description="주변 매장의 메뉴 가격을 기록하면 포지셔닝을 파악할 수 있어요"
+            action={() => setShowAdd(true)}
+            actionLabel="경쟁매장 추가"
+          />
+        ) : (
         <div className="space-y-4">
           {competitors.map((c) => (
             <div key={c.id} className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
@@ -138,6 +148,7 @@ export default function CompetitorPricingPage() {
             </div>
           ))}
         </div>
+        )}
       </div>
     </main>
     </>

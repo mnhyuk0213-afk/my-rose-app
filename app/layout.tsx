@@ -44,7 +44,18 @@ export default function RootLayout({
     <html
       lang="ko"
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          try {
+            if (localStorage.getItem('vela-theme') === 'dark' ||
+                (!localStorage.getItem('vela-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+              document.documentElement.classList.add('dark');
+            }
+          } catch {}
+        ` }} />
+      </head>
       <body className="flex flex-col min-h-screen pt-16 bg-slate-50">
         <NavBar />
         {children}

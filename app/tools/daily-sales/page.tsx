@@ -6,6 +6,7 @@ import { fmt } from "@/lib/vela";
 import { useCloudSync } from "@/lib/useCloudSync";
 import CloudSyncBadge from "@/components/CloudSyncBadge";
 import ToolNav from "@/components/ToolNav";
+import EmptyState from "@/components/EmptyState";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -106,7 +107,11 @@ export default function DailySalesPage() {
             <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
               <h3 className="text-sm font-bold text-slate-900 mb-4">최근 기록</h3>
               {records.length === 0 ? (
-                <p className="text-sm text-slate-400 text-center py-6">아직 기록이 없습니다</p>
+                <EmptyState
+                  icon="📝"
+                  title="아직 기록이 없어요"
+                  description="매일 매출과 고객수를 기록하면 패턴을 분석해드려요"
+                />
               ) : (
                 <div className="space-y-2">
                   {records.slice(0, 14).map((r) => (
