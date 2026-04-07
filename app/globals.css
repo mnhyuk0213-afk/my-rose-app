@@ -207,8 +207,8 @@ html.dark input[type="range"].vela-slider::-moz-range-thumb { border-color: #1E2
 
 /* Dark mode: focus rings */
 html.dark input:focus, html.dark textarea:focus, html.dark select:focus {
-  border-color: #3B82F6 !important;
-  outline-color: #3B82F6 !important;
+  border-color: #3182F6 !important;
+  outline-color: #3182F6 !important;
 }
 
 /* Dark mode: placeholder text */

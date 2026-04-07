@@ -60,7 +60,7 @@ const CATEGORIES: { key: string; label: string; desc: string; tools: Tool[] }[] 
       { href: "/checklist", emoji: "📋", title: "매장 일일 체크리스트", desc: "오픈·마감 체크리스트 (날짜별 자동 저장)", color: "#6366F1", bg: "#EEF2FF", badge: null },
       { href: "/ingredient-tracker", emoji: "🥬", title: "식재료 가격 트래커", desc: "주요 식재료 가격 기록 · 변동 추이 확인", color: "#10B981", bg: "#ECFDF5", badge: null },
       { href: "/tools/startup-checklist", emoji: "✅", title: "창업 체크리스트", desc: "업종별 인허가·준비물·타임라인 단계별 가이드", color: "#0891B2", bg: "#ECFEFF", badge: null },
-      { href: "/tools/daily-sales", emoji: "📝", title: "일일 매출 기록", desc: "매일 매출·고객수 입력 → 월간 자동 집계 + 요일 패턴", color: "#3B82F6", bg: "#EFF6FF", badge: null },
+      { href: "/tools/daily-sales", emoji: "📝", title: "일일 매출 기록", desc: "매일 매출·고객수 입력 → 월간 자동 집계 + 요일 패턴", color: "#3182F6", bg: "#EFF6FF", badge: null },
       { href: "/tools/labor-law", emoji: "⚖️", title: "인건비 계산기 (법정)", desc: "주휴수당·야간수당·4대보험 자동 반영 실제 인건비", color: "#14B8A6", bg: "#F0FDFA", badge: "NEW" },
       { href: "/tools/card-sales", emoji: "💳", title: "카드매출 자동 수집", desc: "사업자번호 → 여신금융협회 카드사별 매출 자동 조회", color: "#6366F1", bg: "#EEF2FF", badge: "SOON" },
       { href: "/tools/integrations", emoji: "🔗", title: "외부 서비스 연동", desc: "POS·배달앱·카드매출 연동 관리", color: "#64748B", bg: "#F8FAFC", badge: null },

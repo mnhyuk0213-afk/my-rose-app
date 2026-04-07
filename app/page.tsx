@@ -332,20 +332,20 @@ function LandingContent() {
         html.dark .btn-secondary:hover{background:#475569}
         html.dark .features-bg{background:#0F172A}
         html.dark .feature-card{background:#1E293B;border-color:#334155}
-        html.dark .feature-card:hover{border-color:#3B82F6;box-shadow:0 20px 60px rgba(59,130,246,.15),0 8px 24px rgba(0,0,0,.2)}
+        html.dark .feature-card:hover{border-color:#3182F6;box-shadow:0 20px 60px rgba(59,130,246,.15),0 8px 24px rgba(0,0,0,.2)}
         html.dark .feature-icon{background:rgba(49,130,246,0.15)}
         html.dark .feature-tag{background:rgba(49,130,246,0.15);color:#93C5FD}
         html.dark .step-num{box-shadow:0 4px 14px rgba(49,130,246,0.3)}
         html.dark .step-card-hover{background:#1E293B !important;border-color:#334155 !important}
         html.dark .pricing-card{background:#1E293B;border-color:#334155}
         html.dark .pricing-card:hover{box-shadow:0 12px 36px rgba(0,0,0,.3)}
-        html.dark .pricing-card.popular{border-color:#3B82F6}
+        html.dark .pricing-card.popular{border-color:#3182F6}
         html.dark .pricing-check{background:rgba(16,185,129,0.15);color:#6EE7B7}
         html.dark .pricing-features li{border-bottom-color:#334155;color:#CBD5E1}
         html.dark .pricing-btn-gray{background:#334155;color:#E2E8F0}
         html.dark .pricing-btn-gray:hover{background:#475569}
         html.dark .field-input{background:#1E293B;border-color:#334155;color:#E2E8F0}
-        html.dark .field-input:focus{border-color:#3B82F6;background:#1E293B;box-shadow:0 0 0 3px rgba(59,130,246,.2)}
+        html.dark .field-input:focus{border-color:#3182F6;background:#1E293B;box-shadow:0 0 0 3px rgba(59,130,246,.2)}
         html.dark section{background-color:#0F172A}
         html.dark .green{color:#6EE7B7}
         html.dark .red{color:#FCA5A5}
