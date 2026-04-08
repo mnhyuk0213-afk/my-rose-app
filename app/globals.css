@@ -33,15 +33,17 @@ body {
 
 /* ── Capacitor 앱 모드 ────────────────────────────── */
 html.capacitor-app body {
-  padding-top: env(safe-area-inset-top) !important;
+  padding-top: 0 !important;
   padding-bottom: 0 !important;
 }
 html.capacitor-app .vela-nav {
-  padding-top: env(safe-area-inset-top);
-  height: calc(64px + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top) !important;
+  height: calc(64px + env(safe-area-inset-top)) !important;
+  align-items: flex-end !important;
 }
 html.capacitor-app .vela-nav-inner {
-  padding-top: 0;
+  height: 64px;
+  align-items: center;
 }
 /* 앱에서 ToolNav 하단 탭바 safe area */
 html.capacitor-app nav.fixed.bottom-0 {
