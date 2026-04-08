@@ -7,7 +7,7 @@ export const PLANS = [
     unit: "원/월",
     desc: "시뮬레이터를 체험하고 싶은 예비 창업자",
     features: [
-      { text: "수익 시뮬레이터 (월 3회)", included: true },
+      { text: "수익 시뮬레이터 (월 10회)", included: true },
       { text: "기본 도구 5개 (원가/인건비/세금/체크리스트)", included: true },
       { text: "커뮤니티 접근", included: true },
       { text: "결과 저장 1개", included: true },
@@ -15,7 +15,7 @@ export const PLANS = [
       { text: "AI 도구 (SNS/리뷰/상권)", included: false },
       { text: "POS 분석 · PDF · 대시보드", included: false },
     ],
-    landingFeatures: ["수익 시뮬레이터 (월 3회)", "기본 도구 5개", "커뮤니티 접근", "결과 저장 1개"],
+    landingFeatures: ["수익 시뮬레이터 (월 10회)", "기본 도구 5개", "커뮤니티 접근", "결과 저장 1개"],
     btn: "무료로 시작",
     cls: "pricing-btn-gray",
     href: "/signup",
@@ -27,6 +27,9 @@ export const PLANS = [
     price: "9,900",
     priceNum: 9900,
     unit: "원/월",
+    annualPrice: "7,900",
+    annualPriceNum: 7900,
+    annualUnit: "원/월 (연간 결제)",
     desc: "성장하는 매장을 위한 AI 경영 파트너",
     features: [
       { text: "수익 시뮬레이터 (무제한)", included: true },
@@ -49,7 +52,7 @@ export const PLANS = [
 // 플랜별 기능 제한 상수
 export const PLAN_LIMITS = {
   free: {
-    simulatorPerMonth: 3,
+    simulatorPerMonth: 10,
     historyMax: 1,
     aiEnabled: false,
     posEnabled: false,

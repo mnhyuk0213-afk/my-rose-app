@@ -941,6 +941,23 @@ export default function MenuCostPage() {
             배달 채널에서는 포장재·배달비까지 원가에 포함해야 실제 마진을 정확히 파악할 수 있습니다.
           </div>
 
+          {/* 관련 도구 추천 */}
+          <div className="mt-8 rounded-3xl bg-slate-50 p-5">
+            <h3 className="text-sm font-bold text-slate-900 mb-3">📌 관련 도구</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { emoji: "👥", label: "인건비 스케줄러", href: "/tools/labor" },
+                { emoji: "🧾", label: "세금 계산기", href: "/tools/tax" },
+                { emoji: "📄", label: "손익계산서 PDF", href: "/tools/pl-report" },
+              ].map(t => (
+                <Link key={t.href} href={t.href} className="flex flex-col items-center gap-1 p-3 rounded-xl bg-white hover:bg-blue-50 transition text-center">
+                  <span className="text-xl">{t.emoji}</span>
+                  <span className="text-xs text-slate-600">{t.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
         </div>
       </main>
     </>

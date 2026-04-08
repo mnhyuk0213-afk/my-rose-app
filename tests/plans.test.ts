@@ -21,8 +21,8 @@ describe("Plans", () => {
     expect(PLAN_PRICES.standard).toBe(9900);
   });
 
-  it("free 플랜은 시뮬레이터 월 3회 제한", () => {
-    expect(PLAN_LIMITS.free.simulatorPerMonth).toBe(3);
+  it("free 플랜은 시뮬레이터 월 10회 제한", () => {
+    expect(PLAN_LIMITS.free.simulatorPerMonth).toBe(10);
   });
 
   it("standard 플랜은 시뮬레이터 무제한", () => {

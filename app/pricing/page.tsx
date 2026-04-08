@@ -17,6 +17,7 @@ export default function PricingPage() {
   const [selectedPlan, setSelectedPlan] = useState<typeof PLANS[0] | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [payLoading, setPayLoading] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -77,7 +78,7 @@ export default function PricingPage() {
         .pricing-tag{display:inline-block;background:#EBF3FF;color:#3182F6;font-size:13px;font-weight:600;padding:5px 14px;border-radius:100px;margin-bottom:16px}
         .pricing-title{font-size:clamp(32px,4vw,52px);font-weight:800;letter-spacing:-0.02em;color:#191F28;margin-bottom:12px}
         .pricing-subtitle{font-size:17px;color:#6B7684}
-        .plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+        .plans-grid{display:grid;grid-template-columns:repeat(2,minmax(0,360px));gap:20px;justify-content:center}
         .plan-card{background:#fff;border:2px solid #E5E8EB;border-radius:24px;padding:36px 28px;position:relative;transition:border-color .2s,transform .2s}
         .plan-card:hover{transform:translateY(-4px)}
         .plan-card.popular{border-color:#3182F6}
@@ -158,14 +159,31 @@ export default function PricingPage() {
             <p className="pricing-subtitle">매장 규모에 맞는 플랜을 선택하세요.</p>
           </div>
 
+          {/* 월간/연간 토글 */}
+          <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:"12px",marginBottom:"40px"}}>
+            <span style={{fontSize:"15px",fontWeight:billingCycle==="monthly"?700:500,color:billingCycle==="monthly"?"#191F28":"#9EA6B3",cursor:"pointer"}} onClick={()=>setBillingCycle("monthly")}>월간</span>
+            <button onClick={()=>setBillingCycle(prev=>prev==="monthly"?"annual":"monthly")}
+              style={{width:"52px",height:"28px",borderRadius:"100px",border:"none",cursor:"pointer",position:"relative",background:billingCycle==="annual"?"#3182F6":"#E5E8EB",transition:"background .2s",padding:0}}>
+              <span style={{position:"absolute",top:"3px",left:billingCycle==="annual"?"27px":"3px",width:"22px",height:"22px",borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.15)"}}/>
+            </button>
+            <span style={{fontSize:"15px",fontWeight:billingCycle==="annual"?700:500,color:billingCycle==="annual"?"#191F28":"#9EA6B3",cursor:"pointer"}} onClick={()=>setBillingCycle("annual")}>연간</span>
+            {billingCycle==="annual" && <span style={{background:"#ECFDF5",color:"#059669",fontSize:"12px",fontWeight:700,padding:"4px 10px",borderRadius:"100px"}}>20% 할인</span>}
+          </div>
+
           <div className="plans-grid">
-            {PLANS.map((plan) => (
+            {PLANS.map((plan) => {
+              const isAnnual = billingCycle === "annual";
+              const displayPrice = plan.price === 0 ? 0 : (isAnnual ? (plan as any).annualPriceNum ?? plan.price : plan.price);
+              const displayPriceStr = plan.price === 0 ? "무료" : displayPrice.toLocaleString("ko-KR");
+              const unitStr = plan.price === 0 ? "" : (isAnnual ? "원/월 (연간 결제)" : "원/월");
+              return (
               <div key={plan.id} className={`plan-card${plan.popular ? " popular" : ""}`}>
                 {plan.popular && <div className="popular-badge">가장 인기</div>}
                 <div className="plan-name">{plan.name}</div>
                 <div className="plan-price">
-                  {plan.price === 0 ? "무료" : plan.price.toLocaleString("ko-KR")}
-                  {plan.price > 0 && <span>원/월</span>}
+                  {displayPriceStr}
+                  {plan.price > 0 && <span>{unitStr}</span>}
+                  {plan.price > 0 && isAnnual && <div style={{marginTop:"6px"}}><span style={{background:"#ECFDF5",color:"#059669",fontSize:"12px",fontWeight:700,padding:"3px 10px",borderRadius:"100px"}}>20% 할인</span></div>}
                 </div>
                 <div className="plan-desc">{plan.desc}</div>
                 <button
@@ -185,8 +203,12 @@ export default function PricingPage() {
                   ))}
                 </ul>
               </div>
-            ))}
+              );
+            })}
           </div>
+
+          {/* 해지 안내 */}
+          <p style={{textAlign:"center",marginTop:"24px",fontSize:"14px",color:"#9EA6B3"}}>언제든 해지 가능 · 위약금 없음</p>
 
           <div className="faq-section">
             <div className="faq-title">자주 묻는 질문</div>

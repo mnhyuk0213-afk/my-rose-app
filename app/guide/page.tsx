@@ -74,10 +74,6 @@ const SECTIONS = [
   },
 ];
 
-const TEMPLATES = [
-  { icon: "📊", title: "사장님 Notion 템플릿", desc: "매장 운영 일지, 월별 매출 트래커, 주간 체크리스트, 메뉴 관리 템플릿 (Coming Soon)", href: "" },
-];
-
 export default function GuidePage() {
   return (
     <>
@@ -93,24 +89,6 @@ export default function GuidePage() {
             <p className="text-slate-500 text-sm">
               매장 운영에 VELA를 200% 활용하는 방법을 알려드려요.
             </p>
-          </div>
-
-          {/* 템플릿 다운로드 */}
-          <div className="rounded-3xl bg-slate-900 p-6 mb-8">
-            <h2 className="text-white font-bold text-base mb-3">📋 무료 템플릿</h2>
-            {TEMPLATES.map((t) => (
-              <div
-                key={t.title}
-                className="flex items-center gap-4 bg-white/10 rounded-2xl p-4 opacity-70"
-              >
-                <span className="text-2xl">{t.icon}</span>
-                <div className="flex-1">
-                  <p className="text-white font-semibold text-sm">{t.title}</p>
-                  <p className="text-slate-400 text-xs mt-0.5">{t.desc}</p>
-                </div>
-                <span className="text-amber-400 text-xs font-semibold bg-amber-400/20 px-3 py-1.5 rounded-xl">Coming Soon</span>
-              </div>
-            ))}
           </div>
 
           {/* 가이드 섹션 */}
@@ -140,30 +118,6 @@ export default function GuidePage() {
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* 영상 가이드 */}
-          <div className="rounded-3xl bg-white ring-1 ring-slate-200 p-6 mt-6">
-            <h2 className="text-base font-bold text-slate-900 mb-4">📹 영상 가이드</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[
-                { title: "시뮬레이터 사용법", desc: "3분 만에 매장 수익 분석하기", duration: "3:24", emoji: "📊" },
-                { title: "원가 계산기 활용", desc: "메뉴별 원가율 계산 방법", duration: "2:15", emoji: "🧮" },
-                { title: "AI 도구 활용 가이드", desc: "SNS 콘텐츠·리뷰 답변 생성", duration: "4:02", emoji: "🤖" },
-                { title: "게임으로 경영 연습", desc: "90일 매장 운영 시뮬레이션", duration: "2:48", emoji: "🎮" },
-              ].map(v => (
-                <div key={v.title} className="rounded-2xl bg-slate-50 p-4 flex items-center gap-3 hover:bg-slate-100 transition cursor-pointer group">
-                  <div className="w-14 h-14 rounded-xl bg-slate-200 flex items-center justify-center text-2xl flex-shrink-0 group-hover:bg-blue-50 transition">
-                    {v.emoji}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-slate-900">{v.title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{v.desc}</p>
-                    <span className="text-[10px] text-slate-400 mt-1 inline-block">⏱ {v.duration} · Coming Soon</span>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* FAQ 링크 */}

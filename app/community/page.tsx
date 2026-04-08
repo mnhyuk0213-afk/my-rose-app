@@ -126,7 +126,14 @@ function FeedTab({ userId, isAdmin }: { userId: string | null; isAdmin: boolean 
       {loading ? (
         <div className="flex justify-center py-16"><div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" /></div>
       ) : posts.length === 0 ? (
-        <EmptyState icon="📊" text="아직 공유된 분석이 없어요" sub="내 수익 공유 버튼으로 첫 번째 공유를 남겨보세요" />
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <span className="text-5xl mb-4">📊</span>
+          <p className="text-slate-600 font-semibold text-lg">아직 공유된 수익이 없어요</p>
+          <p className="mt-2 text-sm text-slate-400">시뮬레이터를 실행하고 첫 번째로 공유해보세요!</p>
+          <Link href="/simulator" className="mt-6 inline-block rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition">
+            시뮬레이터 시작
+          </Link>
+        </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {posts.map(p => <FeedCard key={p.id} post={p} userId={userId} isAdmin={isAdmin} onLike={() => handleLike(p.id)} onDelete={() => handleDelete(p.id)} />)}

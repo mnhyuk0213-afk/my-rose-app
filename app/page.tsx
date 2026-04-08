@@ -340,7 +340,7 @@ function LandingContent() {
         .footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid rgba(255,255,255,.08)}
         .footer-copy{font-size:13px;color:var(--gray-400)}
         .footer-legal{display:flex;gap:16px}
-        .footer-legal a{font-size:13px;color:var(--gray-400);text-decoration:none}
+        .footer-legal a{font-size:14px;color:var(--gray-400);text-decoration:none;padding:8px 0}
         .footer-legal a:hover{color:#fff}
         @media(max-width:1024px){.hero-inner{grid-template-columns:1fr;gap:48px}.features-grid,.pricing-grid,.testi-grid{grid-template-columns:1fr 1fr}.steps-grid{grid-template-columns:1fr 1fr}.contact-layout{grid-template-columns:1fr;gap:48px}.stats-grid{grid-template-columns:repeat(2,1fr);gap:24px}}
         @media(max-width:640px){.features-grid,.pricing-grid,.testi-grid,.steps-grid{grid-template-columns:1fr}.hero-stats{flex-direction:column;gap:20px}.form-row{grid-template-columns:1fr}.footer-top{flex-direction:column;gap:24px}.footer-bottom{flex-direction:column;gap:16px;text-align:center}.hero-actions{flex-direction:column}.stats-grid{grid-template-columns:repeat(2,1fr);gap:20px}}
@@ -376,6 +376,14 @@ function LandingContent() {
         html.dark .green{color:#6EE7B7}
         html.dark .red{color:#FCA5A5}
         html.dark .hero-social-proof{color:#94A3B8}
+        @media(prefers-reduced-motion: reduce) {
+          .hero-bg, .hero-bg2, .hero-bg3 { animation: none !important; }
+          .hero { animation: none !important; background-size: 100% 100% !important; }
+        }
+        @media(max-width: 768px) {
+          .hero-bg, .hero-bg2, .hero-bg3 { display: none; }
+          .hero { background-size: 100% 100%; animation: none; }
+        }
       `}</style>
 
       
