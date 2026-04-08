@@ -47,6 +47,7 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
   const [uploading, setUploading] = useState(false);
   const [allFolders, setAllFolders] = useState<Folder[]>([]);
   const [movingFile, setMovingFile] = useState<string | null>(null);
+  const [preview, setPreview] = useState<FileItem | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async (folderId?: string) => {
@@ -221,8 +222,58 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
     }
   };
 
+  const canPreview = (type: string, name: string) => {
+    const t = type.toLowerCase();
+    const n = name.toLowerCase();
+    if (t.includes("image") || t.includes("png") || t.includes("jpg") || t.includes("jpeg") || t.includes("gif") || t.includes("webp") || t.includes("svg")) return "image";
+    if (t.includes("pdf") || n.endsWith(".pdf")) return "pdf";
+    if (t.includes("video") || n.endsWith(".mp4") || n.endsWith(".webm") || n.endsWith(".mov")) return "video";
+    if (t.includes("audio") || n.endsWith(".mp3") || n.endsWith(".wav") || n.endsWith(".ogg")) return "audio";
+    if (t.includes("text") || t.includes("json") || t.includes("csv") || t.includes("xml") || n.endsWith(".txt") || n.endsWith(".md") || n.endsWith(".json") || n.endsWith(".csv")) return "text";
+    return null;
+  };
+
   return (
     <div className="space-y-5">
+      {/* 미리보기 모달 */}
+      {preview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setPreview(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* 헤더 */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-lg">{fileIcon(preview.type)}</span>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-800 truncate">{preview.name}</p>
+                  <p className="text-xs text-slate-400">{preview.size} · {preview.uploadedBy}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <a href={preview.url} target="_blank" rel="noopener noreferrer" className="text-xs bg-[#3182F6] text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-[#2672DE] transition">다운로드</a>
+                <button onClick={() => setPreview(null)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition">✕</button>
+              </div>
+            </div>
+            {/* 콘텐츠 */}
+            <div className="flex-1 overflow-auto p-5 flex items-center justify-center bg-slate-50/50 min-h-[300px]">
+              {(() => {
+                const type = canPreview(preview.type, preview.name);
+                if (type === "image") return <img src={preview.url} alt={preview.name} className="max-w-full max-h-[70vh] object-contain rounded-lg" />;
+                if (type === "pdf") return <iframe src={preview.url} className="w-full h-[70vh] rounded-lg border-0" />;
+                if (type === "video") return <video src={preview.url} controls className="max-w-full max-h-[70vh] rounded-lg" />;
+                if (type === "audio") return <div className="text-center"><span className="text-5xl mb-4 block">🎵</span><audio src={preview.url} controls className="w-full max-w-md" /></div>;
+                if (type === "text") return <iframe src={preview.url} className="w-full h-[70vh] rounded-lg border border-slate-200 bg-white" />;
+                return (
+                  <div className="text-center py-10">
+                    <span className="text-5xl block mb-4">{fileIcon(preview.type)}</span>
+                    <p className="text-sm text-slate-500 mb-1">미리보기를 지원하지 않는 파일 형식입니다</p>
+                    <p className="text-xs text-slate-400">{preview.type || "알 수 없는 형식"}</p>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
       {/* Breadcrumb */}
       <div className={C}>
         <div className="flex items-center gap-1 text-sm mb-4">
@@ -319,20 +370,22 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
             {files.map((f) => (
               <div
                 key={f.id}
-                className="relative flex items-center justify-between px-4 py-3 rounded-xl border border-slate-100 hover:bg-slate-50/60 transition-colors"
+                className="relative flex items-center justify-between px-4 py-3 rounded-xl border border-slate-100 hover:bg-slate-50/60 transition-colors cursor-pointer"
+                onClick={() => setPreview(f)}
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <span className="text-lg flex-shrink-0">{fileIcon(f.type)}</span>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-800 truncate">
                       {f.name}
+                      {canPreview(f.type, f.name) && <span className="ml-1.5 text-[10px] text-[#3182F6] font-normal">미리보기</span>}
                     </p>
                     <p className="text-xs text-slate-400">
                       {f.size} · {f.uploadedBy} · {formatDate(f.uploadedAt)}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
+                <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                   <a
                     href={f.url}
                     target="_blank"
