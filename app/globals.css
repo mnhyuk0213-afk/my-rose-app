@@ -88,9 +88,34 @@ html.capacitor-app {
 html.capacitor-app body {
   height: 100%;
   overflow-y: auto;
+  overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch;
   padding-bottom: calc(56px + env(safe-area-inset-bottom) + 20px) !important;
 }
+/* 앱에서 다크모드 비활성화 — 항상 라이트 */
+html.capacitor-app.dark { --background: #F9FAFB !important; --foreground: #171717 !important; }
+html.capacitor-app.dark, html.capacitor-app.dark body { background: #F9FAFB !important; color: #171717 !important; }
+html.capacitor-app.dark .bg-white { background-color: #fff !important; }
+html.capacitor-app.dark .bg-slate-50 { background-color: #F9FAFB !important; }
+html.capacitor-app.dark .text-slate-900 { color: #191F28 !important; }
+html.capacitor-app.dark .text-slate-700 { color: #4B5563 !important; }
+html.capacitor-app.dark .text-slate-500 { color: #4E5968 !important; }
+html.capacitor-app.dark .text-slate-400 { color: #6B7684 !important; }
+html.capacitor-app.dark .border-slate-200 { border-color: #E5E8EB !important; }
+html.capacitor-app.dark .ring-slate-200 { --tw-ring-color: #E5E8EB !important; }
+html.capacitor-app.dark input, html.capacitor-app.dark textarea, html.capacitor-app.dark select {
+  background-color: #F9FAFB !important; color: #191F28 !important; border-color: #E5E8EB !important;
+}
+html.capacitor-app.dark .vela-nav { background: rgba(255,255,255,0.95) !important; border-bottom-color: #E5E8EB !important; }
+html.capacitor-app.dark .vela-nav-logo { color: #191F28 !important; }
+html.capacitor-app.dark nav.fixed.bottom-0 { background-color: #fff !important; border-top-color: #E5E8EB !important; }
+/* 앱 전용 — 더 큰 터치 영역 + 간결한 텍스트 */
+html.capacitor-app .text-2xl { font-size: 1.2rem !important; }
+html.capacitor-app .text-xl { font-size: 1.05rem !important; }
+html.capacitor-app .text-lg { font-size: 0.95rem !important; }
+html.capacitor-app .rounded-3xl { border-radius: 16px !important; }
+html.capacitor-app button, html.capacitor-app a { min-height: 44px; }
+html.capacitor-app input, html.capacitor-app textarea, html.capacitor-app select { min-height: 44px; font-size: 16px !important; }
 
 /* ── 모바일 최적화 (max-width: 768px) ─────────────── */
 @media (max-width: 768px) {
@@ -162,6 +187,9 @@ html.capacitor-app body {
   /* 스크롤바 숨기기 */
   ::-webkit-scrollbar { display: none; }
   * { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* 좌우 스크롤 방지 */
+  html, body { overflow-x: hidden !important; max-width: 100vw !important; }
 }
 
 /* ── 라이트 모드 가독성 강화 ───────────────────────── */

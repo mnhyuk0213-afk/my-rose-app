@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 
-type Tab = "dashboard" | "mett" | "kpi" | "goal" | "task" | "aar";
+type Tab = "dashboard" | "mett" | "kpi" | "goal" | "task" | "aar" | "roadmap";
 
 type Mett = { id: string; mission: string; enemy: string; terrain: string; troops: string; time_constraint: string; civil: string; created_at: string };
 type Metric = { id: string; date: string; revenue: number; users_count: number; conversion_rate: number; profit: number };
@@ -20,6 +20,7 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "goal", label: "목표", icon: "🏆" },
   { key: "task", label: "태스크", icon: "✅" },
   { key: "aar", label: "AAR", icon: "📝" },
+  { key: "roadmap", label: "로드맵", icon: "🗺️" },
 ];
 
 const fmt = (n: number) => n.toLocaleString("ko-KR");
@@ -296,23 +297,61 @@ export default function HQPage() {
                 </div>
               </div>
 
-              {/* 운영 루틴 */}
+              {/* 핵심 리스크 */}
               <div className={`${cardCls} mt-4`}>
-                <h3 className="text-sm font-bold text-slate-900 mb-3">📅 운영 루틴</h3>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="bg-slate-50 rounded-xl p-3">
-                    <p className="font-bold text-slate-700 mb-1">일일</p>
-                    <p className="text-slate-500">1. METT-TC 작성</p>
-                    <p className="text-slate-500">2. KPI 확인</p>
-                    <p className="text-slate-500">3. Task 실행</p>
-                    <p className="text-slate-500">4. AAR 작성</p>
+                <h3 className="text-sm font-bold text-slate-900 mb-3">⚠️ 핵심 리스크</h3>
+                <div className="space-y-2 text-xs">
+                  {[
+                    "결제 이탈 — 가격 페이지 → 결제 전환율 모니터링",
+                    "온보딩 실패 — 첫 분석 완료율이 목표 이하",
+                    "기능 과다 — 도구가 많아 사용자 혼란 가능",
+                    "CS 미대응 — 피드백/버그 리포트 처리 지연",
+                  ].map((r, i) => (
+                    <div key={i} className="flex items-start gap-2 px-3 py-2 bg-red-50 rounded-xl">
+                      <span className="text-red-400 flex-shrink-0">●</span>
+                      <span className="text-red-700">{r}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 운영 리듬 (Cadence) */}
+              <div className={`${cardCls} mt-4`}>
+                <h3 className="text-sm font-bold text-slate-900 mb-3">📅 운영 리듬 (Cadence)</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div className="bg-blue-50 rounded-xl p-3">
+                    <p className="font-bold text-blue-700 mb-2">🌅 일일</p>
+                    <p className="text-blue-600">1. METT-TC 상황 판단</p>
+                    <p className="text-blue-600">2. KPI 확인 (핵심 3개)</p>
+                    <p className="text-blue-600">3. 오늘의 Task 실행</p>
+                    <p className="text-blue-600">4. AAR 작성 (3줄)</p>
                   </div>
-                  <div className="bg-slate-50 rounded-xl p-3">
-                    <p className="font-bold text-slate-700 mb-1">주간</p>
-                    <p className="text-slate-500">월: 목표 설정</p>
-                    <p className="text-slate-500">수: 점검</p>
-                    <p className="text-slate-500">금: AAR + 전략 수정</p>
+                  <div className="bg-purple-50 rounded-xl p-3">
+                    <p className="font-bold text-purple-700 mb-2">📆 주간</p>
+                    <p className="text-purple-600">월: 주간 목표 설정</p>
+                    <p className="text-purple-600">수: 중간 점검</p>
+                    <p className="text-purple-600">금: AAR + 전략 수정</p>
                   </div>
+                  <div className="bg-emerald-50 rounded-xl p-3">
+                    <p className="font-bold text-emerald-700 mb-2">📊 월간</p>
+                    <p className="text-emerald-600">KPI 전월 대비 분석</p>
+                    <p className="text-emerald-600">목표 달성률 리뷰</p>
+                    <p className="text-emerald-600">다음 달 전략 수립</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 업무 지시 템플릿 */}
+              <div className={`${cardCls} mt-4`}>
+                <h3 className="text-sm font-bold text-slate-900 mb-2">📋 업무 지시 템플릿</h3>
+                <p className="text-[11px] text-slate-400 mb-3">모든 업무 지시는 이 형식으로 통일</p>
+                <div className="bg-slate-50 rounded-xl p-4 text-xs text-slate-600 space-y-1 font-mono">
+                  <p><b>목표:</b> [무엇을 달성하려는가]</p>
+                  <p><b>담당:</b> [누가]</p>
+                  <p><b>마감:</b> [언제까지]</p>
+                  <p><b>산출물:</b> [무엇을 만들어야 하는가]</p>
+                  <p><b>제약:</b> [제한 조건]</p>
+                  <p><b>보고:</b> [어떻게 보고하는가]</p>
                 </div>
               </div>
             </>
@@ -496,6 +535,58 @@ export default function HQPage() {
                 </div>
               </div>
             ))}
+          </>
+        )}
+
+        {/* Roadmap */}
+        {tab === "roadmap" && (
+          <>
+            <div className={cardCls}>
+              <h3 className="text-sm font-bold text-slate-900 mb-1">🗺️ 실행 로드맵</h3>
+              <p className="text-[11px] text-slate-400 mb-4">지휘통제 시스템 구축 7주 로드맵</p>
+              <div className="space-y-3">
+                {[
+                  { week: "1주차", title: "내부 대시보드 구축", desc: "목표·KPI·실행카드·AAR 탭 구성", status: "completed" as const },
+                  { week: "2주차", title: "브리핑 진입 흐름", desc: "홈페이지/앱에 '브리핑' 문구·흐름 반영", status: "in_progress" as const },
+                  { week: "3~4주차", title: "대시보드 고도화", desc: "오늘의 임무·핵심 경고·실행 카드 블록", status: "pending" as const },
+                  { week: "5~6주차", title: "도구 연결", desc: "기존 도구 결과 → 실행카드·AAR 자동 연결", status: "pending" as const },
+                  { week: "7주차+", title: "HQ 고도화", desc: "팀 실행 카드 보드·사용자 피드백·버그 위젯", status: "pending" as const },
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-3 items-start">
+                    <div className="flex flex-col items-center">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${item.status === "completed" ? "bg-emerald-500 text-white" : item.status === "in_progress" ? "bg-blue-500 text-white" : "bg-slate-200 text-slate-500"}`}>
+                        {item.status === "completed" ? "✓" : i + 1}
+                      </div>
+                      {i < 4 && <div className={`w-0.5 h-8 ${item.status !== "pending" ? "bg-blue-300" : "bg-slate-200"}`} />}
+                    </div>
+                    <div className="flex-1 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-400">{item.week}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${STATUS_COLOR[item.status]}`}>{STATUS_LABEL[item.status]}</span>
+                      </div>
+                      <p className="text-sm font-bold text-slate-900 mt-0.5">{item.title}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className={cardCls}>
+              <h3 className="text-sm font-bold text-slate-900 mb-3">💡 핵심 결론</h3>
+              <div className="space-y-2 text-xs text-slate-600">
+                <p>VELA의 다음 단계는 <b className="text-slate-900">더 많은 도구를 붙이는 것이 아니라</b>, 기존 도구를 지휘통제 시스템 안으로 편입시키는 것입니다.</p>
+                <div className="grid grid-cols-3 gap-2 mt-3">
+                  {[["감각", "→", "구조"], ["즉흥", "→", "시스템"], ["실패", "→", "데이터 기반 개선"]].map(([from, arrow, to], i) => (
+                    <div key={i} className="bg-slate-50 rounded-xl p-3 text-center">
+                      <p className="text-slate-400 text-[11px]">{from}</p>
+                      <p className="text-lg">{arrow}</p>
+                      <p className="font-bold text-slate-900 text-[11px]">{to}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </>
         )}
       </div>
