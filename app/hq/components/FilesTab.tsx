@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { HQRole, Folder, FileItem } from "@/app/hq/types";
 import { sb, today, I, C, L, B, B2, BADGE } from "@/app/hq/utils";
 
@@ -35,6 +35,72 @@ function formatSize(bytes: number) {
   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
 
+function getPreviewType(type: string, name: string) {
+  const t = type.toLowerCase();
+  const n = name.toLowerCase();
+  if (t.includes("image") || ["png","jpg","jpeg","gif","webp","svg"].some(e => t.includes(e) || n.endsWith("." + e))) return "image";
+  if (t.includes("pdf") || n.endsWith(".pdf")) return "pdf";
+  if (t.includes("video") || ["mp4","webm","mov"].some(e => n.endsWith("." + e))) return "video";
+  if (t.includes("audio") || ["mp3","wav","ogg"].some(e => n.endsWith("." + e))) return "audio";
+  if (t.includes("text") || t.includes("json") || t.includes("csv") || t.includes("xml") || ["txt","md","json","csv","log","xml","html","css","js","ts","tsx"].some(e => n.endsWith("." + e))) return "text";
+  return null;
+}
+
+function PreviewContent({ file }: { file: FileItem }) {
+  const [text, setText] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const type = getPreviewType(file.type, file.name);
+
+  useEffect(() => {
+    if (type === "text") {
+      setLoading(true);
+      fetch(`/api/r2/proxy?url=${encodeURIComponent(file.url)}`)
+        .then(r => r.ok ? r.text() : fetch(file.url).then(r2 => r2.text()))
+        .then(t => { setText(t); setLoading(false); })
+        .catch(() => {
+          fetch(file.url).then(r => r.text()).then(t => { setText(t); setLoading(false); }).catch(() => setLoading(false));
+        });
+    }
+    setImgError(false);
+  }, [file.url, type]);
+
+  if (type === "image") {
+    if (imgError) return (
+      <div className="text-center py-10">
+        <span className="text-5xl block mb-4">🖼️</span>
+        <p className="text-sm text-slate-500">이미지를 불러올 수 없습니다</p>
+        <a href={file.url} target="_blank" rel="noopener noreferrer" className="text-xs text-[#3182F6] mt-2 inline-block">직접 열기 →</a>
+      </div>
+    );
+    return <img src={file.url} alt={file.name} className="max-w-full max-h-[70vh] object-contain rounded-lg" onError={() => setImgError(true)} />;
+  }
+  if (type === "pdf") return (
+    <div className="w-full h-[70vh] flex flex-col">
+      <iframe src={file.url + "#toolbar=1"} className="w-full flex-1 rounded-lg border-0" />
+      <a href={file.url} target="_blank" rel="noopener noreferrer" className="text-xs text-[#3182F6] mt-2 text-center">PDF가 안 보이면 여기를 클릭하세요 →</a>
+    </div>
+  );
+  if (type === "video") return <video src={file.url} controls className="max-w-full max-h-[70vh] rounded-lg" />;
+  if (type === "audio") return <div className="text-center"><span className="text-5xl mb-4 block">🎵</span><p className="text-sm text-slate-500 mb-3">{file.name}</p><audio src={file.url} controls className="w-full max-w-md" /></div>;
+  if (type === "text") {
+    if (loading) return <div className="text-sm text-slate-400">불러오는 중...</div>;
+    return (
+      <pre className="w-full h-[70vh] overflow-auto bg-white border border-slate-200 rounded-xl p-4 text-sm text-slate-700 font-mono whitespace-pre-wrap break-words">
+        {text ?? "내용을 불러올 수 없습니다"}
+      </pre>
+    );
+  }
+  return (
+    <div className="text-center py-10">
+      <span className="text-5xl block mb-4">{fileIcon(file.type)}</span>
+      <p className="text-sm text-slate-500 mb-1">미리보기를 지원하지 않는 파일 형식입니다</p>
+      <p className="text-xs text-slate-400 mb-3">{file.type || "알 수 없는 형식"}</p>
+      <a href={file.url} target="_blank" rel="noopener noreferrer" className="text-xs text-[#3182F6]">직접 열기 →</a>
+    </div>
+  );
+}
+
 export default function FilesTab({ userId, userName, myRole, flash }: Props) {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -50,6 +116,7 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
   const [preview, setPreview] = useState<FileItem | null>(null);
   const [renamingFile, setRenamingFile] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [textContent, setTextContent] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async (folderId?: string) => {
@@ -251,16 +318,7 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
     }
   };
 
-  const canPreview = (type: string, name: string) => {
-    const t = type.toLowerCase();
-    const n = name.toLowerCase();
-    if (t.includes("image") || t.includes("png") || t.includes("jpg") || t.includes("jpeg") || t.includes("gif") || t.includes("webp") || t.includes("svg")) return "image";
-    if (t.includes("pdf") || n.endsWith(".pdf")) return "pdf";
-    if (t.includes("video") || n.endsWith(".mp4") || n.endsWith(".webm") || n.endsWith(".mov")) return "video";
-    if (t.includes("audio") || n.endsWith(".mp3") || n.endsWith(".wav") || n.endsWith(".ogg")) return "audio";
-    if (t.includes("text") || t.includes("json") || t.includes("csv") || t.includes("xml") || n.endsWith(".txt") || n.endsWith(".md") || n.endsWith(".json") || n.endsWith(".csv")) return "text";
-    return null;
-  };
+  const canPreview = getPreviewType;
 
   return (
     <div className="space-y-5">
@@ -284,21 +342,7 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
             </div>
             {/* 콘텐츠 */}
             <div className="flex-1 overflow-auto p-5 flex items-center justify-center bg-slate-50/50 min-h-[300px]">
-              {(() => {
-                const type = canPreview(preview.type, preview.name);
-                if (type === "image") return <img src={preview.url} alt={preview.name} className="max-w-full max-h-[70vh] object-contain rounded-lg" />;
-                if (type === "pdf") return <iframe src={preview.url} className="w-full h-[70vh] rounded-lg border-0" />;
-                if (type === "video") return <video src={preview.url} controls className="max-w-full max-h-[70vh] rounded-lg" />;
-                if (type === "audio") return <div className="text-center"><span className="text-5xl mb-4 block">🎵</span><audio src={preview.url} controls className="w-full max-w-md" /></div>;
-                if (type === "text") return <iframe src={preview.url} className="w-full h-[70vh] rounded-lg border border-slate-200 bg-white" />;
-                return (
-                  <div className="text-center py-10">
-                    <span className="text-5xl block mb-4">{fileIcon(preview.type)}</span>
-                    <p className="text-sm text-slate-500 mb-1">미리보기를 지원하지 않는 파일 형식입니다</p>
-                    <p className="text-xs text-slate-400">{preview.type || "알 수 없는 형식"}</p>
-                  </div>
-                );
-              })()}
+              <PreviewContent file={preview} />
             </div>
           </div>
         </div>
