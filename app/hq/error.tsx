@@ -9,7 +9,7 @@ export default function Error({ reset }: { error: Error; reset: () => void }) {
         <p className="text-sm text-slate-500 mb-6">잠시 후 다시 시도해주세요.</p>
         <div className="flex gap-3 justify-center">
           <button onClick={reset} className="rounded-xl bg-slate-900 text-white font-semibold px-5 py-2.5 text-sm hover:bg-slate-800 transition">다시 시도</button>
-          <Link href="/" className="rounded-xl bg-white ring-1 ring-slate-200 text-slate-700 font-semibold px-5 py-2.5 text-sm hover:bg-slate-50 transition">돌아가기</Link>
+          <Link href="/hq" className="rounded-xl bg-white ring-1 ring-slate-200 text-slate-700 font-semibold px-5 py-2.5 text-sm hover:bg-slate-50 transition">돌아가기</Link>
         </div>
       </div>
     </main>
