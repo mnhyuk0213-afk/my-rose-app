@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "VELA — 외식업 손익계산 시뮬레이터 & AI 경영 컨설턴트",
-  description: "카페 원가 계산기, 음식점 수익 시뮬레이터, 외식업 손익계산을 무료로. 매출·원가·인건비를 한 번에 시뮬레이션하고 AI 맞춤 전략을 받아보세요. 500+ 사장님이 사용 중.",
+  description: "카페 원가 계산기, 음식점 수익 시뮬레이터, 외식업 손익계산을 무료로. 매출·원가·인건비를 한 번에 시뮬레이션하고 AI 맞춤 전략을 받아보세요. 외식업 사장님을 위한 무료 경영 도구.",
   keywords: ["외식업 손익계산", "카페 원가 계산기", "음식점 수익 계산", "카페 창업 비용", "음식점 창업", "수익 시뮬레이터", "외식업 경영", "메뉴 원가율", "인건비 계산", "AI 경영 컨설턴트", "VELA", "자영업 매출 분석"],
   openGraph: {
     title: "VELA — 외식업 사장님을 위한 숫자 경영 파트너",
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "VELA — 외식업 손익계산 시뮬레이터",
-    description: "카페·음식점·바 원가율 계산부터 AI 전략까지. 500+ 사장님이 사용 중. 무료로 시작하세요.",
+    description: "카페·음식점·바 원가율 계산부터 AI 전략까지. 외식업 사장님을 위한 무료 경영 도구. 무료로 시작하세요.",
   },
   robots: { index: true, follow: true },
   alternates: { canonical: "https://velaanalytics.com" },

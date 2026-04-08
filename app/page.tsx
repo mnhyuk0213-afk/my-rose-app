@@ -396,10 +396,10 @@ function LandingContent() {
               </div>
               <p style={{fontSize:13,color:"var(--gray-400)",marginTop:16,display:"flex",alignItems:"center",gap:8}}>
                 <span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:"#059669",animation:"pulse-glow 2s infinite"}} />
-                500+ 사장님이 사용 중 · 카카오 로그인 3초 · 무료 플랜 제공
+                카카오 로그인 3초 · 무료 플랜 제공
               </p>
               <div className="hero-stats">
-                <div><div className="stat-num">500<span>+</span></div><div className="stat-label">사장님 사용 중</div></div>
+                <div><div className="stat-num">30<span>+</span></div><div className="stat-label">경영 도구</div></div>
                 <div><div className="stat-num">5<span>개</span></div><div className="stat-label">업종 지원</div></div>
                 <div><div className="stat-num">20<span>+</span></div><div className="stat-label">재무 지표</div></div>
                 <div><div className="stat-num">AI</div><div className="stat-label">실시간 전략</div></div>
@@ -522,7 +522,7 @@ function LandingContent() {
         <div className="stats-grid">
           {[
             { num: "30", suffix: "+", unit: "경영 도구", desc: "원가 계산부터 AI 분석까지" },
-            { num: "500", suffix: "+", unit: "사장님", desc: "실제 매장에서 활용 중" },
+            { num: "무료", suffix: "", unit: "시작 가능", desc: "카카오 3초 로그인" },
             { num: "5", suffix: "", unit: "업종 지원", desc: "카페, 음식점, 베이커리 등" },
             { num: "24/7", suffix: "", unit: "AI 상담", desc: "언제든 경영 질문 가능" },
           ].map((s, i) => (
@@ -534,31 +534,6 @@ function LandingContent() {
               </div>
             </FadeIn>
           ))}
-        </div>
-      </section>
-
-      {/* TESTIMONIALS */}
-      <section className="testi-bg">
-        <div className="section-inner">
-          <FadeIn><span className="section-tag" style={{ background: "rgba(255,255,255,.1)", color: "#93C5FD" }}>{t("reviews.tag")}</span><h2 className="section-title">{t("reviews.title")}</h2><p className="section-desc">실제 사장님들의 생생한 후기입니다.</p></FadeIn>
-          <div className="testi-grid">
-            {[
-              { text: "카페 창업 전에 시뮬레이터로 미리 계산해봤는데 실제와 거의 비슷했어요. 덕분에 자신감 있게 오픈했습니다. 특히 원가율 분석이 정말 정확해서 메뉴 가격을 자신 있게 정할 수 있었어요.", name: "김○○", role: "강남 카페 사장님 · 운영 3년차", av: "김", delay: 0 },
-              { text: "원가율이 38%인 줄 몰랐는데 VELA로 확인하고 메뉴를 조정했더니 월 120만원 절감됐어요. AI가 배달 채널 추가도 추천해줬는데, 실행 후 월 매출이 20% 올랐습니다.", name: "박○○", role: "홍대 분식점 사장님 · 운영 5년차", av: "박", delay: 100 },
-              { text: "정부 지원사업 매칭 기능으로 소상공인 지원금 2천만원을 받았습니다. 혼자였으면 절대 찾지 못했을 거예요. 세금 계산기도 매달 쓰고 있어요. 세무사 비용도 아꼈습니다.", name: "이○○", role: "성수동 베이커리 사장님 · 운영 2년차", av: "이", delay: 200 },
-            ].map((t) => (
-              <FadeIn key={t.name} delay={t.delay}>
-                <div className="testi-card">
-                  <div className="testi-stars">★★★★★</div>
-                  <div className="testi-text">&ldquo;{t.text}&rdquo;</div>
-                  <div className="testi-author">
-                    <div className="testi-avatar">{t.av}</div>
-                    <div><div className="testi-name">{t.name}</div><div className="testi-role">{t.role}</div></div>
-                  </div>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
         </div>
       </section>
 
