@@ -4,6 +4,8 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { fmt } from "@/lib/vela";
 import ToolNav from "@/components/ToolNav";
+import SimDataPicker from "@/components/SimDataPicker";
+import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 // 2026년 기준 (예상)
 const MIN_WAGE = 10620; // 최저시급
@@ -55,6 +57,14 @@ export default function LaborLawPage() {
   const results = useMemo(() => employees.map((e) => ({ ...e, ...calcEmployee(e) })), [employees]);
   const totalMonthlyCost = results.reduce((a, r) => a + r.totalCost, 0);
 
+  const simFields = (sim: SimulatorSnapshot) => [
+    { key: "laborRatio", label: "인건비 비율", value: `${sim.laborRatio}%`, rawValue: sim.laborRatio },
+    { key: "totalSales", label: "월매출", value: `${fmt(Math.round(sim.totalSales))}원`, rawValue: sim.totalSales },
+  ];
+  const applySimSelected = (_selected: Record<string, number | string>) => {
+    // 참고용 데이터 표시
+  };
+
   const updateEmployee = (id: string, field: string, value: number | string | boolean) => {
     setEmployees((prev) => prev.map((e) => e.id === id ? { ...e, [field]: value } : e));
   };
@@ -82,6 +92,7 @@ export default function LaborLawPage() {
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">인건비 계산기 (법정)</h1>
           <p className="text-slate-500 text-sm">주휴수당·야간수당·4대보험을 자동 반영한 실제 인건비를 계산합니다.</p>
           <p className="text-xs text-slate-400 mt-1">2026년 최저시급 {fmt(MIN_WAGE)}원 기준</p>
+          <SimDataPicker fields={simFields} onApply={applySimSelected} />
         </div>
 
         {/* 총 비용 요약 */}

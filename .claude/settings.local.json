@@ -68,7 +68,14 @@
       "Bash(read f:*)",
       "Bash(xcode-select -p)",
       "Bash(xcodebuild -version)",
-      "Bash(npx cap:*)"
+      "Bash(npx cap:*)",
+      "Bash(xcodebuild -scheme App -destination 'platform=iOS Simulator,name=iPhone 16' build)",
+      "Bash(xcodebuild -scheme App -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build)",
+      "Bash(python3 -c ':*)",
+      "Bash(pip3 install:*)",
+      "Bash(python3:*)",
+      "Bash(wc -l /Users/mnhyuk/my-rose-app/app/**/*.tsx /Users/mnhyuk/my-rose-app/components/**/*.tsx /Users/mnhyuk/my-rose-app/lib/**/*.ts*)",
+      "Bash([ -f \"/Users/mnhyuk/my-rose-app/app/tools/$tool/page.tsx\" ])"
     ]
   }
 }

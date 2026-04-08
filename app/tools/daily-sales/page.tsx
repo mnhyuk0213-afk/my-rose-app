@@ -8,6 +8,8 @@ import CloudSyncBadge from "@/components/CloudSyncBadge";
 import ToolNav from "@/components/ToolNav";
 import EmptyState from "@/components/EmptyState";
 import { exportCSV } from "@/lib/exportCSV";
+import SimDataPicker from "@/components/SimDataPicker";
+import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -25,6 +27,17 @@ export default function DailySalesPage() {
   const [customers, setCustomers] = useState("");
   const [memo, setMemo] = useState("");
   const [view, setView] = useState<"input" | "stats">("input");
+
+  const INDUSTRY_LABEL: Record<string, string> = {
+    cafe: "카페", restaurant: "음식점", bar: "술집/바", finedining: "파인다이닝", gogi: "고깃집",
+  };
+  const simFields = (sim: SimulatorSnapshot) => [
+    { key: "totalSales", label: "월매출 목표", value: `${fmt(Math.round(sim.totalSales))}원`, rawValue: sim.totalSales },
+    { key: "industry", label: "업종", value: INDUSTRY_LABEL[sim.industry] ?? sim.industry, rawValue: sim.industry },
+  ];
+  const applySimSelected = (_selected: Record<string, number | string>) => {
+    // 참고용 데이터 표시
+  };
 
   const handleSave = () => {
     if (!sales) return;
@@ -86,6 +99,7 @@ export default function DailySalesPage() {
               </button>
             )}
           </div>
+          <SimDataPicker fields={simFields} onApply={applySimSelected} />
         </div>
 
         {/* 탭 */}

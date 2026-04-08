@@ -5,6 +5,8 @@ import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import { fmt } from "@/lib/vela";
+import SimDataPicker from "@/components/SimDataPicker";
+import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -545,6 +547,16 @@ export default function MenuCostPage() {
   const [filterCategory, setFilterCategory] = useState("전체");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "done" | "error">("idle");
 
+  const simFields = (sim: SimulatorSnapshot) => [
+    { key: "industry", label: "업종", value: sim.industry, rawValue: sim.industry },
+    { key: "avgSpend", label: "객단가 (가격 참고)", value: `${fmt(sim.avgSpend)}원`, rawValue: sim.avgSpend },
+  ];
+  const applySimSelected = (selected: Record<string, number | string>) => {
+    if (selected.industry && selected.industry in INDUSTRY_PRESETS) {
+      changeIndustry(selected.industry as IndustryKey);
+    }
+  };
+
   function buildMenuRow(m: MenuItem, userId: string) {
     const totalCost = m.ingredients.reduce((s, i) => s + (parseInt(i.cost) || 0), 0);
     const sellPrice = num(m.price);
@@ -704,6 +716,7 @@ export default function MenuCostPage() {
             <p className="text-slate-500 text-sm">
               메뉴별 식재료 원가를 입력하면 원가율과 건당 순이익을 자동으로 계산합니다.
             </p>
+            <SimDataPicker fields={simFields} onApply={applySimSelected} />
           </div>
 
           {/* 업종 선택 탭 */}
