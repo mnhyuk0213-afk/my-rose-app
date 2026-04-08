@@ -190,7 +190,7 @@ export default function PricingPage() {
                   className={`plan-btn ${plan.id === "standard" ? "plan-btn-blue" : plan.id === "pro" ? "plan-btn-indigo" : "plan-btn-gray"}`}
                   onClick={() => handleSelect(plan)}
                 >
-                  {plan.id === "free" ? "무료로 시작" : plan.id === "standard" ? "스탠다드 시작" : "프로 시작"}
+                  {plan.id === "free" ? "무료로 시작하기" : plan.id === "standard" ? "스탠다드 시작하기" : "프로 시작하기"}
                 </button>
                 <ul className="plan-features">
                   {plan.features.map((f) => (
@@ -218,7 +218,6 @@ export default function PricingPage() {
                 { q: "언제든지 구독을 취소할 수 있나요?", a: "네, 구독은 언제든 취소 가능합니다. 취소 후에도 결제된 기간 동안은 유료 기능을 계속 사용하실 수 있습니다." },
                 { q: "결제는 어떤 방법으로 가능한가요?", a: "신용카드, 체크카드 등 토스페이먼츠를 통한 다양한 결제 방법을 지원합니다." },
                 { q: "세금계산서 발행이 가능한가요?", a: "사업자 회원의 경우 세금계산서 발행이 가능합니다. 마이페이지에서 신청하실 수 있습니다." },
-                { q: "팀 플랜은 어떻게 사용하나요?", a: "프로 플랜에서 팀 멤버를 초대하면 같은 매장 데이터를 공유하며 함께 분석할 수 있습니다. 초대받은 멤버는 별도 요금이 없습니다." },
               ].map((faq) => (
                 <div key={faq.q} className="faq-item">
                   <div className="faq-q">Q. {faq.q}</div>

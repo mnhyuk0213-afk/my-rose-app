@@ -144,7 +144,7 @@ export default function NavBar() {
         ) : (
           <>
             <Link href="/login" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>로그인</Link>
-            <Link href="/signup" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>무료 시작</Link>
+            <Link href="/signup" className="vela-mobile-link" onClick={() => setMenuOpen(false)}>무료로 시작하기</Link>
           </>
         )}
         <div style={{borderTop:"1px solid #E5E8EB",marginTop:12,paddingTop:12,display:"flex",gap:16,alignItems:"center"}}>
