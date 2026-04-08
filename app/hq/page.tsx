@@ -5,7 +5,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 
-type Tab = "dashboard" | "mett" | "kpi" | "goal" | "task" | "aar" | "notice" | "report" | "feedback" | "calendar" | "memo" | "team" | "timeline" | "files" | "chat";
+type Tab = "dashboard" | "mett" | "kpi" | "goal" | "task" | "aar" | "notice" | "report" | "feedback" | "calendar" | "memo" | "team" | "timeline" | "files" | "chat" | "approval";
+type Approval = { id: string; title: string; content: string; author: string; approver: string; status: "대기" | "승인" | "반려"; comment: string; fileUrl?: string; fileName?: string; date: string };
 type FileItem = { id: string; name: string; size: string; type: string; url: string; uploadedAt: string; uploadedBy: string };
 type ChatMsg = { id: string; sender: string; text: string; time: string };
 type TeamMember = { id: string; name: string; role: string; email: string; status: "active" | "away" | "offline" };
@@ -34,6 +35,7 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "timeline", label: "타임라인", icon: "🕐" },
   { key: "files", label: "파일", icon: "📁" },
   { key: "chat", label: "채팅", icon: "💬" },
+  { key: "approval", label: "결재", icon: "📋" },
 ];
 
 const fmt = (n: number) => n.toLocaleString("ko-KR");
@@ -80,6 +82,8 @@ export default function HQPage() {
   const [files, setFiles] = useState<FileItem[]>([]);
   const [chatMsgs, setChatMsgs] = useState<ChatMsg[]>([]);
   const [chatInput, setChatInput] = useState("");
+  const [approvals, setApprovals] = useState<Approval[]>([]);
+  const [approvalForm, setApprovalForm] = useState({ title: "", content: "", approver: "" });
   const [platformStats, setPlatformStats] = useState({ totalUsers: 0, todayUsers: 0, totalRevenue: 0, activeSubscribers: 0 });
   const [userName, setUserName] = useState("관리자");
   const directiveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -154,6 +158,7 @@ export default function HQPage() {
       try { const d = localStorage.getItem("vela-hq-directive"); if (d) setDirective(d); } catch {}
       // files는 Supabase Storage에서 로드 (별도 처리 불필요 — 업로드 시 state에 추가)
       try { const ch = localStorage.getItem("vela-hq-chat"); if (ch) setChatMsgs(JSON.parse(ch)); } catch {}
+      try { const ap = localStorage.getItem("vela-hq-approvals"); if (ap) setApprovals(JSON.parse(ap)); } catch {}
       setLoading(false);
     })();
   }, []);
@@ -278,6 +283,20 @@ export default function HQPage() {
     setChatInput("");
   };
   const delChat = (id: string) => { const next = chatMsgs.filter(m => m.id !== id); setChatMsgs(next); localStorage.setItem("vela-hq-chat", JSON.stringify(next)); };
+
+  // Approval helpers
+  const saveApproval = async () => {
+    if (!approvalForm.title.trim()) return;
+    const a: Approval = { id: Date.now().toString(), title: approvalForm.title, content: approvalForm.content, author: userName, approver: approvalForm.approver || userName, status: "대기", comment: "", date: new Date().toISOString().slice(0, 10) };
+    const next = [a, ...approvals]; setApprovals(next); localStorage.setItem("vela-hq-approvals", JSON.stringify(next));
+    setApprovalForm({ title: "", content: "", approver: "" }); flash("✓ 결재 요청됨");
+  };
+  const updateApproval = (id: string, status: "승인" | "반려", comment?: string) => {
+    const next = approvals.map(a => a.id === id ? { ...a, status, comment: comment ?? a.comment } : a);
+    setApprovals(next); localStorage.setItem("vela-hq-approvals", JSON.stringify(next));
+    flash(`✓ ${status}됨`);
+  };
+  const delApproval = (id: string) => { const next = approvals.filter(a => a.id !== id); setApprovals(next); localStorage.setItem("vela-hq-approvals", JSON.stringify(next)); };
 
   // Report helper
   const genReport = () => {
@@ -830,6 +849,48 @@ export default function HQPage() {
                 placeholder="메시지 입력..." className={`${I} flex-1`} />
               <button onClick={sendChat} className={B}>전송</button>
             </div>
+          </div>
+        )}
+        {/* Approval */}
+        {tab === "approval" && (
+          <div className="space-y-3">
+            <div className={C}>
+              <h3 className="text-sm font-bold mb-2">📋 결재 요청</h3>
+              <div className="space-y-2">
+                <div><label className={L}>제목</label><input className={I} value={approvalForm.title} onChange={e => setApprovalForm({ ...approvalForm, title: e.target.value })} placeholder="결재 제목" /></div>
+                <div><label className={L}>내용</label><textarea className={`${I} h-20`} value={approvalForm.content} onChange={e => setApprovalForm({ ...approvalForm, content: e.target.value })} placeholder="결재 내용을 상세히 작성하세요" /></div>
+                <div><label className={L}>결재자</label><input className={I} value={approvalForm.approver} onChange={e => setApprovalForm({ ...approvalForm, approver: e.target.value })} placeholder="결재자 이름" /></div>
+                <button onClick={saveApproval} className={B}>결재 요청</button>
+              </div>
+            </div>
+
+            {approvals.length === 0 ? (
+              <div className={C}><p className="text-xs text-slate-400 text-center py-6">결재 요청이 없습니다</p></div>
+            ) : approvals.map(a => (
+              <div key={a.id} className={C}>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-bold">{a.title}</h4>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${a.status === "승인" ? "bg-emerald-100 text-emerald-700" : a.status === "반려" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>{a.status}</span>
+                </div>
+                <p className="text-xs text-slate-600 whitespace-pre-wrap mb-2">{a.content}</p>
+                <div className="flex gap-3 text-[11px] text-slate-400 mb-2">
+                  <span>요청: {a.author}</span>
+                  <span>결재자: {a.approver}</span>
+                  <span>{a.date}</span>
+                </div>
+                {a.comment && <p className="text-xs bg-slate-50 rounded-lg px-3 py-2 mb-2"><b>{a.status === "승인" ? "승인 의견:" : "반려 사유:"}</b> {a.comment}</p>}
+                {a.status === "대기" && (
+                  <div className="flex gap-2">
+                    <button onClick={() => { const c = prompt("승인 의견 (선택)"); updateApproval(a.id, "승인", c ?? ""); }} className="text-[11px] text-emerald-600 font-semibold bg-emerald-50 px-3 py-1.5 rounded-lg">✅ 승인</button>
+                    <button onClick={() => { const c = prompt("반려 사유"); if (c) updateApproval(a.id, "반려", c); }} className="text-[11px] text-red-500 font-semibold bg-red-50 px-3 py-1.5 rounded-lg">❌ 반려</button>
+                    <button onClick={() => delApproval(a.id)} className="text-[11px] text-red-400 ml-auto">삭제</button>
+                  </div>
+                )}
+                {a.status !== "대기" && (
+                  <button onClick={() => delApproval(a.id)} className="text-[11px] text-red-400">삭제</button>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </main>
