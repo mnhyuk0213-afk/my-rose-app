@@ -134,36 +134,55 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
     if (!s) return;
     setUploading(true);
 
+    let uploaded = false;
+
+    // 1차: R2 시도
     try {
-      // R2에 업로드
       const formData = new FormData();
       formData.append("file", file);
       if (currentFolder) formData.append("folder", currentFolder);
 
       const res = await fetch("/api/r2/upload", { method: "POST", body: formData });
-      const data = await res.json();
-
-      if (!res.ok) {
-        flash("업로드 실패: " + (data.error || "알 수 없는 오류"));
-        setUploading(false);
-        return;
+      if (res.ok) {
+        const data = await res.json();
+        await s.from("hq_files").insert({
+          name: data.name,
+          size: data.size,
+          type: data.type,
+          url: data.url,
+          folder_id: currentFolder || null,
+          uploaded_by: userName,
+        });
+        uploaded = true;
+        flash("파일 업로드 완료");
       }
+    } catch {}
 
-      // DB에 메타데이터 저장
-      await s.from("hq_files").insert({
-        name: data.name,
-        size: data.size,
-        type: data.type,
-        url: data.url,
-        r2_key: data.key,
-        folder_id: currentFolder || null,
-        uploaded_by: userName,
-        created_at: new Date().toISOString(),
-      });
-
-      flash("파일이 업로드되었습니다 (R2)");
-    } catch (err) {
-      flash("업로드 실패");
+    // 2차: R2 실패 시 Supabase Storage 폴백
+    if (!uploaded) {
+      try {
+        const path = `${Date.now()}_${file.name}`;
+        const { error: uploadErr } = await s.storage.from("hq-files").upload(path, file);
+        if (uploadErr) {
+          flash("업로드 실패: " + uploadErr.message);
+          setUploading(false);
+          if (fileRef.current) fileRef.current.value = "";
+          return;
+        }
+        const { data: { publicUrl } } = s.storage.from("hq-files").getPublicUrl(path);
+        await s.from("hq_files").insert({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: publicUrl,
+          folder_id: currentFolder || null,
+          uploaded_by: userName,
+        });
+        uploaded = true;
+        flash("파일 업로드 완료");
+      } catch {
+        flash("업로드 실패");
+      }
     }
     setUploading(false);
     if (fileRef.current) fileRef.current.value = "";
@@ -174,19 +193,19 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
     const s = sb();
     if (!s) return;
 
-    // R2에서 삭제 (r2_key가 있으면)
-    try {
-      const { data: fileData } = await s.from("hq_files").select("r2_key").eq("id", f.id).single();
-      if (fileData?.r2_key) {
-        await fetch("/api/r2/delete", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key: fileData.r2_key }),
-        });
-      }
-    } catch {}
+    // R2 또는 Supabase Storage에서 삭제 시도
+    if (f.url.includes("r2.dev")) {
+      try {
+        const key = f.url.split(".r2.dev/")[1];
+        if (key) await fetch("/api/r2/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: decodeURIComponent(key) }) });
+      } catch {}
+    } else if (f.url.includes("supabase")) {
+      try {
+        const path = f.url.split("/hq-files/")[1];
+        if (path) await s.storage.from("hq-files").remove([decodeURIComponent(path)]);
+      } catch {}
+    }
 
-    // DB에서 삭제
     await s.from("hq_files").delete().eq("id", f.id);
     flash("파일이 삭제되었습니다");
     load(currentFolder);
