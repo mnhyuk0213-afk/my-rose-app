@@ -5,7 +5,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 
-type Tab = "dashboard" | "mett" | "kpi" | "goal" | "task" | "aar" | "notice" | "report" | "feedback" | "calendar" | "memo" | "team" | "timeline" | "files" | "chat" | "approval";
+type Tab = "dashboard" | "mett" | "kpi" | "goal" | "task" | "aar" | "notice" | "report" | "feedback" | "calendar" | "memo" | "team" | "timeline" | "files" | "chat" | "approval" | "decision";
+type Decision = { id: string; title: string; decision: string; reason: string; owner: string; date: string; followUp: string };
+type TaskComment = { id: string; author: string; text: string; time: string };
+type ReportType = "daily" | "weekly" | "issue" | "project";
+type DailyReport = { id: string; date: string; content: string; problems: string; nextSteps: string };
+type IssueReport = { id: string; title: string; description: string; priority: string; status: string };
+type ProjectReport = { id: string; title: string; progress: number; description: string; deadline: string };
 type Approval = { id: string; title: string; content: string; author: string; approver: string; status: "대기" | "승인" | "반려"; comment: string; fileUrl?: string; fileName?: string; date: string };
 type FileItem = { id: string; name: string; size: string; type: string; url: string; uploadedAt: string; uploadedBy: string };
 type ChatMsg = { id: string; sender: string; text: string; time: string };
@@ -14,12 +20,12 @@ type TeamMember = { id: string; name: string; role: string; email: string; statu
 
 // 권한별 접근 가능 탭
 const ROLE_PERMISSIONS: Record<HQRole, Tab[]> = {
-  "대표": ["dashboard", "mett", "kpi", "goal", "task", "aar", "notice", "report", "feedback", "calendar", "memo", "team", "timeline", "files", "chat", "approval"],
-  "이사": ["dashboard", "mett", "kpi", "goal", "task", "aar", "notice", "report", "feedback", "calendar", "memo", "timeline", "files", "chat", "approval"],
-  "팀장": ["dashboard", "kpi", "task", "aar", "notice", "report", "feedback", "calendar", "memo", "files", "chat"],
+  "대표": ["dashboard", "mett", "kpi", "goal", "task", "aar", "notice", "report", "feedback", "calendar", "memo", "team", "timeline", "files", "chat", "approval", "decision"],
+  "이사": ["dashboard", "mett", "kpi", "goal", "task", "aar", "notice", "report", "feedback", "calendar", "memo", "timeline", "files", "chat", "approval", "decision"],
+  "팀장": ["dashboard", "kpi", "task", "aar", "notice", "report", "feedback", "calendar", "memo", "files", "chat", "decision"],
   "팀원": ["dashboard", "task", "notice", "calendar", "memo", "chat"],
 };
-type Notice = { id: string; title: string; content: string; date: string; pinned: boolean; author: string };
+type Notice = { id: string; title: string; content: string; date: string; pinned: boolean; author: string; readBy?: string[] };
 type Feedback = { id: string; type: string; title: string; description: string; priority: string; status: string; date: string; author: string };
 type MemoItem = { id: string; content: string; time: string };
 type Mett = { id: string; mission: string; enemy: string; terrain: string; troops: string; time_constraint: string; civil: string; created_at: string };
@@ -45,6 +51,7 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "files", label: "파일", icon: "📁" },
   { key: "chat", label: "채팅", icon: "💬" },
   { key: "approval", label: "결재", icon: "📋" },
+  { key: "decision", label: "의사결정", icon: "⚖️" },
 ];
 
 const fmt = (n: number) => n.toLocaleString("ko-KR");
@@ -94,6 +101,18 @@ export default function HQPage() {
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [approvalForm, setApprovalForm] = useState({ title: "", content: "", approver: "" });
   const [approvalFile, setApprovalFile] = useState<File | null>(null);
+  const [decisions, setDecisions] = useState<Decision[]>([]);
+  const [decisionForm, setDecisionForm] = useState({ title: "", decision: "", reason: "", owner: "", followUp: "" });
+  const [taskComments, setTaskComments] = useState<Record<string, TaskComment[]>>({});
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState("");
+  const [reportType, setReportType] = useState<ReportType>("weekly");
+  const [dailyReports, setDailyReports] = useState<DailyReport[]>([]);
+  const [dailyForm, setDailyForm] = useState({ date: new Date().toISOString().slice(0, 10), content: "", problems: "", nextSteps: "" });
+  const [issueReports, setIssueReports] = useState<IssueReport[]>([]);
+  const [issueForm, setIssueForm] = useState({ title: "", description: "", priority: "중간", status: "신규" });
+  const [projectReports, setProjectReports] = useState<ProjectReport[]>([]);
+  const [projectForm, setProjectForm] = useState({ title: "", progress: "", description: "", deadline: "" });
   const [platformStats, setPlatformStats] = useState({ totalUsers: 0, todayUsers: 0, totalRevenue: 0, activeSubscribers: 0 });
   const [userName, setUserName] = useState("관리자");
   const [myRole, setMyRole] = useState<HQRole>("팀원");
@@ -184,6 +203,9 @@ export default function HQPage() {
       // files는 Supabase Storage에서 로드 (별도 처리 불필요 — 업로드 시 state에 추가)
       try { const ch = localStorage.getItem("vela-hq-chat"); if (ch) setChatMsgs(JSON.parse(ch)); } catch {}
       try { const ap = localStorage.getItem("vela-hq-approvals"); if (ap) setApprovals(JSON.parse(ap)); } catch {}
+      try { const dc = localStorage.getItem("vela-hq-decisions"); if (dc) setDecisions(JSON.parse(dc)); } catch {}
+      try { const tc = localStorage.getItem("vela-hq-task-comments"); if (tc) setTaskComments(JSON.parse(tc)); } catch {}
+      try { const rp = localStorage.getItem("vela-hq-reports"); if (rp) { const d = JSON.parse(rp); setDailyReports(d.daily ?? []); setIssueReports(d.issue ?? []); setProjectReports(d.project ?? []); } } catch {}
       setLoading(false);
     })();
   }, []);
@@ -330,6 +352,56 @@ export default function HQPage() {
     flash(`✓ ${status}됨`);
   };
   const delApproval = (id: string) => { const next = approvals.filter(a => a.id !== id); setApprovals(next); localStorage.setItem("vela-hq-approvals", JSON.stringify(next)); };
+
+  // Decision helpers
+  const saveDecision = () => {
+    if (!decisionForm.title.trim()) return;
+    const d: Decision = { id: Date.now().toString(), ...decisionForm, date: new Date().toISOString().slice(0, 10) };
+    const next = [d, ...decisions]; setDecisions(next); localStorage.setItem("vela-hq-decisions", JSON.stringify(next));
+    setDecisionForm({ title: "", decision: "", reason: "", owner: "", followUp: "" }); flash("✓ 의사결정 저장됨");
+  };
+  const delDecision = (id: string) => { const next = decisions.filter(d => d.id !== id); setDecisions(next); localStorage.setItem("vela-hq-decisions", JSON.stringify(next)); };
+
+  // Task comment helpers
+  const addTaskComment = (taskId: string) => {
+    if (!commentText.trim()) return;
+    const c: TaskComment = { id: Date.now().toString(), author: userName, text: commentText.trim(), time: new Date().toLocaleString("ko-KR") };
+    const next = { ...taskComments, [taskId]: [...(taskComments[taskId] ?? []), c] };
+    setTaskComments(next); localStorage.setItem("vela-hq-task-comments", JSON.stringify(next)); setCommentText("");
+  };
+
+  // Notice read tracking
+  const markNoticeRead = (id: string) => {
+    setExpandedNotice(expandedNotice === id ? null : id);
+    const n = notices.find(x => x.id === id);
+    if (n && !(n.readBy ?? []).includes(userName)) {
+      const next = notices.map(x => x.id === id ? { ...x, readBy: [...(x.readBy ?? []), userName] } : x);
+      setNotices(next); localStorage.setItem("vela-hq-notices", JSON.stringify(next));
+    }
+  };
+
+  // Report sub-type helpers
+  const saveReports = (daily: DailyReport[], issue: IssueReport[], project: ProjectReport[]) => {
+    localStorage.setItem("vela-hq-reports", JSON.stringify({ daily, issue, project }));
+  };
+  const saveDailyReport = () => {
+    if (!dailyForm.content.trim()) return;
+    const r: DailyReport = { id: Date.now().toString(), ...dailyForm };
+    const next = [r, ...dailyReports]; setDailyReports(next); saveReports(next, issueReports, projectReports);
+    setDailyForm({ date: new Date().toISOString().slice(0, 10), content: "", problems: "", nextSteps: "" }); flash("✓ 저장됨");
+  };
+  const saveIssueReport = () => {
+    if (!issueForm.title.trim()) return;
+    const r: IssueReport = { id: Date.now().toString(), ...issueForm };
+    const next = [r, ...issueReports]; setIssueReports(next); saveReports(dailyReports, next, projectReports);
+    setIssueForm({ title: "", description: "", priority: "중간", status: "신규" }); flash("✓ 저장됨");
+  };
+  const saveProjectReport = () => {
+    if (!projectForm.title.trim()) return;
+    const r: ProjectReport = { id: Date.now().toString(), title: projectForm.title, progress: Number(projectForm.progress) || 0, description: projectForm.description, deadline: projectForm.deadline };
+    const next = [r, ...projectReports]; setProjectReports(next); saveReports(dailyReports, issueReports, next);
+    setProjectForm({ title: "", progress: "", description: "", deadline: "" }); flash("✓ 저장됨");
+  };
 
   // Report helper
   const genReport = () => {
@@ -598,13 +670,28 @@ export default function HQPage() {
               </div>
             </div>
             {tasks.map(t => (
-              <div key={t.id} className={`${C} flex items-center gap-3`}>
-                <button onClick={() => updateTask(t.id, t.status === "completed" ? "pending" : "completed")} className={`w-5 h-5 rounded flex-shrink-0 flex items-center justify-center text-[10px] ${t.status === "completed" ? "bg-emerald-500 text-white" : "border border-slate-300"}`}>{t.status === "completed" ? "✓" : ""}</button>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm ${t.status === "completed" ? "text-slate-400 line-through" : "text-slate-900"}`}>{t.title}</p>
-                  <div className="flex gap-2 text-[11px] text-slate-400">{t.assignee && <span>👤 {t.assignee}</span>}{t.deadline && <span>📅 {t.deadline.slice(5)}</span>}</div>
+              <div key={t.id} className={C}>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => updateTask(t.id, t.status === "completed" ? "pending" : "completed")} className={`w-5 h-5 rounded flex-shrink-0 flex items-center justify-center text-[10px] ${t.status === "completed" ? "bg-emerald-500 text-white" : "border border-slate-300"}`}>{t.status === "completed" ? "✓" : ""}</button>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm ${t.status === "completed" ? "text-slate-400 line-through" : "text-slate-900"}`}>{t.title}</p>
+                    <div className="flex gap-2 text-[11px] text-slate-400">{t.assignee && <span>👤 {t.assignee}</span>}{t.deadline && <span>📅 {t.deadline.slice(5)}</span>}</div>
+                  </div>
+                  <button onClick={() => setExpandedTaskId(expandedTaskId === t.id ? null : t.id)} className="text-[10px] text-blue-500">💬 {(taskComments[t.id] ?? []).length}</button>
+                  <button onClick={() => delTask(t.id)} className="text-[10px] text-red-400">✕</button>
                 </div>
-                <button onClick={() => delTask(t.id)} className="text-[10px] text-red-400">✕</button>
+                {expandedTaskId === t.id && (
+                  <div className="mt-2 pt-2 border-t border-slate-100">
+                    <p className="text-[11px] font-semibold text-slate-500 mb-1">코멘트</p>
+                    {(taskComments[t.id] ?? []).map(c => (
+                      <div key={c.id} className="text-xs text-slate-600 mb-1"><b>{c.author}</b> <span className="text-slate-400">{c.time}</span><p>{c.text}</p></div>
+                    ))}
+                    <div className="flex gap-1 mt-1">
+                      <input className={`${I} flex-1 !py-1 !text-xs`} value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="코멘트 입력..." onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addTaskComment(t.id))} />
+                      <button onClick={() => addTaskComment(t.id)} className="text-[11px] text-blue-600 font-semibold px-2">등록</button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -651,8 +738,8 @@ export default function HQPage() {
             {sortedNotices.map(n => (
               <div key={n.id} className={C}>
                 <div className="flex items-center justify-between mb-1">
-                  <button onClick={() => setExpandedNotice(expandedNotice === n.id ? null : n.id)} className="text-sm font-bold text-left flex-1">{n.pinned && "📌 "}{n.title}</button>
-                  <span className="text-[11px] text-slate-400 flex-shrink-0 ml-2">{n.author ?? "관리자"} · {n.date}</span>
+                  <button onClick={() => markNoticeRead(n.id)} className="text-sm font-bold text-left flex-1">{n.pinned && "📌 "}{n.title}</button>
+                  <span className="text-[11px] text-slate-400 flex-shrink-0 ml-2">읽음 {(n.readBy ?? []).length}명 · {n.author ?? "관리자"} · {n.date}</span>
                 </div>
                 {expandedNotice === n.id && <p className="text-xs text-slate-600 whitespace-pre-wrap mt-1 mb-2">{n.content}</p>}
                 <div className="flex gap-2 text-[11px]">
@@ -667,13 +754,63 @@ export default function HQPage() {
         {/* Report */}
         {tab === "report" && (
           <div className="space-y-3">
-            <div className={C}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold">📄 주간 보고서</h3>
-                <button onClick={() => { navigator.clipboard.writeText(genReport()); flash("📋 복사됨"); }} className={B}>📋 복사</button>
-              </div>
-              <pre className="text-xs text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-lg p-3 leading-relaxed">{genReport()}</pre>
+            <div className="flex gap-1 mb-2">
+              {([["daily", "일일"], ["weekly", "주간"], ["issue", "이슈"], ["project", "프로젝트"]] as const).map(([k, l]) => (
+                <button key={k} onClick={() => setReportType(k)} className={`px-3 py-1.5 text-xs font-semibold rounded-lg ${reportType === k ? "bg-blue-600 text-white" : "bg-white text-slate-500 border border-slate-200"}`}>{l}</button>
+              ))}
             </div>
+            {reportType === "weekly" && (
+              <div className={C}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold">📄 주간 보고서 (자동생성)</h3>
+                  <button onClick={() => { navigator.clipboard.writeText(genReport()); flash("📋 복사됨"); }} className={B}>📋 복사</button>
+                </div>
+                <pre className="text-xs text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-lg p-3 leading-relaxed">{genReport()}</pre>
+              </div>
+            )}
+            {reportType === "daily" && (<>
+              <div className={C}>
+                <h3 className="text-sm font-bold mb-2">일일 보고</h3>
+                <div className="space-y-2">
+                  <div><label className={L}>날짜</label><input type="date" className={I} value={dailyForm.date} onChange={e => setDailyForm({ ...dailyForm, date: e.target.value })} /></div>
+                  <div><label className={L}>업무 내용</label><textarea className={`${I} h-14`} value={dailyForm.content} onChange={e => setDailyForm({ ...dailyForm, content: e.target.value })} /></div>
+                  <div><label className={L}>문제점</label><input className={I} value={dailyForm.problems} onChange={e => setDailyForm({ ...dailyForm, problems: e.target.value })} /></div>
+                  <div><label className={L}>다음 계획</label><input className={I} value={dailyForm.nextSteps} onChange={e => setDailyForm({ ...dailyForm, nextSteps: e.target.value })} /></div>
+                  <button onClick={saveDailyReport} className={B}>저장</button>
+                </div>
+              </div>
+              {dailyReports.map(r => (<div key={r.id} className={C}><p className="text-[11px] text-slate-400 mb-1">{r.date}</p><p className="text-xs">{r.content}</p>{r.problems && <p className="text-xs text-red-500 mt-1">문제: {r.problems}</p>}{r.nextSteps && <p className="text-xs text-blue-600 mt-1">다음: {r.nextSteps}</p>}</div>))}
+            </>)}
+            {reportType === "issue" && (<>
+              <div className={C}>
+                <h3 className="text-sm font-bold mb-2">이슈 보고</h3>
+                <div className="space-y-2">
+                  <div><label className={L}>제목</label><input className={I} value={issueForm.title} onChange={e => setIssueForm({ ...issueForm, title: e.target.value })} /></div>
+                  <div><label className={L}>설명</label><textarea className={`${I} h-14`} value={issueForm.description} onChange={e => setIssueForm({ ...issueForm, description: e.target.value })} /></div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><label className={L}>우선순위</label><select className={I} value={issueForm.priority} onChange={e => setIssueForm({ ...issueForm, priority: e.target.value })}><option>높음</option><option>중간</option><option>낮음</option></select></div>
+                    <div><label className={L}>상태</label><select className={I} value={issueForm.status} onChange={e => setIssueForm({ ...issueForm, status: e.target.value })}><option>신규</option><option>진행</option><option>완료</option></select></div>
+                  </div>
+                  <button onClick={saveIssueReport} className={B}>저장</button>
+                </div>
+              </div>
+              {issueReports.map(r => (<div key={r.id} className={C}><div className="flex gap-2 text-[10px] mb-1"><span className="font-bold">{r.priority}</span><span className="text-slate-400">{r.status}</span></div><p className="text-sm font-semibold">{r.title}</p>{r.description && <p className="text-xs text-slate-500 mt-1">{r.description}</p>}</div>))}
+            </>)}
+            {reportType === "project" && (<>
+              <div className={C}>
+                <h3 className="text-sm font-bold mb-2">프로젝트 보고</h3>
+                <div className="space-y-2">
+                  <div><label className={L}>프로젝트명</label><input className={I} value={projectForm.title} onChange={e => setProjectForm({ ...projectForm, title: e.target.value })} /></div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><label className={L}>진행률(%)</label><input className={I} inputMode="numeric" value={projectForm.progress} onChange={e => setProjectForm({ ...projectForm, progress: e.target.value })} /></div>
+                    <div><label className={L}>마감일</label><input type="date" className={I} value={projectForm.deadline} onChange={e => setProjectForm({ ...projectForm, deadline: e.target.value })} /></div>
+                  </div>
+                  <div><label className={L}>설명</label><textarea className={`${I} h-14`} value={projectForm.description} onChange={e => setProjectForm({ ...projectForm, description: e.target.value })} /></div>
+                  <button onClick={saveProjectReport} className={B}>저장</button>
+                </div>
+              </div>
+              {projectReports.map(r => (<div key={r.id} className={C}><div className="flex justify-between mb-1"><p className="text-sm font-semibold">{r.title}</p><span className="text-[11px] text-slate-400">{r.deadline}</span></div><div className="h-1.5 bg-slate-100 rounded-full mb-1"><div className="h-full rounded-full bg-blue-500" style={{ width: `${Math.min(r.progress, 100)}%` }} /></div><p className="text-[11px] text-slate-400">{r.progress}%</p>{r.description && <p className="text-xs text-slate-500 mt-1">{r.description}</p>}</div>))}
+            </>)}
           </div>
         )}
 
@@ -932,6 +1069,34 @@ export default function HQPage() {
                 {a.status !== "대기" && (
                   <button onClick={() => delApproval(a.id)} className="text-[11px] text-red-400">삭제</button>
                 )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Decision Log */}
+        {tab === "decision" && (
+          <div className="space-y-3">
+            <div className={C}>
+              <h3 className="text-sm font-bold mb-2">⚖️ 의사결정 기록</h3>
+              <div className="space-y-2">
+                <div><label className={L}>제목</label><input className={I} value={decisionForm.title} onChange={e => setDecisionForm({ ...decisionForm, title: e.target.value })} placeholder="의사결정 주제" /></div>
+                <div><label className={L}>결정 사항</label><textarea className={`${I} h-14`} value={decisionForm.decision} onChange={e => setDecisionForm({ ...decisionForm, decision: e.target.value })} /></div>
+                <div><label className={L}>근거/이유</label><textarea className={`${I} h-14`} value={decisionForm.reason} onChange={e => setDecisionForm({ ...decisionForm, reason: e.target.value })} /></div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><label className={L}>책임자</label><input className={I} value={decisionForm.owner} onChange={e => setDecisionForm({ ...decisionForm, owner: e.target.value })} /></div>
+                  <div><label className={L}>후속 조치</label><input className={I} value={decisionForm.followUp} onChange={e => setDecisionForm({ ...decisionForm, followUp: e.target.value })} /></div>
+                </div>
+                <button onClick={saveDecision} className={B}>저장</button>
+              </div>
+            </div>
+            {decisions.map(d => (
+              <div key={d.id} className={C}>
+                <div className="flex justify-between mb-1"><h4 className="text-sm font-bold">{d.title}</h4><span className="text-[11px] text-slate-400">{d.date} · {d.owner}</span></div>
+                <p className="text-xs mb-1"><b>결정:</b> {d.decision}</p>
+                {d.reason && <p className="text-xs text-slate-500 mb-1"><b>근거:</b> {d.reason}</p>}
+                {d.followUp && <p className="text-xs text-blue-600 mb-1"><b>후속:</b> {d.followUp}</p>}
+                <button onClick={() => delDecision(d.id)} className="text-[11px] text-red-400">삭제</button>
               </div>
             ))}
           </div>
