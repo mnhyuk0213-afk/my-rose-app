@@ -1969,8 +1969,8 @@ export default function Page() {
           )}
         </section>
 
-        {/* 모바일 플로팅 미리보기 — 최상단 고정 */}
-        <div className="lg:hidden sticky top-[56px] z-40 mb-3 -mx-4 px-3 pt-1 pb-1 bg-slate-50/95 backdrop-blur-sm">
+        {/* 모바일 플로팅 미리보기 — NavBar 바로 아래 고정 */}
+        <div className="lg:hidden sticky top-0 z-40 mb-3 -mx-4 px-3 pt-1 pb-1 bg-slate-50/95 backdrop-blur-sm">
           <PreviewBar form={form} />
         </div>
 

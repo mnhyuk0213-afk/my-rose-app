@@ -25,11 +25,11 @@ export default function DarkModeToggle() {
         </div>
         <button
           onClick={toggle}
-          className={`relative w-14 h-7 rounded-full transition-colors ${isDark ? "bg-blue-600" : "bg-slate-200"}`}
+          className={`relative w-11 h-6 rounded-full transition-colors ${isDark ? "bg-blue-600" : "bg-slate-200"}`}
           aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
         >
           <span
-            className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${isDark ? "translate-x-7" : "translate-x-1"}`}
+            className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${isDark ? "translate-x-5" : "translate-x-0.5"}`}
           />
         </button>
       </div>

@@ -91,9 +91,9 @@ export default function ConsentManager({ userId }: { userId: string | null }) {
         <button
           onClick={toggleMarketing}
           disabled={saving}
-          className={`relative w-12 h-6 rounded-full transition-colors ${consent?.marketing_agreed ? "bg-blue-600" : "bg-slate-200"} disabled:opacity-50`}
+          className={`relative w-11 h-6 rounded-full transition-colors ${consent?.marketing_agreed ? "bg-blue-600" : "bg-slate-200"} disabled:opacity-50`}
         >
-          <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${consent?.marketing_agreed ? "translate-x-6" : "translate-x-0.5"}`} />
+          <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${consent?.marketing_agreed ? "translate-x-5" : "translate-x-0.5"}`} />
         </button>
       </div>
     </div>
