@@ -7,6 +7,8 @@ export default function InstallPrompt() {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
+    // PC에서는 숨기기 — 모바일만 표시
+    if (window.innerWidth > 768) return;
     // Don't show if already dismissed this session
     if (sessionStorage.getItem("vela-install-dismissed")) return;
     // Don't show if already installed (standalone mode)
