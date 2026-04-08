@@ -34,12 +34,12 @@ function FadeIn({ children, delay = 0, className = "" }: { children: React.React
 
 function HeroMiniSim() {
   const t = useTranslation();
-  const [seats, setSeats] = useState(36);
-  const [spend, setSpend] = useState(25000);
-  const [turn, setTurn] = useState(1.6);
-  const [cogsRate, setCogsRate] = useState(32);
-  const [rent, setRent] = useState(200);
-  const [labor, setLabor] = useState(500);
+  const [seats, setSeats] = useState(28);
+  const [spend, setSpend] = useState(20000);
+  const [turn, setTurn] = useState(1.4);
+  const [cogsRate, setCogsRate] = useState(33);
+  const [rent, setRent] = useState(250);
+  const [labor, setLabor] = useState(600);
   const sales = Math.round(seats * spend * turn * 26);
   const cost = Math.round(sales * cogsRate / 100 + labor * 10000 + rent * 10000 + 500000);
   const profit = sales - cost;
@@ -391,8 +391,8 @@ function LandingContent() {
               <h1 className="hero-title">{t("hero.title1")}<br /><span>{t("hero.title2")}</span></h1>
               <p className="hero-desc">{t("hero.desc")}</p>
               <div className="hero-actions">
-                <Link href="/simulator" className="btn-primary" style={{padding:"18px 36px",fontSize:17,borderRadius:16,animation:"pulse-glow 3s infinite 2s"}}>시뮬레이터 시작 →</Link>
-                <a href="#features" className="btn-secondary" style={{padding:"18px 32px",fontSize:17,borderRadius:16}}>도구 둘러보기</a>
+                <Link href="/signup" className="btn-primary" style={{padding:"18px 36px",fontSize:17,borderRadius:16,animation:"pulse-glow 3s infinite 2s"}}>무료로 시작하기</Link>
+                <Link href="/tools" className="btn-secondary" style={{padding:"18px 32px",fontSize:17,borderRadius:16}}>도구 둘러보기</Link>
               </div>
               <p style={{fontSize:13,color:"var(--gray-400)",marginTop:16,display:"flex",alignItems:"center",gap:8}}>
                 <span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:"#059669",animation:"pulse-glow 2s infinite"}} />
@@ -632,6 +632,7 @@ function LandingContent() {
             <div className="footer-legal">
               <Link href="/terms">이용약관</Link>
               <Link href="/privacy">개인정보처리방침</Link>
+              <Link href="/refund">환불 정책</Link>
               <a href="#contact">문의</a>
             </div>
           </div>
