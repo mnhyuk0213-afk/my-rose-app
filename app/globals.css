@@ -31,6 +31,12 @@ body {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
+/* ── 라이트 모드 가독성 강화 ───────────────────────── */
+.text-slate-400 { color: #6B7684 !important; }
+.text-slate-500 { color: #4E5968 !important; }
+.text-gray-400 { color: #6B7684 !important; }
+.text-gray-500 { color: #4E5968 !important; }
+
 /* ── 슬라이더 커스텀 ───────────────────────────────── */
 input[type="range"].vela-slider {
   -webkit-appearance: none;
