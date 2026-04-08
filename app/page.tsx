@@ -634,6 +634,14 @@ function LandingContent() {
               <a href="#contact">문의</a>
             </div>
           </div>
+          <div style={{fontSize:"12px",color:"var(--gray-400)",lineHeight:"1.6",marginBottom:"24px"}}>
+            상호명: 벨라솔루션 | 대표자: 김민혁<br />
+            사업자등록번호: 777-17-02386<br />
+            통신판매업 신고번호: 제2026-대전중구-0222호<br />
+            주소: 대전광역시 중구 당디로96번길 9, 204호(유천동)<br />
+            전화번호: 010-2863-3754 | 이메일: mnhyuk@velaanalytics.com<br />
+            호스팅 서비스 제공자: Vercel Inc.
+          </div>
           <div className="footer-bottom">
             <div className="footer-copy">© {new Date().getFullYear()} VELA. All rights reserved.</div>
             <div className="footer-legal">
