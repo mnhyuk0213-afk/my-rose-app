@@ -342,7 +342,7 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
                     다운로드
                   </a>
                   <button
-                    onClick={() => setMovingFile(movingFile === f.id ? null : f.id)}
+                    onClick={(e) => { e.stopPropagation(); setMovingFile(movingFile === f.id ? null : f.id); }}
                     className="text-xs text-slate-400 hover:text-amber-600 transition-colors px-2 py-1"
                   >
                     이동
@@ -355,14 +355,16 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
                   </button>
                 </div>
                 {movingFile === f.id && (
-                  <div className="absolute right-0 top-full mt-1 z-10 bg-white border border-slate-200 rounded-xl shadow-lg p-2 min-w-[180px]">
+                  <div className="absolute right-0 top-full mt-1 z-10 bg-white border border-slate-200 rounded-xl shadow-lg p-2 min-w-[180px]" onClick={(e) => e.stopPropagation()}>
                     <p className="text-[10px] text-slate-400 font-semibold px-2 mb-1">이동할 폴더 선택</p>
-                    <button
-                      onClick={() => moveFile(f.id, null)}
-                      className="w-full text-left text-xs px-2 py-1.5 rounded-lg hover:bg-slate-50 text-slate-600"
-                    >
-                      📂 루트
-                    </button>
+                    {currentFolder && (
+                      <button
+                        onClick={() => moveFile(f.id, null)}
+                        className="w-full text-left text-xs px-2 py-1.5 rounded-lg hover:bg-slate-50 text-slate-600"
+                      >
+                        📂 루트
+                      </button>
+                    )}
                     {allFolders.filter(af => af.id !== currentFolder).map(af => (
                       <button
                         key={af.id}
@@ -372,6 +374,12 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
                         📁 {af.name}
                       </button>
                     ))}
+                    <button
+                      onClick={() => setMovingFile(null)}
+                      className="w-full text-left text-xs px-2 py-1.5 rounded-lg hover:bg-red-50 text-slate-400 mt-1 border-t border-slate-100 pt-1.5"
+                    >
+                      취소
+                    </button>
                   </div>
                 )}
               </div>
