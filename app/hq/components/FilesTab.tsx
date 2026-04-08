@@ -106,7 +106,6 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
 
   const createFolder = async () => {
     if (!newFolder.trim()) return;
-    if (depth >= 2) return flash("폴더는 최대 2단계까지 생성 가능합니다");
     const s = sb();
     if (!s) return;
     const { error } = await s.from("hq_folders").insert({
