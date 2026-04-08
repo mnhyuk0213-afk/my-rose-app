@@ -46,8 +46,8 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
           s.from("hq_mett").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(3),
           s.from("profiles").select("id", { count: "exact", head: true }),
           s.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", today() + "T00:00:00"),
-          s.from("payments").select("amount").eq("status", "paid"),
-          s.from("payments").select("id", { count: "exact", head: true }).eq("status", "active"),
+          s.from("payments").select("amount").eq("status", "done"),
+          s.from("payments").select("id", { count: "exact", head: true }).eq("status", "done"),
         ]);
       setMetrics((mRes.data as Metric[]) ?? []);
       setGoals((gRes.data as Goal[]) ?? []);
