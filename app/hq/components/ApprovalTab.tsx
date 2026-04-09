@@ -52,7 +52,7 @@ export default function ApprovalTab({ userId, userName, myRole, flash }: Props) 
       })));
     if (teamData)
       setApprovers(
-        (teamData as TeamMember[]).filter(m => ["대표", "이사"].includes(m.hqRole))
+        (teamData as any[]).map(m => ({ name: m.name, hqRole: m.hq_role ?? "팀원" })).filter(m => ["대표", "이사"].includes(m.hqRole))
       );
     setLoading(false);
   };
