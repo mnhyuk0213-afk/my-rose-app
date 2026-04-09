@@ -1,8 +1,9 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import {
   Tab, HQRole, TABS, SIDEBAR_GROUPS, ROLE_PERMISSIONS, TAB_MAP,
@@ -61,7 +62,10 @@ const TAB_COMPONENTS: Record<Tab, React.ComponentType<{ userId: string; userName
 };
 
 export default function HQPage() {
-  const [tab, setTab] = useState<Tab>("dashboard");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const tabParam = searchParams.get("tab") as Tab | null;
+  const [tab, setTabState] = useState<Tab>(tabParam && TABS.some(t => t.key === tabParam) ? tabParam : "dashboard");
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
@@ -69,6 +73,18 @@ export default function HQPage() {
   const [userName, setUserName] = useState("관리자");
   const [myRole, setMyRole] = useState<HQRole>("팀원");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const setTab = useCallback((t: Tab) => {
+    setTabState(t);
+    router.push(`/hq?tab=${t}`, { scroll: false });
+  }, [router]);
+
+  // URL 변경 시 탭 동기화
+  useEffect(() => {
+    if (tabParam && TABS.some(t => t.key === tabParam) && tabParam !== tab) {
+      setTabState(tabParam);
+    }
+  }, [tabParam]);
 
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 2500); };
 
