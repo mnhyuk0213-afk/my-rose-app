@@ -396,28 +396,21 @@ export default function HQPage() {
         </main>
       </div>
 
-      {/* ── 모바일 하단 네비게이션 ─────────────────────── */}
+      {/* ── 모바일 하단 네비게이션 (스크롤 가능) ──────────── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200/80" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        <div className="flex items-center justify-around h-14">
-          {BOTTOM_NAV_TABS.map(item => {
-            const isMore = item.key === "more";
-            const isActive = !isMore && tab === item.key;
+        <div className="flex items-center overflow-x-auto scrollbar-none h-14">
+          {allowedTabs.map(item => {
+            const isActive = tab === item.key;
             return (
               <button
                 key={item.key}
-                onClick={() => {
-                  if (isMore) {
-                    setSidebarOpen(true);
-                  } else {
-                    setTab(item.key as Tab);
-                  }
-                }}
-                className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
+                onClick={() => setTab(item.key)}
+                className={`flex flex-col items-center justify-center gap-0.5 min-w-[64px] px-2 h-full transition-colors flex-shrink-0 ${
                   isActive ? "text-[#3182F6]" : "text-slate-400"
                 }`}
               >
                 <span className="text-lg leading-none">{item.icon}</span>
-                <span className={`text-[10px] font-semibold ${isActive ? "text-[#3182F6]" : "text-slate-400"}`}>{item.label}</span>
+                <span className={`text-[10px] font-semibold whitespace-nowrap ${isActive ? "text-[#3182F6]" : "text-slate-400"}`}>{item.label}</span>
               </button>
             );
           })}

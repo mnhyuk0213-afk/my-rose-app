@@ -143,7 +143,14 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
       setTasks((tRes.data as Task[]) ?? []);
       setAars((aRes.data as AAR[]) ?? []);
       setMetts((meRes.data as Mett[]) ?? []);
-      setTotalUsers(pAll.count ?? 0);
+      // 직원 이메일 제외한 사용자 수 계산
+      let staffEmails: string[] = [];
+      try {
+        const { data: teamData } = await s.from("hq_team").select("email");
+        if (teamData) staffEmails = teamData.map((t: any) => t.email).filter(Boolean);
+      } catch {}
+      const staffCount = staffEmails.length;
+      setTotalUsers(Math.max(0, (pAll.count ?? 0) - staffCount));
       setTodaySignups(pToday.count ?? 0);
       setTotalRevenue((payAll.data ?? []).reduce((s: number, p: { amount: number }) => s + (p.amount || 0), 0));
       setActiveSubs(paySub.count ?? 0);
