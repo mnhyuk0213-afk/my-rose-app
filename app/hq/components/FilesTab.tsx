@@ -149,6 +149,8 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
   const [confirmDelete, setConfirmDelete] = useState<{ type: "file" | "folder"; id: string; name: string } | null>(null);
   const [uploadSecurity, setUploadSecurity] = useState<SecurityLevel>("내부용");
   const [securityFilter, setSecurityFilter] = useState<SecurityLevel | "all">("all");
+  const [sortBy, setSortBy] = useState<"name" | "date" | "size" | "type">("date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isAdmin = myRole === "대표" || myRole === "이사";
@@ -521,12 +523,36 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
       <div className={C}>
         {(() => {
           const accessibleFiles = files.filter(f => canAccessSecurity(myRole, (f.security as SecurityLevel) || "내부용"));
-          const filteredFiles = securityFilter === "all" ? accessibleFiles : accessibleFiles.filter(f => (f.security || "내부용") === securityFilter);
+          const filtered = securityFilter === "all" ? accessibleFiles : accessibleFiles.filter(f => (f.security || "내부용") === securityFilter);
+          const parseSize = (s: string) => { const n = parseFloat(s); if (s.includes("MB")) return n * 1024; return n; };
+          const filteredFiles = [...filtered].sort((a, b) => {
+            let cmp = 0;
+            if (sortBy === "name") cmp = a.name.localeCompare(b.name, "ko");
+            else if (sortBy === "date") cmp = (a.uploadedAt || "").localeCompare(b.uploadedAt || "");
+            else if (sortBy === "size") cmp = parseSize(a.size) - parseSize(b.size);
+            else if (sortBy === "type") cmp = (a.type || "").localeCompare(b.type || "");
+            return sortDir === "asc" ? cmp : -cmp;
+          });
           return (<>
-        <h3 className="text-sm font-bold text-slate-700 mb-3">
-          파일{" "}
-          <span className="font-normal text-slate-400">({filteredFiles.length})</span>
-        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-bold text-slate-700">
+            파일 <span className="font-normal text-slate-400">({filteredFiles.length})</span>
+          </h3>
+          <div className="flex items-center gap-1">
+            {([
+              { key: "name" as const, label: "이름" },
+              { key: "date" as const, label: "날짜" },
+              { key: "size" as const, label: "크기" },
+              { key: "type" as const, label: "유형" },
+            ]).map(s => (
+              <button key={s.key}
+                onClick={() => { if (sortBy === s.key) setSortDir(sortDir === "asc" ? "desc" : "asc"); else { setSortBy(s.key); setSortDir(s.key === "name" ? "asc" : "desc"); } }}
+                className={`text-[11px] px-2 py-1 rounded-lg transition-all ${sortBy === s.key ? "bg-[#3182F6]/10 text-[#3182F6] font-bold" : "text-slate-400 hover:text-slate-600"}`}>
+                {s.label}{sortBy === s.key && (sortDir === "asc" ? " ↑" : " ↓")}
+              </button>
+            ))}
+          </div>
+        </div>
         {loading ? (
           <p className="text-sm text-slate-400 py-8 text-center">
             불러오는 중...
