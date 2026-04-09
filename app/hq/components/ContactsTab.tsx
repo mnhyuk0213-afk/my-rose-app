@@ -120,6 +120,12 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
     [contacts]
   );
 
+  const POSITION_ORDER: Record<string, number> = { "대표": 0, "이사": 1, "팀장": 2, "부장": 3, "차장": 4, "과장": 5, "대리": 6, "사원": 7, "팀원": 8, "인턴": 9 };
+  const posRank = (pos: string) => {
+    for (const [key, val] of Object.entries(POSITION_ORDER)) { if (pos.includes(key)) return val; }
+    return 99;
+  };
+
   const filtered = useMemo(() => {
     let r = contacts;
     if (deptFilter) r = r.filter((c) => c.department === deptFilter);
@@ -134,7 +140,7 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
           c.phone.includes(q)
       );
     }
-    return r;
+    return [...r].sort((a, b) => posRank(a.position) - posRank(b.position));
   }, [contacts, search, deptFilter]);
 
   // Org chart: group by department
