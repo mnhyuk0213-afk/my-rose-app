@@ -108,6 +108,38 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
     }
   };
 
+  const isAdmin = myRole === "대표" || myRole === "이사";
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", department: "", position: "", phone: "", email: "", extension: "" });
+
+  const startEdit = (c: Contact) => {
+    setEditingId(c.id);
+    setEditForm({ name: c.name, department: c.department, position: c.position, phone: c.phone, email: c.email, extension: c.extension });
+  };
+
+  const saveEdit = async () => {
+    if (!editingId) return;
+    const s = sb();
+    if (!s) return;
+    const isTeamContact = editingId.startsWith("team-");
+    const realId = isTeamContact ? editingId.replace("team-", "") : editingId;
+    try {
+      if (isTeamContact) {
+        await s.from("hq_team").update({
+          name: editForm.name, role: editForm.department, email: editForm.email,
+        }).eq("id", realId);
+      } else {
+        await s.from("hq_contacts").update({
+          name: editForm.name, department: editForm.department, position: editForm.position,
+          phone: editForm.phone, email: editForm.email, extension: editForm.extension,
+        }).eq("id", editingId);
+      }
+      flash("수정 완료");
+      setEditingId(null);
+      load();
+    } catch { flash("수정 실패"); }
+  };
+
   const remove = async (id: string) => {
     const s = sb();
     if (!s) { flash("DB 연결 실패"); return; }
@@ -287,53 +319,53 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((c) => (
-              <div
-                key={c.id}
-                className="group bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative"
-              >
-                <button
-                  onClick={() => remove(c.id)}
-                  className="absolute top-3 right-3 text-xs text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  ✕
-                </button>
-                <div className="flex items-center gap-3 mb-3">
-                  <div
-                    className={`w-11 h-11 rounded-full flex items-center justify-center text-base font-bold ${avatarColor(
-                      c.name
-                    )}`}
-                  >
-                    {c.name.charAt(0)}
+              <div key={c.id} className="group bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative">
+                {/* 관리자 버튼 */}
+                {isAdmin && (
+                  <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => startEdit(c)} className="text-xs text-slate-300 hover:text-[#3182F6]">✏️</button>
+                    <button onClick={() => remove(c.id)} className="text-xs text-slate-300 hover:text-red-500">✕</button>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-800">{c.name}</p>
-                    <p className="text-xs text-slate-400 truncate">
-                      {c.position && `${c.position}`}
-                      {c.position && c.department && " · "}
-                      {c.department}
-                    </p>
+                )}
+
+                {/* 수정 모드 */}
+                {editingId === c.id ? (
+                  <div className="space-y-2">
+                    <input className={`${I} !text-xs`} placeholder="이름" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input className={`${I} !text-xs`} placeholder="부서/팀" value={editForm.department} onChange={e => setEditForm({ ...editForm, department: e.target.value })} />
+                      <input className={`${I} !text-xs`} placeholder="직책" value={editForm.position} onChange={e => setEditForm({ ...editForm, position: e.target.value })} />
+                    </div>
+                    <input className={`${I} !text-xs`} placeholder="전화번호" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} />
+                    <input className={`${I} !text-xs`} placeholder="이메일" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
+                    <input className={`${I} !text-xs`} placeholder="내선번호" value={editForm.extension} onChange={e => setEditForm({ ...editForm, extension: e.target.value })} />
+                    <div className="flex gap-2">
+                      <button className={`${B} !text-xs !px-3 !py-1.5`} onClick={saveEdit}>저장</button>
+                      <button className={`${B2} !text-xs !px-3 !py-1.5`} onClick={() => setEditingId(null)}>취소</button>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-1.5 text-xs text-slate-500">
-                  {c.phone && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-300">📱</span>
-                      <span>{c.phone}</span>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-11 h-11 rounded-full flex items-center justify-center text-base font-bold ${avatarColor(c.name)}`}>
+                        {c.name.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-800">{c.name}</p>
+                        <p className="text-xs text-slate-400 truncate">
+                          {c.position && `${c.position}`}
+                          {c.position && c.department && " · "}
+                          {c.department}
+                        </p>
+                      </div>
                     </div>
-                  )}
-                  {c.email && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-300">✉️</span>
-                      <span className="truncate">{c.email}</span>
+                    <div className="space-y-1.5 text-xs text-slate-500">
+                      {c.phone && <div className="flex items-center gap-2"><span className="text-slate-300">📱</span><span>{c.phone}</span></div>}
+                      {c.email && <div className="flex items-center gap-2"><span className="text-slate-300">✉️</span><span className="truncate">{c.email}</span></div>}
+                      {c.extension && <div className="flex items-center gap-2"><span className="text-slate-300">☎️</span><span>내선 {c.extension}</span></div>}
                     </div>
-                  )}
-                  {c.extension && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-300">☎️</span>
-                      <span>내선 {c.extension}</span>
-                    </div>
-                  )}
-                </div>
+                  </>
+                )}
               </div>
             ))}
           </div>

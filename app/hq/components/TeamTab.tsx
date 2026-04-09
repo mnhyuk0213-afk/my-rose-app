@@ -37,18 +37,20 @@ export default function TeamTab({ userId, userName, myRole, flash }: Props) {
     const { data } = await s
       .from("hq_team")
       .select("*")
-      .order("created_at", { ascending: false });
-    if (data)
-      setMembers(
-        data.map((r: any) => ({
-          id: r.id,
-          name: r.name,
-          role: r.role,
-          email: r.email,
-          status: r.status || "offline",
-          hqRole: r.hq_role || "팀원",
-        }))
-      );
+      .order("created_at", { ascending: true });
+    if (data) {
+      const ROLE_RANK: Record<string, number> = { "대표": 0, "이사": 1, "팀장": 2, "팀원": 3 };
+      const mapped = data.map((r: any) => ({
+        id: r.id,
+        name: r.name,
+        role: r.role,
+        email: r.email,
+        status: r.status || "offline",
+        hqRole: (r.hq_role || "팀원") as HQRole,
+      }));
+      mapped.sort((a: TeamMember, b: TeamMember) => (ROLE_RANK[a.hqRole] ?? 9) - (ROLE_RANK[b.hqRole] ?? 9));
+      setMembers(mapped);
+    }
     setLoading(false);
   };
 
