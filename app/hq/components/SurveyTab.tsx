@@ -35,22 +35,54 @@ export default function SurveyTab({ userId, userName, myRole, flash }: Props) {
   // Answer form
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
 
-  useEffect(() => {
-    (async () => {
-      const s = sb();
-      if (s) {
-        try {
-          const { data } = await s.from("hq_surveys").select("*").order("created_at", { ascending: false });
-          if (data && data.length >= 0) { setSurveys(data as SurveyItem[]); }
-        } catch {}
+  const loadSurveys = async () => {
+    const s = sb();
+    if (!s) return;
+    try {
+      const { data, error } = await s.from("hq_surveys").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      if (data) {
+        setSurveys(data.map((d: any) => ({
+          id: d.id,
+          title: d.title ?? "",
+          description: d.description ?? "",
+          author: d.author ?? "",
+          deadline: d.deadline ?? "",
+          status: d.status ?? "진행중",
+          questions: d.questions ?? [],
+          responses: d.responses ?? 0,
+          date: d.created_at?.slice(0, 10) ?? today(),
+        })));
       }
-      try { const d = localStorage.getItem("vela-hq-surveys"); if (d) setSurveys(JSON.parse(d)); } catch {}
-      try { const d = localStorage.getItem("vela-hq-survey-responses"); if (d) setResponses(JSON.parse(d)); } catch {}
-    })();
-  }, []);
+    } catch (e) {
+      console.error("SurveyTab loadSurveys error:", e);
+    }
+  };
 
-  const persistSurveys = (next: SurveyItem[]) => { setSurveys(next); localStorage.setItem("vela-hq-surveys", JSON.stringify(next)); };
-  const persistResponses = (next: SurveyResponse[]) => { setResponses(next); localStorage.setItem("vela-hq-survey-responses", JSON.stringify(next)); };
+  const loadResponses = async () => {
+    const s = sb();
+    if (!s) return;
+    try {
+      const { data, error } = await s.from("hq_survey_responses").select("*").order("created_at", { ascending: true });
+      if (error) throw error;
+      if (data) {
+        setResponses(data.map((d: any) => ({
+          id: d.id,
+          surveyId: d.survey_id ?? "",
+          answers: d.answers ?? {},
+          respondent: d.respondent ?? "",
+          date: d.created_at?.slice(0, 10) ?? today(),
+        })));
+      }
+    } catch (e) {
+      console.error("SurveyTab loadResponses error:", e);
+    }
+  };
+
+  useEffect(() => {
+    loadSurveys();
+    loadResponses();
+  }, []);
 
   const addQuestion = () => {
     setQuestions([...questions, { id: crypto.randomUUID(), type: "단일선택", question: "", options: ["옵션 1", "옵션 2"] }]);
@@ -79,25 +111,31 @@ export default function SurveyTab({ userId, userName, myRole, flash }: Props) {
     updateQuestion(qIdx, { options: (q.options || []).map((o, i) => i === oIdx ? val : o) });
   };
 
-  const createSurvey = () => {
+  const createSurvey = async () => {
     if (!title.trim()) { flash("제목을 입력하세요"); return; }
     if (questions.length === 0) { flash("질문을 추가하세요"); return; }
     if (!deadline) { flash("마감일을 설정하세요"); return; }
-    const survey: SurveyItem = {
-      id: crypto.randomUUID(),
-      title: title.trim(),
-      description: desc.trim(),
-      author: userName,
-      deadline,
-      status: deadline > today() ? "진행중" : "마감",
-      questions,
-      responses: 0,
-      date: today(),
-    };
-    persistSurveys([survey, ...surveys]);
-    flash("설문이 생성되었습니다");
-    setTitle(""); setDesc(""); setDeadline(""); setQuestions([]);
-    setView("list");
+    const s = sb();
+    if (!s) { flash("DB 연결 실패"); return; }
+    try {
+      const { error } = await s.from("hq_surveys").insert({
+        title: title.trim(),
+        description: desc.trim(),
+        author: userName,
+        deadline,
+        status: deadline > today() ? "진행중" : "마감",
+        questions,
+        responses: 0,
+      });
+      if (error) throw error;
+      await loadSurveys();
+      flash("설문이 생성되었습니다");
+      setTitle(""); setDesc(""); setDeadline(""); setQuestions([]);
+      setView("list");
+    } catch (e) {
+      console.error("createSurvey error:", e);
+      flash("설문 생성 실패");
+    }
   };
 
   const openAnswer = (id: string) => {
@@ -108,7 +146,7 @@ export default function SurveyTab({ userId, userName, myRole, flash }: Props) {
     setView("answer");
   };
 
-  const submitAnswer = () => {
+  const submitAnswer = async () => {
     if (!selectedId) return;
     const survey = surveys.find(s => s.id === selectedId);
     if (!survey) return;
@@ -119,17 +157,25 @@ export default function SurveyTab({ userId, userName, myRole, flash }: Props) {
         flash("모든 질문에 답변해 주세요"); return;
       }
     }
-    const resp: SurveyResponse = {
-      id: crypto.randomUUID(),
-      surveyId: selectedId,
-      answers,
-      respondent: userName,
-      date: today(),
-    };
-    persistResponses([...responses, resp]);
-    persistSurveys(surveys.map(s => s.id === selectedId ? { ...s, responses: s.responses + 1 } : s));
-    flash("설문 제출 완료");
-    setView("list");
+    const s = sb();
+    if (!s) { flash("DB 연결 실패"); return; }
+    try {
+      const { error } = await s.from("hq_survey_responses").insert({
+        survey_id: selectedId,
+        respondent: userName,
+        answers,
+      });
+      if (error) throw error;
+      // Update response count on survey
+      await s.from("hq_surveys").update({ responses: (survey.responses ?? 0) + 1 }).eq("id", selectedId);
+      await loadSurveys();
+      await loadResponses();
+      flash("설문 제출 완료");
+      setView("list");
+    } catch (e) {
+      console.error("submitAnswer error:", e);
+      flash("설문 제출 실패");
+    }
   };
 
   const openResult = (id: string) => {

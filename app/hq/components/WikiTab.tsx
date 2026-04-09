@@ -33,20 +33,32 @@ export default function WikiTab({ userId, userName, myRole, flash }: Props) {
   const [fTags, setFTags] = useState("");
   const [fContent, setFContent] = useState("");
 
-  useEffect(() => {
-    (async () => {
-      const s = sb();
-      if (s) {
-        try {
-          const { data } = await s.from("hq_wiki").select("*").order("created_at", { ascending: false });
-          if (data && data.length >= 0) { setArticles(data as WikiArticle[]); return; }
-        } catch {}
+  const loadArticles = async () => {
+    const s = sb();
+    if (!s) return;
+    try {
+      const { data, error } = await s.from("hq_wiki").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      if (data) {
+        setArticles(data.map((d: any) => ({
+          id: d.id,
+          title: d.title ?? "",
+          content: d.content ?? "",
+          category: d.category ?? "일반",
+          author: d.author ?? "",
+          lastEditor: d.last_editor ?? "",
+          date: d.created_at?.slice(0, 10) ?? today(),
+          updatedAt: d.updated_at?.slice(0, 10) ?? today(),
+          tags: d.tags ?? [],
+          views: d.views ?? 0,
+        })));
       }
-      try { const d = localStorage.getItem("vela-hq-wiki"); if (d) setArticles(JSON.parse(d)); } catch {}
-    })();
-  }, []);
+    } catch (e) {
+      console.error("WikiTab loadArticles error:", e);
+    }
+  };
 
-  const persist = (next: WikiArticle[]) => { setArticles(next); localStorage.setItem("vela-hq-wiki", JSON.stringify(next)); };
+  useEffect(() => { loadArticles(); }, []);
 
   const catCounts = CATEGORIES.reduce((acc, c) => {
     acc[c] = articles.filter(a => a.category === c).length;
@@ -70,10 +82,19 @@ export default function WikiTab({ userId, userName, myRole, flash }: Props) {
     setView("create");
   };
 
-  const openDetail = (id: string) => {
+  const openDetail = async (id: string) => {
     setSelectedId(id);
     // Increment view count
-    persist(articles.map(a => a.id === id ? { ...a, views: a.views + 1 } : a));
+    const s = sb();
+    if (s) {
+      const article = articles.find(a => a.id === id);
+      if (article) {
+        try {
+          await s.from("hq_wiki").update({ views: (article.views ?? 0) + 1 }).eq("id", id);
+        } catch {}
+      }
+    }
+    setArticles(prev => prev.map(a => a.id === id ? { ...a, views: a.views + 1 } : a));
     setView("detail");
   };
 
@@ -86,50 +107,72 @@ export default function WikiTab({ userId, userName, myRole, flash }: Props) {
     setView("edit");
   };
 
-  const saveArticle = () => {
+  const saveArticle = async () => {
     if (!fTitle.trim()) { flash("제목을 입력하세요"); return; }
     if (!fContent.trim()) { flash("내용을 입력하세요"); return; }
     const tags = fTags.split(",").map(t => t.trim()).filter(Boolean);
-    const article: WikiArticle = {
-      id: crypto.randomUUID(),
-      title: fTitle.trim(),
-      content: fContent.trim(),
-      category: fCategory,
-      author: userName,
-      lastEditor: userName,
-      date: today(),
-      updatedAt: today(),
-      tags,
-      views: 0,
-    };
-    persist([article, ...articles]);
-    flash("문서가 작성되었습니다");
-    resetForm();
-    setView("list");
+    const s = sb();
+    if (!s) { flash("DB 연결 실패"); return; }
+    try {
+      const { error } = await s.from("hq_wiki").insert({
+        title: fTitle.trim(),
+        content: fContent.trim(),
+        category: fCategory,
+        author: userName,
+        last_editor: userName,
+        tags,
+        views: 0,
+      });
+      if (error) throw error;
+      await loadArticles();
+      flash("문서가 작성되었습니다");
+      resetForm();
+      setView("list");
+    } catch (e) {
+      console.error("saveArticle error:", e);
+      flash("문서 작성 실패");
+    }
   };
 
-  const updateArticle = () => {
+  const updateArticle = async () => {
     if (!selected) return;
     if (!fTitle.trim()) { flash("제목을 입력하세요"); return; }
     if (!fContent.trim()) { flash("내용을 입력하세요"); return; }
     const tags = fTags.split(",").map(t => t.trim()).filter(Boolean);
-    persist(articles.map(a => a.id === selected.id ? {
-      ...a,
-      title: fTitle.trim(),
-      content: fContent.trim(),
-      category: fCategory,
-      tags,
-      lastEditor: userName,
-      updatedAt: today(),
-    } : a));
-    flash("문서가 수정되었습니다");
-    setView("detail");
+    const s = sb();
+    if (!s) { flash("DB 연결 실패"); return; }
+    try {
+      const { error } = await s.from("hq_wiki").update({
+        title: fTitle.trim(),
+        content: fContent.trim(),
+        category: fCategory,
+        tags,
+        last_editor: userName,
+        updated_at: new Date().toISOString(),
+      }).eq("id", selected.id);
+      if (error) throw error;
+      await loadArticles();
+      flash("문서가 수정되었습니다");
+      setView("detail");
+    } catch (e) {
+      console.error("updateArticle error:", e);
+      flash("문서 수정 실패");
+    }
   };
 
-  const deleteArticle = (id: string) => {
-    persist(articles.filter(a => a.id !== id));
-    flash("문서가 삭제되었습니다");
-    setView("list");
+  const deleteArticle = async (id: string) => {
+    const s = sb();
+    if (!s) { flash("DB 연결 실패"); return; }
+    try {
+      const { error } = await s.from("hq_wiki").delete().eq("id", id);
+      if (error) throw error;
+      await loadArticles();
+      flash("문서가 삭제되었습니다");
+      setView("list");
+    } catch (e) {
+      console.error("deleteArticle error:", e);
+      flash("문서 삭제 실패");
+    }
   };
 
   // ──── DETAIL VIEW ────

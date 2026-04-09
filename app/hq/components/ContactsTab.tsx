@@ -11,20 +11,6 @@ interface Props {
   flash: (m: string) => void;
 }
 
-const LS_KEY = "vela-hq-contacts";
-
-function loadLocal(): Contact[] {
-  try {
-    return JSON.parse(localStorage.getItem(LS_KEY) || "[]");
-  } catch {
-    return [];
-  }
-}
-
-function saveLocal(c: Contact[]) {
-  localStorage.setItem(LS_KEY, JSON.stringify(c));
-}
-
 const AVATAR_COLORS = [
   "bg-blue-100 text-blue-600",
   "bg-emerald-100 text-emerald-600",
@@ -57,12 +43,14 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
 
   const load = async () => {
     const s = sb();
-    if (s) {
+    if (!s) { setLoading(false); return; }
+    try {
       const { data, error } = await s
         .from("hq_contacts")
         .select("*")
         .order("name", { ascending: true });
-      if (data && !error) {
+      if (error) throw error;
+      if (data) {
         const mapped: Contact[] = data.map((r: any) => ({
           id: r.id,
           name: r.name,
@@ -74,13 +62,10 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
           manager: r.manager,
         }));
         setContacts(mapped);
-        saveLocal(mapped);
-        setLoading(false);
-        return;
       }
+    } catch (e) {
+      console.error("ContactsTab load error:", e);
     }
-    // Fallback: localStorage
-    setContacts(loadLocal());
     setLoading(false);
   };
 
@@ -90,59 +75,44 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
 
   const add = async () => {
     if (!name.trim()) return flash("이름을 입력하세요");
-    const newContact: Contact = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      department: department.trim(),
-      position: position.trim(),
-      phone: phone.trim(),
-      email: email.trim(),
-      extension: extension.trim(),
-    };
-
     const s = sb();
-    if (s) {
+    if (!s) { flash("DB 연결 실패"); return; }
+    try {
       const { error } = await s.from("hq_contacts").insert({
-        id: newContact.id,
-        name: newContact.name,
-        department: newContact.department,
-        position: newContact.position,
-        phone: newContact.phone,
-        email: newContact.email,
-        extension: newContact.extension,
+        name: name.trim(),
+        department: department.trim(),
+        position: position.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        extension: extension.trim(),
       });
-      if (error) {
-        // Fallback to local
-        const updated = [newContact, ...contacts];
-        setContacts(updated);
-        saveLocal(updated);
-      } else {
-        await load();
-      }
-    } else {
-      const updated = [newContact, ...contacts];
-      setContacts(updated);
-      saveLocal(updated);
+      if (error) throw error;
+      await load();
+      flash("연락처가 추가되었습니다");
+      setName("");
+      setDepartment("");
+      setPosition("");
+      setPhone("");
+      setEmail("");
+      setExtension("");
+    } catch (e) {
+      console.error("ContactsTab add error:", e);
+      flash("연락처 추가 실패");
     }
-
-    flash("연락처가 추가되었습니다");
-    setName("");
-    setDepartment("");
-    setPosition("");
-    setPhone("");
-    setEmail("");
-    setExtension("");
   };
 
   const remove = async (id: string) => {
     const s = sb();
-    if (s) {
-      await s.from("hq_contacts").delete().eq("id", id);
+    if (!s) { flash("DB 연결 실패"); return; }
+    try {
+      const { error } = await s.from("hq_contacts").delete().eq("id", id);
+      if (error) throw error;
+      await load();
+      flash("삭제되었습니다");
+    } catch (e) {
+      console.error("ContactsTab remove error:", e);
+      flash("삭제 실패");
     }
-    const updated = contacts.filter((c) => c.id !== id);
-    setContacts(updated);
-    saveLocal(updated);
-    flash("삭제되었습니다");
   };
 
   const departments = useMemo(

@@ -13,9 +13,6 @@ interface Props {
 const CATEGORIES = ["전체", "자유", "공지", "질문", "정보", "부서"] as const;
 type Category = (typeof CATEGORIES)[number];
 
-const LS_KEY = "vela-hq-board";
-const LS_COMMENTS_KEY = "vela-hq-board-comments";
-
 const categoryColor: Record<string, string> = {
   "자유": "bg-blue-50 text-blue-700",
   "공지": "bg-red-50 text-red-700",
@@ -25,12 +22,8 @@ const categoryColor: Record<string, string> = {
 };
 
 export default function BoardTab({ userId, userName, myRole, flash }: Props) {
-  const [posts, setPosts] = useState<BoardPost[]>(() => {
-    try { const d = localStorage.getItem(LS_KEY); return d ? JSON.parse(d) : []; } catch { return []; }
-  });
-  const [comments, setComments] = useState<BoardComment[]>(() => {
-    try { const d = localStorage.getItem(LS_COMMENTS_KEY); return d ? JSON.parse(d) : []; } catch { return []; }
-  });
+  const [posts, setPosts] = useState<BoardPost[]>([]);
+  const [comments, setComments] = useState<BoardComment[]>([]);
 
   const [activeCat, setActiveCat] = useState<Category>("전체");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -44,18 +37,8 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
   // Comment
   const [commentText, setCommentText] = useState("");
 
-  const [useSupabase, setUseSupabase] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Sync to localStorage
-  useEffect(() => {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(posts)); } catch {}
-  }, [posts]);
-  useEffect(() => {
-    try { localStorage.setItem(LS_COMMENTS_KEY, JSON.stringify(comments)); } catch {}
-  }, [comments]);
-
-  // Try Supabase first
   const load = async () => {
     const s = sb();
     if (!s) { setLoading(false); return; }
@@ -76,74 +59,65 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
           pinned: d.pinned ?? false,
         }));
         setPosts(mapped);
-        setUseSupabase(true);
       }
       // Load comments
       const { data: cData } = await s.from("hq_board_comments").select("*").order("created_at", { ascending: true });
       if (cData) {
         setComments(cData.map((c: any) => ({ id: c.id, postId: c.post_id, author: c.author, content: c.content, date: c.created_at?.slice(0, 16)?.replace("T", " ") ?? "" })));
       }
-    } catch {
-      // Table doesn't exist, use localStorage
-      setUseSupabase(false);
+    } catch (e) {
+      console.error("BoardTab load error:", e);
     }
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
 
-  const genId = () => crypto.randomUUID();
-
   const addPost = async () => {
     if (!fTitle.trim()) { flash("제목을 입력하세요"); return; }
-    const newPost: BoardPost = {
-      id: genId(),
-      category: fCat as BoardPost["category"],
-      title: fTitle.trim(),
-      content: fContent.trim(),
-      author: userName,
-      date: today(),
-      views: 0,
-      likes: 0,
-      comments: 0,
-      pinned: false,
-    };
-
-    if (useSupabase) {
-      const s = sb();
-      if (s) {
-        const { error } = await s.from("hq_board").insert({ category: newPost.category, title: newPost.title, content: newPost.content, author: newPost.author, views: 0, likes: 0, pinned: false });
-        if (!error) { load(); } else { setPosts((p) => [newPost, ...p]); }
-      }
-    } else {
-      setPosts((p) => [newPost, ...p]);
+    const s = sb();
+    if (!s) { flash("DB 연결 실패"); return; }
+    try {
+      const { error } = await s.from("hq_board").insert({
+        category: fCat,
+        title: fTitle.trim(),
+        content: fContent.trim(),
+        author: userName,
+        views: 0,
+        likes: 0,
+        pinned: false,
+      });
+      if (error) throw error;
+      await load();
+      setFTitle(""); setFContent(""); setFCat("자유"); setShowForm(false);
+      flash("게시글 등록 완료");
+    } catch (e) {
+      console.error("addPost error:", e);
+      flash("게시글 등록 실패");
     }
-
-    setFTitle(""); setFContent(""); setFCat("자유"); setShowForm(false);
-    flash("게시글 등록 완료");
   };
 
   const toggleExpand = async (id: string) => {
     if (expandedId === id) { setExpandedId(null); return; }
     setExpandedId(id);
     // Increment views
-    if (useSupabase) {
-      const s = sb();
-      const post = posts.find((p) => p.id === id);
-      if (s && post) {
+    const s = sb();
+    const post = posts.find((p) => p.id === id);
+    if (s && post) {
+      try {
         await s.from("hq_board").update({ views: (post.views ?? 0) + 1 }).eq("id", id);
-      }
+      } catch {}
     }
     setPosts((prev) => prev.map((p) => p.id === id ? { ...p, views: p.views + 1 } : p));
   };
 
   const likePost = async (id: string) => {
-    if (useSupabase) {
-      const s = sb();
-      const post = posts.find((p) => p.id === id);
-      if (s && post) {
+    const s = sb();
+    const post = posts.find((p) => p.id === id);
+    if (s && post) {
+      try {
         await s.from("hq_board").update({ likes: (post.likes ?? 0) + 1 }).eq("id", id);
-      }
+      } catch {}
     }
     setPosts((prev) => prev.map((p) => p.id === id ? { ...p, likes: p.likes + 1 } : p));
   };
@@ -152,9 +126,11 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
     const post = posts.find((p) => p.id === id);
     if (!post) return;
     const newPinned = !post.pinned;
-    if (useSupabase) {
-      const s = sb();
-      if (s) await s.from("hq_board").update({ pinned: newPinned }).eq("id", id);
+    const s = sb();
+    if (s) {
+      try {
+        await s.from("hq_board").update({ pinned: newPinned }).eq("id", id);
+      } catch {}
     }
     setPosts((prev) => prev.map((p) => p.id === id ? { ...p, pinned: newPinned } : p));
     flash(newPinned ? "고정됨" : "고정 해제");
@@ -162,23 +138,21 @@ export default function BoardTab({ userId, userName, myRole, flash }: Props) {
 
   const addComment = async (postId: string) => {
     if (!commentText.trim()) return;
-    const newComment: BoardComment = {
-      id: genId(),
-      postId,
-      author: userName,
-      content: commentText.trim(),
-      date: new Date().toISOString().slice(0, 16).replace("T", " "),
-    };
-
-    if (useSupabase) {
-      const s = sb();
-      if (s) {
-        await s.from("hq_board_comments").insert({ post_id: postId, author: userName, content: newComment.content });
-        load();
-      }
+    const s = sb();
+    if (!s) { flash("DB 연결 실패"); return; }
+    try {
+      const { error } = await s.from("hq_board_comments").insert({
+        post_id: postId,
+        author: userName,
+        content: commentText.trim(),
+      });
+      if (error) throw error;
+      await load();
+      setCommentText("");
+    } catch (e) {
+      console.error("addComment error:", e);
+      flash("댓글 등록 실패");
     }
-    setComments((prev) => [...prev, newComment]);
-    setCommentText("");
   };
 
   const canPin = myRole === "대표" || myRole === "이사" || myRole === "팀장";
