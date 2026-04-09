@@ -35,6 +35,8 @@ export default function FeedbackTab({ userId, userName, myRole, flash }: Props) 
   const [filterStatus, setFilterStatus] = useState<string>("전체");
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Feedback | null>(null);
+  const [comments, setComments] = useState<{ id: string; author: string; text: string; time: string }[]>([]);
+  const [commentText, setCommentText] = useState("");
 
   const load = async () => {
     const s = sb();
@@ -82,6 +84,36 @@ export default function FeedbackTab({ userId, userName, myRole, flash }: Props) 
     load();
   };
 
+  const loadComments = async (feedbackId: string) => {
+    const s = sb();
+    if (!s) return;
+    const { data } = await s.from("hq_item_comments").select("*").eq("item_id", feedbackId).eq("item_type", "feedback").order("created_at", { ascending: true });
+    if (data) setComments(data.map((r: any) => ({ id: r.id, author: r.author, text: r.text, time: r.created_at })));
+  };
+
+  const addComment = async () => {
+    if (!commentText.trim() || !selected) return;
+    const s = sb();
+    if (!s) return;
+    const { error } = await s.from("hq_item_comments").insert({ item_id: selected.id, item_type: "feedback", author: userName, text: commentText.trim() });
+    if (error) { flash("댓글 저장 실패"); return; }
+    setCommentText("");
+    loadComments(selected.id);
+  };
+
+  const deleteComment = async (commentId: string) => {
+    const s = sb();
+    if (!s) return;
+    await s.from("hq_item_comments").delete().eq("id", commentId);
+    if (selected) loadComments(selected.id);
+  };
+
+  const openDetail = (fb: Feedback) => {
+    setSelected(fb);
+    setCommentText("");
+    loadComments(fb.id);
+  };
+
   const deleteFb = async (id: string) => {
     const s = sb();
     if (!s) return;
@@ -122,13 +154,51 @@ export default function FeedbackTab({ userId, userName, myRole, flash }: Props) 
               <div className="flex items-center justify-between text-xs text-slate-400">
                 <span>작성자: {selected.author} · {selected.date}</span>
               </div>
+
+              {/* 댓글 */}
+              <div>
+                <h4 className="text-sm font-bold text-slate-700 mb-3">댓글 ({comments.length})</h4>
+                {comments.length === 0 ? (
+                  <p className="text-xs text-slate-400 text-center py-2">아직 댓글이 없습니다</p>
+                ) : (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {comments.map(c => (
+                      <div key={c.id} className="bg-slate-50 rounded-xl px-3 py-2.5 group">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 bg-[#3182F6] rounded-full flex items-center justify-center">
+                              <span className="text-[9px] text-white font-bold">{c.author[0]}</span>
+                            </div>
+                            <span className="text-xs font-semibold text-slate-700">{c.author}</span>
+                            <span className="text-[10px] text-slate-400">{new Date(c.time).toLocaleString("ko-KR")}</span>
+                          </div>
+                          {c.author === userName && (
+                            <button onClick={() => deleteComment(c.id)} className="text-[10px] text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">삭제</button>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-600 pl-7">{c.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="px-5 py-3 border-t border-slate-100 flex justify-between">
-              {selected.author === userName && (
-                <button onClick={() => deleteFb(selected.id)} className="text-xs text-red-500 hover:text-red-700 font-semibold">삭제</button>
-              )}
-              <div />
-              <button onClick={() => setSelected(null)} className={B2}>닫기</button>
+
+            {/* 댓글 입력 + 삭제 */}
+            <div className="px-5 py-3 border-t border-slate-100 space-y-2">
+              <div className="flex gap-2">
+                <input className={`${I} flex-1`} placeholder="댓글을 입력하세요..." value={commentText}
+                  onChange={e => setCommentText(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") addComment(); }} />
+                <button className={B} onClick={addComment}>전송</button>
+              </div>
+              <div className="flex justify-between">
+                {selected.author === userName && (
+                  <button onClick={() => deleteFb(selected.id)} className="text-xs text-red-500 hover:text-red-700 font-semibold">피드백 삭제</button>
+                )}
+                <div />
+                <button onClick={() => setSelected(null)} className={B2}>닫기</button>
+              </div>
             </div>
           </div>
         </div>
@@ -192,7 +262,7 @@ export default function FeedbackTab({ userId, userName, myRole, flash }: Props) 
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((fb) => (
-            <div key={fb.id} className={`${C} cursor-pointer`} onClick={() => setSelected(fb)}>
+            <div key={fb.id} className={`${C} cursor-pointer`} onClick={() => openDetail(fb)}>
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-base">{typeIcon[fb.type] ?? "📝"}</span>
