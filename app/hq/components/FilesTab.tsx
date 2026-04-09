@@ -101,6 +101,28 @@ function PreviewContent({ file }: { file: FileItem }) {
   );
 }
 
+// 보안등급
+type SecurityLevel = "공개" | "내부용" | "대외비" | "기밀";
+const SECURITY_LEVELS: { value: SecurityLevel; label: string; color: string; icon: string }[] = [
+  { value: "공개", label: "공개", color: "bg-emerald-50 text-emerald-700", icon: "🟢" },
+  { value: "내부용", label: "내부용", color: "bg-blue-50 text-blue-700", icon: "🔵" },
+  { value: "대외비", label: "대외비", color: "bg-amber-50 text-amber-700", icon: "🟡" },
+  { value: "기밀", label: "기밀", color: "bg-red-50 text-red-700", icon: "🔴" },
+];
+// 보안등급별 접근 가능 역할
+const SECURITY_ACCESS: Record<SecurityLevel, HQRole[]> = {
+  "공개": ["대표", "이사", "팀장", "팀원"],
+  "내부용": ["대표", "이사", "팀장", "팀원"],
+  "대외비": ["대표", "이사", "팀장"],
+  "기밀": ["대표", "이사"],
+};
+function canAccessSecurity(role: HQRole, level: SecurityLevel) {
+  return SECURITY_ACCESS[level]?.includes(role) ?? false;
+}
+function getSecurityStyle(level: SecurityLevel) {
+  return SECURITY_LEVELS.find(s => s.value === level) ?? SECURITY_LEVELS[1];
+}
+
 // 권한: 대표/이사=전체, 팀장=업로드+본인삭제, 팀원=조회+업로드만
 function getPermissions(myRole: HQRole, uploaderName: string, userName: string) {
   if (myRole === "대표" || myRole === "이사") return { canUpload: true, canDelete: true, canMove: true, canRename: true, canCreateFolder: true, canDeleteFolder: true };
@@ -125,6 +147,8 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
   const [renameValue, setRenameValue] = useState("");
   const [textContent, setTextContent] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ type: "file" | "folder"; id: string; name: string } | null>(null);
+  const [uploadSecurity, setUploadSecurity] = useState<SecurityLevel>("내부용");
+  const [securityFilter, setSecurityFilter] = useState<SecurityLevel | "all">("all");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isAdmin = myRole === "대표" || myRole === "이사";
@@ -151,6 +175,7 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
         id: r.id, name: r.name, size: formatSize(r.size || 0),
         type: r.type || "", url: r.url || "", uploadedAt: r.created_at,
         uploadedBy: r.uploaded_by || "", folderId: r.folder_id,
+        security: r.security || "내부용",
       })));
     if (allF.data)
       setAllFolders(allF.data.map((r: any) => ({ id: r.id, name: r.name, parentId: r.parent_id })));
@@ -239,6 +264,7 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
           url: data.url,
           folder_id: currentFolder || null,
           uploaded_by: userName,
+          security: uploadSecurity,
         });
         uploaded = true;
         flash("파일 업로드 완료");
@@ -264,6 +290,7 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
           url: publicUrl,
           folder_id: currentFolder || null,
           uploaded_by: userName,
+          security: uploadSecurity,
         });
         uploaded = true;
         flash("파일 업로드 완료");
@@ -440,8 +467,27 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
             >
               {uploading ? "업로드 중..." : "파일 업로드"}
             </button>
+            <select className={`${I} !w-auto`} value={uploadSecurity} onChange={e => setUploadSecurity(e.target.value as SecurityLevel)}>
+              {SECURITY_LEVELS.map(s => (
+                <option key={s.value} value={s.value}>{s.icon} {s.label}</option>
+              ))}
+            </select>
           </div>
         </div>
+      </div>
+
+      {/* 보안등급 필터 */}
+      <div className="flex flex-wrap gap-2">
+        <button onClick={() => setSecurityFilter("all")}
+          className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${securityFilter === "all" ? "bg-[#3182F6] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+          전체
+        </button>
+        {SECURITY_LEVELS.map(s => (
+          <button key={s.value} onClick={() => setSecurityFilter(s.value)}
+            className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${securityFilter === s.value ? "bg-[#3182F6] text-white" : `${s.color} hover:opacity-80`}`}>
+            {s.icon} {s.label}
+          </button>
+        ))}
       </div>
 
       {/* Folders */}
@@ -473,21 +519,25 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
 
       {/* Files */}
       <div className={C}>
+        {(() => {
+          const accessibleFiles = files.filter(f => canAccessSecurity(myRole, (f.security as SecurityLevel) || "내부용"));
+          const filteredFiles = securityFilter === "all" ? accessibleFiles : accessibleFiles.filter(f => (f.security || "내부용") === securityFilter);
+          return (<>
         <h3 className="text-sm font-bold text-slate-700 mb-3">
           파일{" "}
-          <span className="font-normal text-slate-400">({files.length})</span>
+          <span className="font-normal text-slate-400">({filteredFiles.length})</span>
         </h3>
         {loading ? (
           <p className="text-sm text-slate-400 py-8 text-center">
             불러오는 중...
           </p>
-        ) : files.length === 0 ? (
+        ) : filteredFiles.length === 0 ? (
           <p className="text-sm text-slate-400 py-8 text-center">
-            파일이 없습니다
+            {securityFilter !== "all" ? "해당 등급의 파일이 없습니다" : "파일이 없습니다"}
           </p>
         ) : (
           <div className="space-y-2">
-            {files.map((f) => (
+            {filteredFiles.map((f) => (
               <div
                 key={f.id}
                 className="relative flex items-center justify-between px-4 py-3 rounded-xl border border-slate-100 hover:bg-slate-50/60 transition-colors cursor-pointer"
@@ -512,6 +562,9 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
                     <p className="text-sm font-semibold text-slate-800 truncate">
                       {f.name}
                       {canPreview(f.type, f.name) && <span className="ml-1.5 text-[10px] text-[#3182F6] font-normal">미리보기</span>}
+                      <span className={`ml-1.5 inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-bold ${getSecurityStyle((f.security as SecurityLevel) || "내부용").color}`}>
+                        {getSecurityStyle((f.security as SecurityLevel) || "내부용").icon} {f.security || "내부용"}
+                      </span>
                     </p>
                     )}
                     <p className="text-xs text-slate-400">
@@ -574,6 +627,8 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
             ))}
           </div>
         )}
+          </>);
+        })()}
       </div>
     </div>
   );

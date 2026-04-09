@@ -166,6 +166,7 @@ CREATE TABLE IF NOT EXISTS hq_files (
   type TEXT,
   url TEXT NOT NULL,
   r2_key TEXT,
+  security TEXT DEFAULT '내부용',
   folder_id UUID REFERENCES hq_folders(id) ON DELETE SET NULL,
   uploaded_by TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now()
