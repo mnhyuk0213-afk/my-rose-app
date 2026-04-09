@@ -29,6 +29,8 @@ export default function ApprovalTab({ userId, userName, myRole, flash }: Props) 
   const [filter, setFilter] = useState<"all" | "mine" | "pending">("all");
   const [approvers, setApprovers] = useState<TeamMember[]>([]);
   const [selectedApprover, setSelectedApprover] = useState("");
+  const [approverSearch, setApproverSearch] = useState("");
+  const [showApproverList, setShowApproverList] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const canApprove = myRole === "대표" || myRole === "이사" || myRole === "팀장";
@@ -50,7 +52,7 @@ export default function ApprovalTab({ userId, userName, myRole, flash }: Props) 
       })));
     if (teamData)
       setApprovers(
-        (teamData as TeamMember[]).filter(m => ["대표", "이사", "팀장"].includes(m.hqRole))
+        (teamData as TeamMember[]).filter(m => ["대표", "이사"].includes(m.hqRole))
       );
     setLoading(false);
   };
@@ -124,14 +126,30 @@ export default function ApprovalTab({ userId, userName, myRole, flash }: Props) 
               <label className={L}>제목</label>
               <input className={I} placeholder="결재 제목" value={title} onChange={e => setTitle(e.target.value)} />
             </div>
-            <div>
-              <label className={L}>결재자</label>
-              <select className={I} value={selectedApprover} onChange={e => setSelectedApprover(e.target.value)}>
-                <option value="">결재자 선택</option>
-                {approvers.map(a => (
-                  <option key={a.name} value={a.name}>{a.name} ({a.hqRole})</option>
-                ))}
-              </select>
+            <div className="relative">
+              <label className={L}>결재자 (대표/이사)</label>
+              <input className={I} placeholder="이름으로 검색..." value={approverSearch}
+                onChange={e => { setApproverSearch(e.target.value); setShowApproverList(true); setSelectedApprover(""); }}
+                onFocus={() => setShowApproverList(true)} />
+              {selectedApprover && (
+                <span className="absolute right-3 top-[30px] text-xs bg-[#3182F6]/10 text-[#3182F6] px-2 py-0.5 rounded-lg font-semibold">{selectedApprover}</span>
+              )}
+              {showApproverList && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-40 overflow-y-auto">
+                  {approvers.filter(a => !approverSearch || a.name.includes(approverSearch)).length === 0 ? (
+                    <p className="text-xs text-slate-400 px-3 py-2">검색 결과 없음</p>
+                  ) : (
+                    approvers.filter(a => !approverSearch || a.name.includes(approverSearch)).map(a => (
+                      <button key={a.name} type="button"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 transition-colors flex items-center justify-between"
+                        onClick={() => { setSelectedApprover(a.name); setApproverSearch(a.name); setShowApproverList(false); }}>
+                        <span className="font-medium text-slate-700">{a.name}</span>
+                        <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-lg">{a.hqRole}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <div>
