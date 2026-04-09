@@ -503,9 +503,10 @@ export default function FilesTab({ userId, userName, myRole, flash }: Props) {
 
   const changeSecurity = useCallback(async (fileId: string, level: SecurityLevel) => {
     const s = sb();
-    if (!s) return;
-    await s.from("hq_files").update({ security: level }).eq("id", fileId);
-    flash(`보안등급이 "${level}"으로 변경되었습니다`);
+    if (!s) { flash("DB 연결 실패"); return; }
+    const { error } = await s.from("hq_files").update({ security: level }).eq("id", fileId);
+    if (error) { flash("등급 변경 실패: " + error.message); console.error("changeSecurity error:", error); return; }
+    flash(`보안등급: ${level}`);
     load(currentFolder);
   }, [flash, load, currentFolder]);
 
