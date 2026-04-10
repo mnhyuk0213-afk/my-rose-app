@@ -372,7 +372,7 @@ export default function EventFeedbackPage() {
 const baseStyle = `
   *{box-sizing:border-box;margin:0;padding:0}
 
-  .fb-page{min-height:100vh;padding:120px 24px 80px}
+  .fb-page{min-height:100vh;padding:120px 24px 160px}
   .fb-inner{max-width:640px;margin:0 auto}
 
   .fb-header{text-align:center;margin-bottom:48px}
