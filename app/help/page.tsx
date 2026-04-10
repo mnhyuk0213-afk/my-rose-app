@@ -86,7 +86,7 @@ export default function HelpPage() {
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
           <input
             value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="질문 검색..."
+            placeholder="질문 검색..." aria-label="질문 검색"
             className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-3 text-sm focus:border-blue-400 outline-none transition"
           />
         </div>

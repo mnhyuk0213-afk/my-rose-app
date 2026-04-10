@@ -35,6 +35,7 @@ export default function PrivacyPage() {
 
         <div className="sec">
           <h2 className="h2">1. 수집하는 개인정보</h2>
+          <div className="overflow-x-auto">
           <table className="table">
             <thead>
               <tr><th>구분</th><th>수집 항목</th><th>수집 방법</th></tr>
@@ -47,6 +48,7 @@ export default function PrivacyPage() {
               <tr><td>결제</td><td>결제 수단 정보 (카드사에서 처리)</td><td>결제 시 입력</td></tr>
             </tbody>
           </table>
+          </div>
           <p className="p">민감 정보(주민등록번호 등)는 수집하지 않습니다.</p>
         </div>
 
@@ -64,6 +66,7 @@ export default function PrivacyPage() {
 
         <div className="sec">
           <h2 className="h2">3. 개인정보 보관 기간</h2>
+          <div className="overflow-x-auto">
           <table className="table">
             <thead>
               <tr><th>보관 항목</th><th>보관 기간</th><th>근거</th></tr>
@@ -75,6 +78,7 @@ export default function PrivacyPage() {
               <tr><td>불만·분쟁 기록</td><td>3년</td><td>전자상거래법</td></tr>
             </tbody>
           </table>
+          </div>
           <p className="p">보관 기간이 경과하거나 처리 목적이 달성된 개인정보는 지체 없이 파기합니다.</p>
         </div>
 
@@ -89,6 +93,7 @@ export default function PrivacyPage() {
 
         <div className="sec">
           <h2 className="h2">5. 위탁 처리</h2>
+          <div className="overflow-x-auto">
           <table className="table">
             <thead>
               <tr><th>수탁업체</th><th>위탁 업무</th></tr>
@@ -99,6 +104,7 @@ export default function PrivacyPage() {
               <tr><td>Anthropic PBC</td><td>AI 분석 처리</td></tr>
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="sec">
@@ -145,6 +151,7 @@ export default function PrivacyPage() {
         <div className="sec">
           <h2 className="h2">9. 데이터 국외 이전</h2>
           <p className="p">서비스 제공을 위해 아래와 같이 개인정보가 국외로 이전됩니다.</p>
+          <div className="overflow-x-auto">
           <table className="table">
             <thead>
               <tr><th>이전받는 자</th><th>이전 항목</th><th>이전 목적</th><th>보유 기간</th></tr>
@@ -154,6 +161,7 @@ export default function PrivacyPage() {
               <tr><td>Anthropic PBC (미국)</td><td>시뮬레이션 입력 데이터 (비식별)</td><td>AI 분석 처리</td><td>분석 완료 즉시 삭제</td></tr>
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="sec">

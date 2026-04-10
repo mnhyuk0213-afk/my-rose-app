@@ -1,43 +1,45 @@
 "use client";
-export const dynamic = "force-dynamic";
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import {
   Tab, HQRole, TABS, SIDEBAR_GROUPS, ROLE_PERMISSIONS, TAB_MAP,
 } from "./types";
 
-// ── 탭 컴포넌트 ────────────────────────────────────────
+// ── 탭 컴포넌트 (always needed) ───────────────────────
 import NotificationBell from "./components/NotificationBell";
 import SearchModal from "./components/SearchModal";
-import Dashboard from "./components/Dashboard";
-import MettTab from "./components/MettTab";
-import KpiTab from "./components/KpiTab";
-import GoalTab from "./components/GoalTab";
-import TaskTab from "./components/TaskTab";
-import AarTab from "./components/AarTab";
-import NoticeTab from "./components/NoticeTab";
-import ReportTab from "./components/ReportTab";
-import FeedbackTab from "./components/FeedbackTab";
-import CalendarTab from "./components/CalendarTab";
-import MemoTab from "./components/MemoTab";
-import TeamTab from "./components/TeamTab";
-import TimelineTab from "./components/TimelineTab";
-import FilesTab from "./components/FilesTab";
-import ChatTab from "./components/ChatTab";
-import ApprovalTab from "./components/ApprovalTab";
-import DecisionTab from "./components/DecisionTab";
-import AttendanceTab from "./components/AttendanceTab";
-import LeaveTab from "./components/LeaveTab";
-import ContactsTab from "./components/ContactsTab";
-import BoardTab from "./components/BoardTab";
-import SurveyTab from "./components/SurveyTab";
-import WikiTab from "./components/WikiTab";
-import OrgChartTab from "./components/OrgChartTab";
-import AuditLog from "./components/AuditLog";
-import GanttTab from "./components/GanttTab";
+
+// ── 탭 컴포넌트 (lazy loaded) ─────────────────────────
+const Dashboard = dynamic(() => import("./components/Dashboard"));
+const MettTab = dynamic(() => import("./components/MettTab"));
+const KpiTab = dynamic(() => import("./components/KpiTab"));
+const GoalTab = dynamic(() => import("./components/GoalTab"));
+const TaskTab = dynamic(() => import("./components/TaskTab"));
+const AarTab = dynamic(() => import("./components/AarTab"));
+const NoticeTab = dynamic(() => import("./components/NoticeTab"));
+const ReportTab = dynamic(() => import("./components/ReportTab"));
+const FeedbackTab = dynamic(() => import("./components/FeedbackTab"));
+const CalendarTab = dynamic(() => import("./components/CalendarTab"));
+const MemoTab = dynamic(() => import("./components/MemoTab"));
+const TeamTab = dynamic(() => import("./components/TeamTab"));
+const TimelineTab = dynamic(() => import("./components/TimelineTab"));
+const FilesTab = dynamic(() => import("./components/FilesTab"));
+const ChatTab = dynamic(() => import("./components/ChatTab"));
+const ApprovalTab = dynamic(() => import("./components/ApprovalTab"));
+const DecisionTab = dynamic(() => import("./components/DecisionTab"));
+const AttendanceTab = dynamic(() => import("./components/AttendanceTab"));
+const LeaveTab = dynamic(() => import("./components/LeaveTab"));
+const ContactsTab = dynamic(() => import("./components/ContactsTab"));
+const BoardTab = dynamic(() => import("./components/BoardTab"));
+const SurveyTab = dynamic(() => import("./components/SurveyTab"));
+const WikiTab = dynamic(() => import("./components/WikiTab"));
+const OrgChartTab = dynamic(() => import("./components/OrgChartTab"));
+const AuditLog = dynamic(() => import("./components/AuditLog"));
+const GanttTab = dynamic(() => import("./components/GanttTab"));
 
 // ── 탭 → 컴포넌트 매핑 ────────────────────────────────
 const TAB_COMPONENTS: Record<Tab, React.ComponentType<{ userId: string; userName: string; myRole: HQRole; flash: (m: string) => void }>> = {

@@ -217,14 +217,14 @@ function ShareForm({ userId, onDone, onCancel }: { userId: string; onDone: () =>
     <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200 shadow-sm space-y-4">
       <h3 className="font-bold text-slate-900">내 수익 공유하기</h3>
       <div className="grid gap-3 sm:grid-cols-2">
-        <input placeholder="닉네임 (예: 홍대카페 사장)" value={form.nickname} onChange={e => setForm(p => ({ ...p, nickname: e.target.value }))}
+        <input placeholder="닉네임 (예: 홍대카페 사장)" aria-label="닉네임" value={form.nickname} onChange={e => setForm(p => ({ ...p, nickname: e.target.value }))}
           className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400" />
         <select value={form.industry} onChange={e => setForm(p => ({ ...p, industry: e.target.value }))}
           className="rounded-xl border border-slate-200 px-3 py-2 text-sm">
           {Object.entries(INDUSTRY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
         <input className="sm:col-span-2 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
-          placeholder="제목 (예: 홍대 카페 3년차 현황 공유)" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
+          placeholder="제목 (예: 홍대 카페 3년차 현황 공유)" aria-label="제목" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
         {[
           { key: "total_sales", label: "월 총 매출 (원)" },
           { key: "net_profit", label: "세후 실수령 (원)" },
@@ -407,7 +407,8 @@ function PostDetail({ post, userId, onBack }: { post: BoardPost; userId: string 
     setLoading(true);
     const sb = createSupabaseBrowserClient();
     await sb.from("comments").insert({ post_id: post.id, user_id: userId, nickname, content: input });
-    await sb.from("posts").update({ comment_count: post.comment_count + comments.length + 1 }).eq("id", post.id);
+    const { count } = await sb.from("comments").select("id", { count: "exact", head: true }).eq("post_id", post.id);
+    await sb.from("posts").update({ comment_count: count ?? 0 }).eq("id", post.id);
     setInput("");
     const { data } = await sb.from("comments").select("*").eq("post_id", post.id).order("created_at");
     setComments(data ?? []);
@@ -447,7 +448,7 @@ function PostDetail({ post, userId, onBack }: { post: BoardPost; userId: string 
         <div className="flex gap-2 pt-2">
           <input placeholder="닉네임" value={nickname} onChange={e => setNickname(e.target.value)}
             className="w-24 shrink-0 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400" />
-          <input placeholder="댓글을 입력하세요..." value={input} onChange={e => setInput(e.target.value)}
+          <input placeholder="댓글을 입력하세요..." aria-label="댓글 입력" value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitComment(); } }}
             className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400" />
           <button onClick={submitComment} disabled={loading}
