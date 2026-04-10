@@ -5,6 +5,7 @@ import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { useCloudSync } from "@/lib/useCloudSync";
 import CloudSyncBadge from "@/components/CloudSyncBadge";
+import CollapsibleTip from "@/components/CollapsibleTip";
 
 type CheckItem = {
   id: string;
@@ -402,9 +403,9 @@ export default function StartupChecklistPage() {
             })}
           </div>
 
-          <div className="mt-6 rounded-2xl bg-slate-100 px-5 py-4 text-xs text-slate-500 leading-relaxed">
-            💡 <strong className="text-slate-700">Tip.</strong> 체크 상태는 브라우저 새로고침 시 초기화됩니다. 진행 상황은 별도로 저장해두시길 권장합니다. 인허가 요건은 지자체별로 상이할 수 있으니 관할 구청에서 최종 확인하세요.
-          </div>
+          <CollapsibleTip className="mt-6">
+            체크 상태는 브라우저 새로고침 시 초기화됩니다. 진행 상황은 별도로 저장해두시길 권장합니다. 인허가 요건은 지자체별로 상이할 수 있으니 관할 구청에서 최종 확인하세요.
+          </CollapsibleTip>
         </div>
       </main>
     </>

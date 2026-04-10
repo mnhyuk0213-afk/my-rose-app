@@ -5,6 +5,7 @@ import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { useSimulatorData } from "@/lib/useSimulatorData";
 import SendToSimulator from "@/components/SendToSimulator";
+import CollapsibleTip from "@/components/CollapsibleTip";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import { fmt } from "@/lib/vela";
 
@@ -475,9 +476,9 @@ export default function TaxPage() {
             </div>
           </div>
 
-          <div className="mt-4 rounded-2xl bg-slate-100 px-5 py-4 text-xs text-slate-500 leading-relaxed">
-            💡 <strong className="text-slate-700">Tip.</strong> 매출이 증가할수록 간이과세에서 일반과세로 전환하는 것이 유리할 수 있습니다. 신용카드·현금영수증 매출 비중이 높은 경우 세액공제 혜택도 확인하세요.
-          </div>
+          <CollapsibleTip className="mt-4">
+            매출이 증가할수록 간이과세에서 일반과세로 전환하는 것이 유리할 수 있습니다. 신용카드·현금영수증 매출 비중이 높은 경우 세액공제 혜택도 확인하세요.
+          </CollapsibleTip>
         </div>
       </main>
     </>

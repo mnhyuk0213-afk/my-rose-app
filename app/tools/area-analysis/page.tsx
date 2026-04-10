@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import PlanGate from "@/components/PlanGate";
+import CollapsibleTip from "@/components/CollapsibleTip";
 
 type Industry = "cafe" | "restaurant" | "bar" | "finedining" | "gogi";
 
@@ -277,9 +278,9 @@ export default function AreaAnalysisPage() {
             </div>
           </div>
 
-          <div className="mt-6 rounded-2xl bg-slate-100 px-5 py-4 text-xs text-slate-500 leading-relaxed">
-            💡 <strong className="text-slate-700">Tip.</strong> AI 분석은 입력된 정보를 바탕으로 한 참고 의견입니다. 실제 입점 결정 전 현장 방문과 평일·주말·시간대별 유동인구 직접 조사를 병행하세요. <Link href="/simulator" className="text-blue-500 underline">수익 시뮬레이터</Link>와 함께 활용하면 더욱 정확한 판단이 가능합니다.
-          </div>
+          <CollapsibleTip className="mt-6">
+            AI 분석은 입력된 정보를 바탕으로 한 참고 의견입니다. 실제 입점 결정 전 현장 방문과 평일·주말·시간대별 유동인구 직접 조사를 병행하세요. <Link href="/simulator" className="text-blue-500 underline">수익 시뮬레이터</Link>와 함께 활용하면 더욱 정확한 판단이 가능합니다.
+          </CollapsibleTip>
         </div>
       </main>
       </PlanGate>

@@ -7,6 +7,7 @@ import { useSimulatorData } from "@/lib/useSimulatorData";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import PlanGate from "@/components/PlanGate";
 import { fmt } from "@/lib/vela";
+import CollapsibleTip from "@/components/CollapsibleTip";
 
 type Tone = "warm" | "trendy" | "professional" | "fun";
 type Platform = "instagram" | "naver-blog" | "kakao";
@@ -478,9 +479,9 @@ ${dataContext}
             </div>
           </div>
 
-          <div className="mt-6 rounded-2xl bg-slate-100 px-5 py-4 text-xs text-slate-500 leading-relaxed">
-            💡 <strong className="text-slate-700">Tip.</strong> 인스타그램은 첫 줄이 가장 중요합니다. 생성된 글에서 첫 문장을 더 임팩트 있게 다듬어보세요. 실제 게시 전 맞춤법 검사도 꼭 확인하세요.
-          </div>
+          <CollapsibleTip className="mt-6">
+            인스타그램은 첫 줄이 가장 중요합니다. 생성된 글에서 첫 문장을 더 임팩트 있게 다듬어보세요. 실제 게시 전 맞춤법 검사도 꼭 확인하세요.
+          </CollapsibleTip>
         </div>
       </main>
       </PlanGate>

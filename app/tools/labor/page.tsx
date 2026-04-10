@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { fmt } from "@/lib/vela";
+import CollapsibleTip from "@/components/CollapsibleTip";
 import SimDataPicker from "@/components/SimDataPicker";
 import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
@@ -384,9 +385,9 @@ export default function LaborSchedulerPage() {
             </div>
           </div>
 
-          <div className="mt-4 rounded-2xl bg-slate-100 px-5 py-4 text-xs text-slate-500 leading-relaxed">
-            💡 <strong className="text-slate-700">Tip.</strong> 주휴수당은 주 15시간 이상 근무 시 발생합니다. 4대보험 요율은 연도·급여 구간별로 다를 수 있으니 정확한 계산은 4대보험 정보연계센터를 참고하세요.
-          </div>
+          <CollapsibleTip className="mt-4">
+            주휴수당은 주 15시간 이상 근무 시 발생합니다. 4대보험 요율은 연도·급여 구간별로 다를 수 있으니 정확한 계산은 4대보험 정보연계센터를 참고하세요.
+          </CollapsibleTip>
         </div>
       </main>
     </>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import PlanGate from "@/components/PlanGate";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
+import CollapsibleTip from "@/components/CollapsibleTip";
 
 type Platform = "baemin" | "coupang" | "yogiyo";
 type Tag = "spicy" | "popular" | "recommended" | "new" | "signature" | "healthy";
@@ -472,11 +473,11 @@ export default function DeliveryMenuPage() {
               </div>
             </div>
 
-            <div className="mt-6 rounded-2xl bg-slate-100 px-5 py-4 text-xs text-slate-500 leading-relaxed">
-              💡 <strong className="text-slate-700">Tip.</strong> 같은 메뉴라도
+            <CollapsibleTip className="mt-6">
+              같은 메뉴라도
               플랫폼별로 설명을 다르게 작성하면 더 높은 클릭률을 얻을 수 있습니다.
               생성된 3가지 버전을 각각 다른 플랫폼에 적용해보세요.
-            </div>
+            </CollapsibleTip>
           </div>
         </main>
       </PlanGate>

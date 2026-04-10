@@ -6,6 +6,7 @@ import ToolNav from "@/components/ToolNav";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import { fmt } from "@/lib/vela";
 import SimDataPicker from "@/components/SimDataPicker";
+import CollapsibleTip from "@/components/CollapsibleTip";
 import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -936,10 +937,10 @@ export default function MenuCostPage() {
           )}
 
           {/* 하단 팁 */}
-          <div className="mt-8 rounded-2xl bg-slate-100 px-5 py-4 text-xs text-slate-500 leading-relaxed">
-            💡 <strong className="text-slate-700">Tip.</strong> 원가율이 높은 메뉴는 식재료 공급처 변경, 레시피 조정, 또는 판매가 인상을 검토해 보세요.
+          <CollapsibleTip className="mt-8">
+            원가율이 높은 메뉴는 식재료 공급처 변경, 레시피 조정, 또는 판매가 인상을 검토해 보세요.
             배달 채널에서는 포장재·배달비까지 원가에 포함해야 실제 마진을 정확히 파악할 수 있습니다.
-          </div>
+          </CollapsibleTip>
 
           {/* 관련 도구 추천 */}
           <div className="mt-8 rounded-3xl bg-slate-50 p-5">

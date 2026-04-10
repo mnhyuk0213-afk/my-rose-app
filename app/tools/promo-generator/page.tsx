@@ -5,6 +5,7 @@ import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import PlanGate from "@/components/PlanGate";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
+import CollapsibleTip from "@/components/CollapsibleTip";
 
 type EventType = "new-menu" | "discount" | "season" | "anniversary" | "grand-open";
 type Channel = "flyer" | "banner" | "delivery-notice" | "kakao" | "sms";
@@ -394,11 +395,11 @@ ${CHANNEL_GUIDES[channel]}
               </div>
             </div>
 
-            <div className="mt-6 rounded-2xl bg-slate-100 px-5 py-4 text-xs text-slate-500 leading-relaxed">
-              💡 <strong className="text-slate-700">Tip.</strong> 같은 이벤트라도
+            <CollapsibleTip className="mt-6">
+              같은 이벤트라도
               채널마다 문구 스타일이 달라야 효과적입니다. 전단지는 한눈에 들어오는
               헤드라인, 문자는 45자 이내 핵심, 카카오채널은 친근한 톤이 핵심입니다.
-            </div>
+            </CollapsibleTip>
           </div>
         </main>
       </PlanGate>

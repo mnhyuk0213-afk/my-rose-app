@@ -5,6 +5,7 @@ import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import PlanGate from "@/components/PlanGate";
+import CollapsibleTip from "@/components/CollapsibleTip";
 import { fmt } from "@/lib/vela";
 
 type SimHistory = { id: string; label: string; form: Record<string, number | string>; result: Record<string, number> };
@@ -427,9 +428,9 @@ export default function PLReportPage() {
             </div>
           </div>
 
-          <div className="no-print mt-6 rounded-2xl bg-slate-100 px-5 py-4 text-xs text-slate-500 leading-relaxed">
-            💡 <strong className="text-slate-700">Tip.</strong> 출력 시 브라우저 인쇄 대화상자에서 &ldquo;PDF로 저장&rdquo;을 선택하세요. 배경 그래픽 옵션을 켜면 색상이 더 잘 표현됩니다.
-          </div>
+          <CollapsibleTip className="no-print mt-6">
+            출력 시 브라우저 인쇄 대화상자에서 &ldquo;PDF로 저장&rdquo;을 선택하세요. 배경 그래픽 옵션을 켜면 색상이 더 잘 표현됩니다.
+          </CollapsibleTip>
         </div>
       </main>
       </PlanGate>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
+import CollapsibleTip from "@/components/CollapsibleTip";
 
 type MonthSnap = {
   month: string;
@@ -387,13 +388,13 @@ ${revenueHistory}
           )}
 
           {/* Tip */}
-          <div className="mt-6 rounded-2xl bg-slate-100 px-5 py-4 text-xs text-slate-500 leading-relaxed">
-            💡 <strong className="text-slate-700">Tip.</strong> 예측 정확도를 높이려면{" "}
+          <CollapsibleTip className="mt-6">
+            예측 정확도를 높이려면{" "}
             <Link href="/monthly-input" className="text-purple-600 underline hover:text-purple-800">
               월별 매출 입력
             </Link>
             에서 최소 6개월 이상의 데이터를 입력해 주세요. 데이터가 많을수록 계절성과 트렌드 분석이 정확해집니다.
-          </div>
+          </CollapsibleTip>
         </div>
       </main>
     </>

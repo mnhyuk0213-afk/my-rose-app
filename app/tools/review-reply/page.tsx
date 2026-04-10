@@ -5,6 +5,7 @@ import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import PlanGate from "@/components/PlanGate";
+import CollapsibleTip from "@/components/CollapsibleTip";
 import { useSimulatorData } from "@/lib/useSimulatorData";
 import { fmt } from "@/lib/vela";
 
@@ -297,9 +298,9 @@ ${review}
             </div>
           </div>
 
-          <div className="mt-6 rounded-2xl bg-slate-100 px-5 py-4 text-xs text-slate-500 leading-relaxed">
-            💡 <strong className="text-slate-700">Tip.</strong> 부정적인 리뷰일수록 빠른 답변이 중요합니다. AI 초안을 기반으로 실제 상황에 맞게 수정한 뒤 게시하세요. 리뷰어의 이름을 언급하면 더 개인적인 느낌을 줄 수 있습니다.
-          </div>
+          <CollapsibleTip className="mt-6">
+            부정적인 리뷰일수록 빠른 답변이 중요합니다. AI 초안을 기반으로 실제 상황에 맞게 수정한 뒤 게시하세요. 리뷰어의 이름을 언급하면 더 개인적인 느낌을 줄 수 있습니다.
+          </CollapsibleTip>
         </div>
       </main>
       </PlanGate>

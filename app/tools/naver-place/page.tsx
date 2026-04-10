@@ -5,6 +5,7 @@ import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { useCloudSync } from "@/lib/useCloudSync";
 import CloudSyncBadge from "@/components/CloudSyncBadge";
+import CollapsibleTip from "@/components/CollapsibleTip";
 
 type CheckCategory = "basic" | "review" | "content" | "seo";
 
@@ -311,12 +312,12 @@ export default function NaverPlacePage() {
             </Link>
           </div>
 
-          <div className="mt-6 rounded-2xl bg-slate-100 px-5 py-4 text-xs text-slate-500 leading-relaxed">
-            💡 <strong className="text-slate-700">Tip.</strong> 체크 상태는
+          <CollapsibleTip className="mt-6">
+            체크 상태는
             브라우저에 자동 저장됩니다. 15개 항목을 모두 완료하면 네이버 플레이스
             검색 순위가 눈에 띄게 개선됩니다. 한 번에 다 하기 어렵다면 매주 2~3개씩
             실행해보세요.
-          </div>
+          </CollapsibleTip>
         </div>
       </main>
     </>
