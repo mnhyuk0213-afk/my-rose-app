@@ -223,6 +223,7 @@ export default function HQPage() {
       <meta name="theme-color" content={darkMode ? "#0F172A" : "#ffffff"} />
       <style>{`
         .vela-nav,.vela-mobile-tab{display:none!important}
+        body{padding-top:0!important}
         .hq-header{position:-webkit-sticky;position:sticky;top:0;z-index:100;height:56px;background:rgba(255,255,255,0.97);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid #E5E8EB;display:flex;align-items:center;padding:0 12px}
         .hq-dark { background: #0F172A !important; color: #E2E8F0 !important; }
         .hq-dark .bg-white { background: #1E293B !important; }
