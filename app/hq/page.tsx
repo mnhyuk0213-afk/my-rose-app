@@ -219,7 +219,7 @@ export default function HQPage() {
   const activeTabInfo = TAB_MAP[tab];
 
   return (
-    <div className={`min-h-screen bg-[#F7F8FA]${darkMode ? " hq-dark" : ""}`}>
+    <div className={`min-h-screen bg-white${darkMode ? " hq-dark" : ""}`} style={{ background: "white" }}>
       <meta name="theme-color" content={darkMode ? "#0F172A" : "#ffffff"} />
       <style>{`
         .vela-nav,.vela-mobile-tab{display:none!important}
@@ -337,7 +337,7 @@ export default function HQPage() {
         </aside>
       </div>
 
-      <div className="flex mt-[calc(45px+env(safe-area-inset-top))] lg:mt-[calc(53px+env(safe-area-inset-top))]" style={{ height: "calc(100vh - 45px - env(safe-area-inset-top))" }}>
+      <div className="flex" style={{ marginTop: "calc(45px + env(safe-area-inset-top, 0px))", minHeight: "calc(100vh - 45px - env(safe-area-inset-top, 0px))" }}>
         {/* ── 데스크톱 사이드바 (독립 스크롤) ─────────── */}
         <aside className="hidden md:flex flex-col w-[240px] bg-white border-r border-slate-200/80 overflow-y-auto flex-shrink-0">
           <nav className="flex-1 px-3 py-4">
@@ -376,7 +376,7 @@ export default function HQPage() {
         </aside>
 
         {/* ── 메인 콘텐츠 (독립 스크롤) ─────────────────── */}
-        <main className="flex-1 min-w-0 pb-16 md:pb-0 overflow-y-auto">
+        <main className="flex-1 min-w-0 pb-16 md:pb-0 bg-[#F7F8FA]">
           {/* 탭 콘텐츠 */}
           <div className="px-3 lg:px-6 pt-2 lg:pt-3 pb-10">
             {userId && tab === "dashboard" ? (
