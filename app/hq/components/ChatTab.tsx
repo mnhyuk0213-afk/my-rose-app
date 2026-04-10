@@ -283,10 +283,15 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
     if (!text.trim()) return;
     const s = sb();
     if (!s) return;
-    const payload: any = { sender: userName, text: text.trim() };
+    const msgText = text.trim();
+    const payload: any = { sender: userName, text: msgText };
     if (replyTo) payload.reply_to = { sender: replyTo.sender, text: replyTo.text.slice(0, 100) };
-    await s.from("hq_chat").insert(payload);
     setText(""); setReplyTo(null); isAtBottom.current = true;
+    const { data } = await s.from("hq_chat").insert(payload).select().single();
+    if (data) {
+      const newMsg = mapRow(data);
+      setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
+    }
   };
 
   const deleteTeamMsg = async (id: string) => {
@@ -424,8 +429,13 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
     if (!s) return;
     const payload: any = { sender: userName, receiver: dmTarget.name, text: dmText.trim() };
     if (dmReplyTo) payload.reply_to = { sender: dmReplyTo.sender, text: dmReplyTo.text.slice(0, 100) };
-    await s.from("hq_dm").insert(payload);
     setDmText(""); setDmReplyTo(null);
+    const { data } = await s.from("hq_dm").insert(payload).select().single();
+    if (data) {
+      const newMsg = mapRow(data);
+      setDmMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
+      setDmLastMsgs(prev => ({ ...prev, [dmTarget.name]: { text: newMsg.text, time: newMsg.time } }));
+    }
   };
 
   const deleteDmMsg = async (id: string) => {
