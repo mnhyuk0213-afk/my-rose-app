@@ -887,7 +887,7 @@ function MemberHome() {
 
   const name = user?.user_metadata?.nickname || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "사장님";
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "좋은 아침이에요" : hour < 18 ? "안녕하세요" : "오늘도 수고하셨어요";
+  const greeting = hour < 6 ? "늦은 밤이에요" : hour < 12 ? "좋은 아침이에요" : hour < 18 ? "안녕하세요" : "오늘도 수고하셨어요";
   const fmtN = (n: number) => Math.round(n).toLocaleString("ko-KR");
 
   if (loading) return (

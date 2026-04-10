@@ -40,7 +40,7 @@ export default function EventPopup() {
             EVENT
           </span>
           <button
-            onClick={dismissToday}
+            onClick={(e) => { e.stopPropagation(); dismissToday(); }}
             aria-label="닫기"
             style={{ fontSize: 11, color: "#9EA6B3", background: "#F2F4F6", padding: "3px 10px", borderRadius: 100, fontWeight: 600, border: "none", cursor: "pointer" }}
           >
