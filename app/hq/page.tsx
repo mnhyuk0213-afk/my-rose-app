@@ -391,7 +391,7 @@ export default function HQPage() {
 
       {/* ── 모바일 하단 네비게이션 (스크롤 가능) ──────────── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200/80" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        <div className="flex items-center overflow-x-auto scrollbar-none h-14">
+        <div className="flex items-center overflow-x-auto scrollbar-none h-14 px-2">
           {allowedTabs.map(item => {
             const isActive = tab === item.key;
             return (
@@ -407,6 +407,7 @@ export default function HQPage() {
               </button>
             );
           })}
+          <div className="min-w-[24px] flex-shrink-0" />
         </div>
       </nav>
 
