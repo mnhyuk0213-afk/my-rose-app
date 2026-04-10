@@ -236,7 +236,7 @@ export default function WikiTab({ userId, userName, myRole, flash }: Props) {
         const sizes: Record<number, string> = { 1: "text-xl font-bold", 2: "text-lg font-bold", 3: "text-base font-semibold", 4: "text-sm font-semibold" };
         return <Tag key={i} id={id} className={`${sizes[level] || "text-sm font-semibold"} text-slate-800 mt-4 mb-2`}>{text}</Tag>;
       }
-      return <p key={i} className="text-sm text-slate-700 leading-relaxed">{line || "\u00A0"}</p>;
+      return <p key={i} className="text-sm text-slate-700 leading-relaxed">{line || " "}</p>;
     });
   };
 

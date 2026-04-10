@@ -472,7 +472,7 @@ export default function KpiTab({ userId, flash }: Props) {
                 const rows = records.map(r =>
                   [r.date, r.revenue, r.users_count, r.conversion_rate, r.profit].join(",")
                 );
-                const csv = "\uFEFF" + [header, ...rows].join("\n");
+                const csv = "﻿" + [header, ...rows].join("\n");
                 const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");

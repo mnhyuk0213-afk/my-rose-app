@@ -55,9 +55,9 @@ export default function GoalTab({ userId, flash }: Props) {
   const activeCount = goals.filter((g) => g.status === "active").length;
 
   async function save() {
-    if (!form.title.trim()) { flash("\ubaa9\ud45c \uc81c\ubaa9\uc744 \uc785\ub825\ud558\uc138\uc694"); return; }
-    if (!form.target_value) { flash("\ubaa9\ud45c \uac12\uc744 \uc785\ub825\ud558\uc138\uc694"); return; }
-    if (activeCount >= 2) { flash("\ud65c\uc131 \ubaa9\ud45c\ub294 \ucd5c\ub300 2\uac1c\uae4c\uc9c0 \uac00\ub2a5\ud569\ub2c8\ub2e4"); return; }
+    if (!form.title.trim()) { flash("목표 제목을 입력하세요"); return; }
+    if (!form.target_value) { flash("목표 값을 입력하세요"); return; }
+    if (activeCount >= 2) { flash("활성 목표는 최대 2개까지 가능합니다"); return; }
     setSaving(true);
     const s = sb();
     if (!s) return;
@@ -66,13 +66,13 @@ export default function GoalTab({ userId, flash }: Props) {
       title: form.title,
       target_value: Number(form.target_value),
       current_value: 0,
-      metric_type: form.metric_type || "\uae30\ud0c0",
+      metric_type: form.metric_type || "기타",
       start_date: form.start_date,
       end_date: form.end_date || null,
       status: "active",
     });
-    if (error) flash("\uc800\uc7a5 \uc2e4\ud328: " + error.message);
-    else { flash("\ubaa9\ud45c \uc0dd\uc131 \uc644\ub8cc"); setForm({ ...EMPTY }); await load(); }
+    if (error) flash("저장 실패: " + error.message);
+    else { flash("목표 생성 완료"); setForm({ ...EMPTY }); await load(); }
     setSaving(false);
   }
 
@@ -80,7 +80,7 @@ export default function GoalTab({ userId, flash }: Props) {
     const s = sb();
     if (!s) return;
     await s.from("hq_goals").update({ status }).eq("id", id);
-    flash(status === "completed" ? "\ubaa9\ud45c \ub2ec\uc131!" : "\ubaa9\ud45c \uc2e4\ud328 \ucc98\ub9ac");
+    flash(status === "completed" ? "목표 달성!" : "목표 실패 처리");
     await load();
   }
 
@@ -95,7 +95,7 @@ export default function GoalTab({ userId, flash }: Props) {
     const s = sb();
     if (!s) return;
     await s.from("hq_goals").delete().eq("id", id);
-    flash("\uc0ad\uc81c \uc644\ub8cc");
+    flash("삭제 완료");
     await load();
   }
 
@@ -104,40 +104,40 @@ export default function GoalTab({ userId, flash }: Props) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-900">\ubaa9\ud45c \uad00\ub9ac</h2>
+        <h2 className="text-xl font-bold text-slate-900">목표 관리</h2>
         <span className={`${BADGE} ${activeCount >= 2 ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-blue-700"}`}>
-          \ud65c\uc131 {activeCount}/2
+          활성 {activeCount}/2
         </span>
       </div>
 
       {/* Form */}
       <div className={C}>
-        <h3 className="mb-4 text-sm font-bold text-slate-700">\uc0c8 \ubaa9\ud45c</h3>
+        <h3 className="mb-4 text-sm font-bold text-slate-700">새 목표</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className={L}>\ubaa9\ud45c \uc81c\ubaa9</label>
-            <input className={I} placeholder="\uc608: \uc6d4 \ub9e4\ucd9c 1\uc5b5 \ub2ec\uc131" value={form.title} onChange={(e) => set("title", e.target.value)} />
+            <label className={L}>목표 제목</label>
+            <input className={I} placeholder="예: 월 매출 1억 달성" value={form.title} onChange={(e) => set("title", e.target.value)} />
           </div>
           <div>
-            <label className={L}>\ubaa9\ud45c \uac12</label>
+            <label className={L}>목표 값</label>
             <input type="number" className={I} placeholder="100" value={form.target_value} onChange={(e) => set("target_value", e.target.value)} />
           </div>
           <div>
-            <label className={L}>\uc9c0\ud45c \uc720\ud615</label>
-            <input className={I} placeholder="\ub9e4\ucd9c, \uc0ac\uc6a9\uc790, \uc804\ud658\uc728 \ub4f1" value={form.metric_type} onChange={(e) => set("metric_type", e.target.value)} />
+            <label className={L}>지표 유형</label>
+            <input className={I} placeholder="매출, 사용자, 전환율 등" value={form.metric_type} onChange={(e) => set("metric_type", e.target.value)} />
           </div>
           <div>
-            <label className={L}>\uc2dc\uc791\uc77c</label>
+            <label className={L}>시작일</label>
             <input type="date" className={I} value={form.start_date} onChange={(e) => set("start_date", e.target.value)} />
           </div>
           <div>
-            <label className={L}>\uc885\ub8cc\uc77c</label>
+            <label className={L}>종료일</label>
             <input type="date" className={I} value={form.end_date} onChange={(e) => set("end_date", e.target.value)} />
           </div>
         </div>
         <div className="mt-4 flex justify-end">
           <button className={B} onClick={save} disabled={saving || activeCount >= 2}>
-            {saving ? "\uc0dd\uc131 \uc911..." : "\ubaa9\ud45c \uc0dd\uc131"}
+            {saving ? "생성 중..." : "목표 생성"}
           </button>
         </div>
       </div>
@@ -161,7 +161,7 @@ export default function GoalTab({ userId, flash }: Props) {
                       <span className={`${BADGE} text-[10px] ${st.bg}`}>{st.label}</span>
                     </div>
                     <p className="mt-0.5 text-xs text-slate-400">
-                      {g.metric_type} &middot; {g.start_date} ~ {g.end_date || "\ubbf8\uc815"}
+                      {g.metric_type} &middot; {g.start_date} ~ {g.end_date || "미정"}
                     </p>
                   </div>
                   <span className="text-lg font-bold text-[#3182F6]">{pct}%</span>
@@ -183,7 +183,7 @@ export default function GoalTab({ userId, flash }: Props) {
 
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-slate-500">
-                    \ud604\uc7ac {g.current_value} / \ubaa9\ud45c {g.target_value}
+                    현재 {g.current_value} / 목표 {g.target_value}
                   </p>
                   <div className="flex items-center gap-2">
                     {isActive && (
@@ -191,7 +191,7 @@ export default function GoalTab({ userId, flash }: Props) {
                         <input
                           type="number"
                           className="w-24 rounded-lg border border-slate-200 px-2 py-1 text-xs outline-none focus:border-blue-400"
-                          placeholder="\ud604\uc7ac\uac12"
+                          placeholder="현재값"
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               updateCurrent(g.id, Number((e.target as HTMLInputElement).value));
@@ -203,13 +203,13 @@ export default function GoalTab({ userId, flash }: Props) {
                           className="rounded-lg bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
                           onClick={() => updateStatus(g.id, "completed")}
                         >
-                          \ub2ec\uc131
+                          달성
                         </button>
                         <button
                           className="rounded-lg bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-100"
                           onClick={() => updateStatus(g.id, "failed")}
                         >
-                          \uc2e4\ud328
+                          실패
                         </button>
                       </>
                     )}
@@ -217,7 +217,7 @@ export default function GoalTab({ userId, flash }: Props) {
                       className="rounded-lg bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-100"
                       onClick={() => remove(g.id)}
                     >
-                      \uc0ad\uc81c
+                      삭제
                     </button>
                   </div>
                 </div>
@@ -235,8 +235,8 @@ export default function GoalTab({ userId, flash }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-slate-700 mb-1">\uc544\uc9c1 \uc124\uc815\ub41c \ubaa9\ud45c\uac00 \uc5c6\uc2b5\ub2c8\ub2e4</p>
-          <p className="text-xs text-slate-400">\ubaa9\ud45c\ub97c \uc124\uc815\ud558\uace0 \uc131\uc7a5\uc744 \ucd94\uc801\ud574\ubcf4\uc138\uc694!</p>
+          <p className="text-sm font-semibold text-slate-700 mb-1">아직 설정된 목표가 없습니다</p>
+          <p className="text-xs text-slate-400">목표를 설정하고 성장을 추적해보세요!</p>
         </div>
       )}
     </div>

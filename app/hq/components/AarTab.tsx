@@ -55,14 +55,14 @@ export default function AarTab({ userId, flash }: Props) {
   }
 
   async function save() {
-    if (!form.goal.trim()) { flash("\ubaa9\ud45c\ub97c \uc785\ub825\ud558\uc138\uc694"); return; }
-    if (!form.result.trim()) { flash("\uacb0\uacfc\ub97c \uc785\ub825\ud558\uc138\uc694"); return; }
+    if (!form.goal.trim()) { flash("목표를 입력하세요"); return; }
+    if (!form.result.trim()) { flash("결과를 입력하세요"); return; }
     setSaving(true);
     const s = sb();
     if (!s) return;
     const { error } = await s.from("hq_aar").insert({ user_id: userId, ...form });
-    if (error) flash("\uc800\uc7a5 \uc2e4\ud328: " + error.message);
-    else { flash("AAR \uc800\uc7a5 \uc644\ub8cc"); setForm({ ...EMPTY }); await load(); }
+    if (error) flash("저장 실패: " + error.message);
+    else { flash("AAR 저장 완료"); setForm({ ...EMPTY }); await load(); }
     setSaving(false);
   }
 
@@ -70,7 +70,7 @@ export default function AarTab({ userId, flash }: Props) {
     const s = sb();
     if (!s) return;
     await s.from("hq_aar").delete().eq("id", id);
-    flash("\uc0ad\uc81c \uc644\ub8cc");
+    flash("삭제 완료");
     await load();
   }
 
@@ -82,36 +82,36 @@ export default function AarTab({ userId, flash }: Props) {
 
       {/* Form */}
       <div className={C}>
-        <h3 className="mb-4 text-sm font-bold text-slate-700">\uc0c8 AAR \uc791\uc131</h3>
+        <h3 className="mb-4 text-sm font-bold text-slate-700">새 AAR 작성</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className={L}>\ub0a0\uc9dc</label>
+            <label className={L}>날짜</label>
             <input type="date" className={I} value={form.date} onChange={(e) => set("date", e.target.value)} />
           </div>
           <div>
-            <label className={L}>\ubaa9\ud45c (\uc758\ub3c4\ud55c \uac83)</label>
-            <input className={I} placeholder="\ub2ec\uc131\ud558\ub824 \ud588\ub358 \ubaa9\ud45c" value={form.goal} onChange={(e) => set("goal", e.target.value)} />
+            <label className={L}>목표 (의도한 것)</label>
+            <input className={I} placeholder="달성하려 했던 목표" value={form.goal} onChange={(e) => set("goal", e.target.value)} />
           </div>
           <div>
-            <label className={L}>\uacb0\uacfc (\uc2e4\uc81c \uc77c\uc5b4\ub09c \uac83)</label>
-            <input className={I} placeholder="\uc2e4\uc81c \uacb0\uacfc" value={form.result} onChange={(e) => set("result", e.target.value)} />
+            <label className={L}>결과 (실제 일어난 것)</label>
+            <input className={I} placeholder="실제 결과" value={form.result} onChange={(e) => set("result", e.target.value)} />
           </div>
           <div>
-            <label className={L}>GAP \uc6d0\uc778</label>
+            <label className={L}>GAP 원인</label>
             <textarea
               className={`${I} resize-none`}
               rows={3}
-              placeholder="\ubaa9\ud45c\uc640 \uacb0\uacfc\uc758 \ucc28\uc774\uac00 \ubc1c\uc0dd\ud55c \uc6d0\uc778"
+              placeholder="목표와 결과의 차이가 발생한 원인"
               value={form.gap_reason}
               onChange={(e) => set("gap_reason", e.target.value)}
             />
           </div>
           <div className="sm:col-span-2">
-            <label className={L}>\uac1c\uc120 \ubc29\uc548</label>
+            <label className={L}>개선 방안</label>
             <textarea
               className={`${I} resize-none`}
               rows={3}
-              placeholder="\ub2e4\uc74c\uc5d0 \ub354 \uc798\ud558\uae30 \uc704\ud55c \uad6c\uccb4\uc801\uc778 \uac1c\uc120 \ubc29\uc548"
+              placeholder="다음에 더 잘하기 위한 구체적인 개선 방안"
               value={form.improvement}
               onChange={(e) => set("improvement", e.target.value)}
             />
@@ -119,7 +119,7 @@ export default function AarTab({ userId, flash }: Props) {
         </div>
         <div className="mt-4 flex justify-end">
           <button className={B} onClick={save} disabled={saving}>
-            {saving ? "\uc800\uc7a5 \uc911..." : "AAR \uc800\uc7a5"}
+            {saving ? "저장 중..." : "AAR 저장"}
           </button>
         </div>
       </div>
@@ -133,27 +133,27 @@ export default function AarTab({ userId, flash }: Props) {
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm font-bold text-slate-700">{r.date}</span>
             <button className="text-xs text-red-400 hover:text-red-600" onClick={() => remove(r.id)}>
-              \uc0ad\uc81c
+              삭제
             </button>
           </div>
           <div className="space-y-3">
             <div className="rounded-xl bg-blue-50/60 p-3">
-              <p className="text-xs font-bold text-blue-700">\ubaa9\ud45c</p>
+              <p className="text-xs font-bold text-blue-700">목표</p>
               <p className="mt-1 text-sm text-blue-900/80">{r.goal}</p>
             </div>
             <div className="rounded-xl bg-emerald-50/60 p-3">
-              <p className="text-xs font-bold text-emerald-700">\uacb0\uacfc</p>
+              <p className="text-xs font-bold text-emerald-700">결과</p>
               <p className="mt-1 text-sm text-emerald-900/80">{r.result}</p>
             </div>
             {r.gap_reason && (
               <div className="rounded-xl bg-amber-50/60 p-3">
-                <p className="text-xs font-bold text-amber-700">GAP \uc6d0\uc778</p>
+                <p className="text-xs font-bold text-amber-700">GAP 원인</p>
                 <p className="mt-1 text-sm leading-relaxed text-amber-900/80 whitespace-pre-wrap">{r.gap_reason}</p>
               </div>
             )}
             {r.improvement && (
               <div className="rounded-xl bg-purple-50/60 p-3">
-                <p className="text-xs font-bold text-purple-700">\uac1c\uc120 \ubc29\uc548</p>
+                <p className="text-xs font-bold text-purple-700">개선 방안</p>
                 <p className="mt-1 text-sm leading-relaxed text-purple-900/80 whitespace-pre-wrap">{r.improvement}</p>
               </div>
             )}
@@ -169,8 +169,8 @@ export default function AarTab({ userId, flash }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-slate-700 mb-1">\uc791\uc131\ub41c AAR\uc774 \uc5c6\uc2b5\ub2c8\ub2e4</p>
-          <p className="text-xs text-slate-400">\ud589\ub3d9 \ud6c4 \ub9ac\ubdf0\ub97c \uc791\uc131\ud558\uc5ec \uc131\uc7a5\uc744 \uae30\ub85d\ud558\uc138\uc694</p>
+          <p className="text-sm font-semibold text-slate-700 mb-1">작성된 AAR이 없습니다</p>
+          <p className="text-xs text-slate-400">행동 후 리뷰를 작성하여 성장을 기록하세요</p>
         </div>
       )}
     </div>

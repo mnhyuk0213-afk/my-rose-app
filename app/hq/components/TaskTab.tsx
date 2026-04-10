@@ -11,10 +11,10 @@ interface Props {
 }
 
 const STATUSES = [
-  { key: "pending", label: "\ub300\uae30" },
-  { key: "in_progress", label: "\uc9c4\ud589\uc911" },
-  { key: "review", label: "\uac80\ud1a0" },
-  { key: "completed", label: "\uc644\ub8cc" },
+  { key: "pending", label: "대기" },
+  { key: "in_progress", label: "진행중" },
+  { key: "review", label: "검토" },
+  { key: "completed", label: "완료" },
 ] as const;
 
 const STATUS_DOT: Record<string, string> = {
@@ -25,16 +25,16 @@ const STATUS_DOT: Record<string, string> = {
 };
 
 const PRIORITIES = [
-  { key: "\uae34\uae09", color: "bg-red-500 text-white", border: "border-red-400", dot: "bg-red-500" },
-  { key: "\ub192\uc74c", color: "bg-orange-100 text-orange-700", border: "border-orange-300", dot: "bg-orange-500" },
-  { key: "\ubcf4\ud1b5", color: "bg-slate-100 text-slate-600", border: "border-slate-200", dot: "bg-slate-400" },
-  { key: "\ub0ae\uc74c", color: "bg-blue-50 text-blue-500", border: "border-blue-200", dot: "bg-blue-400" },
+  { key: "긴급", color: "bg-red-500 text-white", border: "border-red-400", dot: "bg-red-500" },
+  { key: "높음", color: "bg-orange-100 text-orange-700", border: "border-orange-300", dot: "bg-orange-500" },
+  { key: "보통", color: "bg-slate-100 text-slate-600", border: "border-slate-200", dot: "bg-slate-400" },
+  { key: "낮음", color: "bg-blue-50 text-blue-500", border: "border-blue-200", dot: "bg-blue-400" },
 ] as const;
 type Priority = typeof PRIORITIES[number]["key"];
 
 const PRIORITY_MAP = Object.fromEntries(PRIORITIES.map(p => [p.key, p]));
 
-const EMPTY = { title: "", assignee: "", deadline: "", goal_id: "", priority: "\ubcf4\ud1b5" as Priority, progress: "0" };
+const EMPTY = { title: "", assignee: "", deadline: "", goal_id: "", priority: "보통" as Priority, progress: "0" };
 
 function isOverdue(deadline: string | null | undefined, status: string): boolean {
   if (!deadline || status === "completed") return false;
@@ -90,7 +90,7 @@ export default function TaskTab({ userId, userName, flash }: Props) {
   }
 
   async function save() {
-    if (!form.title.trim()) { flash("\ud0dc\uc2a4\ud06c \uc81c\ubaa9\uc744 \uc785\ub825\ud558\uc138\uc694"); return; }
+    if (!form.title.trim()) { flash("태스크 제목을 입력하세요"); return; }
     setSaving(true);
     const s = sb();
     if (!s) return;
@@ -103,8 +103,8 @@ export default function TaskTab({ userId, userName, flash }: Props) {
       status: "pending",
       result: JSON.stringify({ priority: form.priority, progress: Number(form.progress) || 0 }),
     });
-    if (error) flash("\uc800\uc7a5 \uc2e4\ud328: " + error.message);
-    else { flash("\ud0dc\uc2a4\ud06c \uc0dd\uc131 \uc644\ub8cc"); setForm({ ...EMPTY }); await load(); }
+    if (error) flash("저장 실패: " + error.message);
+    else { flash("태스크 생성 완료"); setForm({ ...EMPTY }); await load(); }
     setSaving(false);
   }
 
@@ -129,7 +129,7 @@ export default function TaskTab({ userId, userName, flash }: Props) {
     const s = sb();
     if (!s) return;
     await s.from("hq_tasks").delete().eq("id", id);
-    flash("\uc0ad\uc81c \uc644\ub8cc");
+    flash("삭제 완료");
     await load();
   }
 
@@ -139,7 +139,7 @@ export default function TaskTab({ userId, userName, flash }: Props) {
     const s = sb();
     if (!s) return;
     const { error } = await s.from("hq_task_comments").insert({ task_id: taskId, author: userName, text });
-    if (error) { flash("\ub313\uae00 \uc800\uc7a5 \uc2e4\ud328"); return; }
+    if (error) { flash("댓글 저장 실패"); return; }
     setCommentInputs((p) => ({ ...p, [taskId]: "" }));
     loadComments();
   }
@@ -148,15 +148,15 @@ export default function TaskTab({ userId, userName, flash }: Props) {
   const goalMap = Object.fromEntries(goals.map((g) => [g.id, g.title]));
 
   function parseResultMeta(result: string | undefined | null): { priority: Priority; progress: number } {
-    if (!result) return { priority: "\ubcf4\ud1b5", progress: 0 };
+    if (!result) return { priority: "보통", progress: 0 };
     try {
       const parsed = JSON.parse(result);
       return {
-        priority: parsed.priority || "\ubcf4\ud1b5",
+        priority: parsed.priority || "보통",
         progress: typeof parsed.progress === "number" ? parsed.progress : 0,
       };
     } catch {
-      return { priority: "\ubcf4\ud1b5", progress: 0 };
+      return { priority: "보통", progress: 0 };
     }
   }
 
@@ -168,13 +168,13 @@ export default function TaskTab({ userId, userName, flash }: Props) {
     dl.setHours(0, 0, 0, 0);
     const diff = Math.round((dl.getTime() - todayDate.getTime()) / 86400000);
     if (diff === 0) return <span className={`${BADGE} text-[10px] bg-red-50 text-red-600`}>D-DAY</span>;
-    if (diff < 0) return <span className={`${BADGE} text-[10px] bg-red-50 text-red-600`}>D+{Math.abs(diff)} \uc9c0\uc5f0</span>;
+    if (diff < 0) return <span className={`${BADGE} text-[10px] bg-red-50 text-red-600`}>D+{Math.abs(diff)} 지연</span>;
     if (diff <= 3) return <span className={`${BADGE} text-[10px] bg-amber-50 text-amber-600`}>D-{diff}</span>;
     return <span className={`${BADGE} text-[10px] bg-slate-50 text-slate-500`}>D-{diff}</span>;
   }
 
   function priorityBadge(priority: Priority) {
-    const p = PRIORITY_MAP[priority] ?? PRIORITY_MAP["\ubcf4\ud1b5"];
+    const p = PRIORITY_MAP[priority] ?? PRIORITY_MAP["보통"];
     return <span className={`${BADGE} text-[10px] ${p.color}`}>{priority}</span>;
   }
 
@@ -201,7 +201,7 @@ export default function TaskTab({ userId, userName, flash }: Props) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-900">\ud0dc\uc2a4\ud06c \uad00\ub9ac</h2>
+        <h2 className="text-xl font-bold text-slate-900">태스크 관리</h2>
         <div className="flex gap-2 items-center">
           {/* My tasks / All filter */}
           <div className="flex gap-1 rounded-xl bg-slate-100 p-1">
@@ -209,13 +209,13 @@ export default function TaskTab({ userId, userName, flash }: Props) {
               className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${filterMode === "all" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}
               onClick={() => setFilterMode("all")}
             >
-              \uc804\uccb4
+              전체
             </button>
             <button
               className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${filterMode === "mine" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}
               onClick={() => setFilterMode("mine")}
             >
-              \ub0b4 \ud0dc\uc2a4\ud06c
+              내 태스크
             </button>
           </div>
           {/* View toggle */}
@@ -224,13 +224,13 @@ export default function TaskTab({ userId, userName, flash }: Props) {
               className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${view === "list" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}
               onClick={() => setView("list")}
             >
-              \ub9ac\uc2a4\ud2b8
+              리스트
             </button>
             <button
               className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${view === "kanban" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}
               onClick={() => setView("kanban")}
             >
-              \uce78\ubc18
+              칸반
             </button>
           </div>
         </div>
@@ -238,22 +238,22 @@ export default function TaskTab({ userId, userName, flash }: Props) {
 
       {/* Form */}
       <div className={C}>
-        <h3 className="mb-4 text-sm font-bold text-slate-700">\uc0c8 \ud0dc\uc2a4\ud06c</h3>
+        <h3 className="mb-4 text-sm font-bold text-slate-700">새 태스크</h3>
         <div className="grid gap-4 sm:grid-cols-4">
           <div className="sm:col-span-2">
-            <label className={L}>\uc81c\ubaa9</label>
-            <input className={I} placeholder="\ud0dc\uc2a4\ud06c \uc81c\ubaa9" value={form.title} onChange={(e) => set("title", e.target.value)} />
+            <label className={L}>제목</label>
+            <input className={I} placeholder="태스크 제목" value={form.title} onChange={(e) => set("title", e.target.value)} />
           </div>
           <div>
-            <label className={L}>\ub2f4\ub2f9\uc790</label>
+            <label className={L}>담당자</label>
             <input className={I} placeholder={userName} value={form.assignee} onChange={(e) => set("assignee", e.target.value)} />
           </div>
           <div>
-            <label className={L}>\ub9c8\uac10\uc77c</label>
+            <label className={L}>마감일</label>
             <input type="date" className={I} value={form.deadline} onChange={(e) => set("deadline", e.target.value)} />
           </div>
           <div>
-            <label className={L}>\uc6b0\uc120\uc21c\uc704</label>
+            <label className={L}>우선순위</label>
             <div className="flex gap-1.5 flex-wrap">
               {PRIORITIES.map(p => (
                 <button
@@ -267,13 +267,13 @@ export default function TaskTab({ userId, userName, flash }: Props) {
             </div>
           </div>
           <div>
-            <label className={L}>\uc9c4\ud589\ub960 ({form.progress}%)</label>
+            <label className={L}>진행률 ({form.progress}%)</label>
             <input type="range" min="0" max="100" step="5" className="w-full accent-[#3182F6]" value={form.progress} onChange={(e) => set("progress", e.target.value)} />
           </div>
           <div>
-            <label className={L}>\uc5f0\uacb0 \ubaa9\ud45c</label>
+            <label className={L}>연결 목표</label>
             <select className={I} value={form.goal_id} onChange={(e) => set("goal_id", e.target.value)}>
-              <option value="">\uc5c6\uc74c</option>
+              <option value="">없음</option>
               {goals.map((g) => (
                 <option key={g.id} value={g.id}>{g.title}</option>
               ))}
@@ -281,7 +281,7 @@ export default function TaskTab({ userId, userName, flash }: Props) {
           </div>
           <div className="flex items-end">
             <button className={B} onClick={save} disabled={saving}>
-              {saving ? "\uc0dd\uc131 \uc911..." : "\ud0dc\uc2a4\ud06c \uc0dd\uc131"}
+              {saving ? "생성 중..." : "태스크 생성"}
             </button>
           </div>
         </div>
@@ -319,7 +319,7 @@ export default function TaskTab({ userId, userName, flash }: Props) {
                     </div>
                     <div className="flex items-center gap-3 mt-1">
                       <p className="text-xs text-slate-400">
-                        {t.assignee} &middot; {t.deadline || "\ub9c8\uac10\uc77c \uc5c6\uc74c"}
+                        {t.assignee} &middot; {t.deadline || "마감일 없음"}
                       </p>
                       {progressBar(meta.progress)}
                     </div>
@@ -334,7 +334,7 @@ export default function TaskTab({ userId, userName, flash }: Props) {
                     ))}
                   </select>
                   <button className="text-xs text-red-400 hover:text-red-600" onClick={() => remove(t.id)}>
-                    \uc0ad\uc81c
+                    삭제
                   </button>
                 </div>
 
@@ -343,7 +343,7 @@ export default function TaskTab({ userId, userName, flash }: Props) {
                   <div className="mt-3 border-t border-slate-100 pt-3">
                     {/* Progress slider */}
                     <div className="flex items-center gap-3 mb-3">
-                      <span className="text-xs font-semibold text-slate-500">\uc9c4\ud589\ub960:</span>
+                      <span className="text-xs font-semibold text-slate-500">진행률:</span>
                       <input
                         type="range" min="0" max="100" step="5"
                         className="flex-1 accent-[#3182F6]"
@@ -367,13 +367,13 @@ export default function TaskTab({ userId, userName, flash }: Props) {
                     <div className="flex gap-2">
                       <input
                         className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-blue-400"
-                        placeholder="\ucf54\uba58\ud2b8 \uc785\ub825..."
+                        placeholder="코멘트 입력..."
                         value={commentInputs[t.id] ?? ""}
                         onChange={(e) => setCommentInputs((p) => ({ ...p, [t.id]: e.target.value }))}
                         onKeyDown={(e) => e.key === "Enter" && addComment(t.id)}
                       />
                       <button className={`${B2} text-xs`} onClick={() => addComment(t.id)}>
-                        \ucd94\uac00
+                        추가
                       </button>
                     </div>
                   </div>
@@ -382,7 +382,7 @@ export default function TaskTab({ userId, userName, flash }: Props) {
             );
           })}
           {filteredTasks.length === 0 && (
-            <p className="py-8 text-center text-sm text-slate-400">\ud0dc\uc2a4\ud06c\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.</p>
+            <p className="py-8 text-center text-sm text-slate-400">태스크가 없습니다.</p>
           )}
         </div>
       )}
@@ -412,7 +412,7 @@ export default function TaskTab({ userId, userName, flash }: Props) {
                           {dDayBadge(t.deadline)}
                         </div>
                         <p className="mt-1 text-xs text-slate-400">
-                          {t.assignee} &middot; {t.deadline || "\ub9c8\uac10\uc77c \uc5c6\uc74c"}
+                          {t.assignee} &middot; {t.deadline || "마감일 없음"}
                         </p>
                         {/* Progress bar */}
                         <div className="mt-1.5">{progressBar(meta.progress)}</div>
@@ -436,7 +436,7 @@ export default function TaskTab({ userId, userName, flash }: Props) {
                     );
                   })}
                   {colTasks.length === 0 && (
-                    <p className="py-4 text-center text-xs text-slate-300">\ube44\uc5b4 \uc788\uc74c</p>
+                    <p className="py-4 text-center text-xs text-slate-300">비어 있음</p>
                   )}
                 </div>
               </div>

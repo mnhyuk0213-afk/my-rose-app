@@ -305,7 +305,7 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
                 const rows = monthRecords.map(r =>
                   [r.userName, r.date, r.clockIn || "", r.clockOut || "", r.status, r.overtime, `"${(r.memo || "").replace(/"/g, '""')}"`].join(",")
                 );
-                const csv = "\uFEFF" + [header, ...rows].join("\n");
+                const csv = "﻿" + [header, ...rows].join("\n");
                 const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
