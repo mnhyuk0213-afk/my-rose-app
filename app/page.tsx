@@ -2,13 +2,22 @@
 
 import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
-import OnboardingModal from "@/components/OnboardingModal";
 import { PLANS } from "@/lib/plans";
-import MonthlyReminder from "@/components/MonthlyReminder";
 import EventBanner from "@/components/EventBanner";
 import EventPopup from "@/components/EventPopup";
 import { useTranslation } from "@/lib/i18n";
+
+const MemberHome = dynamic(() => import("@/app/components/MemberHome"), {
+  loading: () => (
+    <div className="min-h-screen bg-slate-50">
+      <div className="flex items-center justify-center h-[80vh]">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
+      </div>
+    </div>
+  ),
+});
 
 function useInView() {
   const ref = useRef<HTMLDivElement>(null);
@@ -650,22 +659,8 @@ function LandingContent() {
   );
 }
 
-// ── 회원 전용 홈화면 ─────────────────────────────────────────
-const TOOLS_HOME = [
-  { icon:"🧮", label:"원가 계산기",    href:"/tools/menu-cost" },
-  { icon:"👥", label:"인건비 스케줄러", href:"/tools/labor" },
-  { icon:"🧾", label:"세금 계산기",    href:"/tools/tax" },
-  { icon:"📄", label:"손익계산서 PDF", href:"/tools/pl-report" },
-  { icon:"✅", label:"창업 체크리스트", href:"/tools/startup-checklist" },
-  { icon:"📱", label:"SNS 콘텐츠",     href:"/tools/sns-content" },
-  { icon:"💬", label:"리뷰 답변",      href:"/tools/review-reply" },
-  { icon:"🗺️", label:"상권 분석",     href:"/tools/area-analysis" },
-];
-type NewsItem = { title:string; summary:string; source:string; url:string; tag?:string; insight?:string };
-import type { User } from "@supabase/supabase-js";
-
-type IndexData = { price:string; date:string } | null;
-
+// ── 라우터 ────────────────────────────────────────────────────
+// PLACEHOLDER_REMOVE_START
 function StockTicker() {
   const [stocks, setStocks] = useState<{kospi:IndexData;kosdaq:IndexData;usdkrw:IndexData}|null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -766,6 +761,7 @@ function NewsSection({ news, loading }: { news: NewsItem[]; loading: boolean }) 
                   <div className="flex items-center gap-2 mb-1">
                     {n.tag && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${TAG_COLORS[n.tag] ?? "bg-slate-100 text-slate-600"}`}>{n.tag}</span>}
                     <span className="text-[11px] text-slate-400">{n.source}</span>
+                    {n.date && <span className="text-[10px] text-slate-300">{n.date.slice(5).replace("-", "/")}</span>}
                   </div>
                   <p className="text-sm font-semibold text-slate-900 leading-snug group-hover:text-blue-600 transition">{n.title}</p>
                   <p className="text-xs text-slate-500 mt-1">{n.summary}</p>

@@ -74,6 +74,7 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
   const [activeSubs, setActiveSubs] = useState(0);
   const [directive, setDirective] = useState("");
   const [loading, setLoading] = useState(true);
+  const [secondaryLoading, setSecondaryLoading] = useState(true);
   const [pendingApprovals, setPendingApprovals] = useState(0);
   const [attendanceIn, setAttendanceIn] = useState(0);
   const [attendanceOut, setAttendanceOut] = useState(0);
@@ -120,31 +121,28 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
   const isSectionVisible = (key: SectionKey) => !widgetPrefs.hidden.includes(key);
 
   useEffect(() => {
-    load();
+    loadCritical();
+    const timer = setTimeout(() => { loadSecondary(); }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
-  async function load() {
+  async function loadCritical() {
     const s = sb();
     if (!s) return;
     setLoading(true);
     try {
-      const [mRes, gRes, tRes, aRes, meRes, pAll, pToday, payAll, paySub] =
+      const [mRes, gRes, tRes, pAll, pToday, dirRes] =
         await Promise.all([
           s.from("hq_metrics").select("*").eq("user_id", userId).order("date", { ascending: false }).limit(15),
           s.from("hq_goals").select("*").eq("user_id", userId).order("start_date", { ascending: false }),
           s.from("hq_tasks").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
-          s.from("hq_aar").select("*").eq("user_id", userId).order("date", { ascending: false }),
-          s.from("hq_mett").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(3),
           s.from("profiles").select("id", { count: "exact", head: true }),
           s.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", today() + "T00:00:00"),
-          s.from("payments").select("amount").eq("status", "done"),
-          s.from("payments").select("id", { count: "exact", head: true }).eq("status", "done"),
+          s.from("hq_directives").select("content").eq("user_id", userId).single(),
         ]);
       setMetrics((mRes.data as Metric[]) ?? []);
       setGoals((gRes.data as Goal[]) ?? []);
       setTasks((tRes.data as Task[]) ?? []);
-      setAars((aRes.data as AAR[]) ?? []);
-      setMetts((meRes.data as Mett[]) ?? []);
       // 직원 이메일 제외한 사용자 수 계산
       let staffEmails: string[] = [];
       try {
@@ -154,28 +152,9 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
       const staffCount = staffEmails.length;
       setTotalUsers(Math.max(0, (pAll.count ?? 0) - staffCount));
       setTodaySignups(pToday.count ?? 0);
-      setTotalRevenue((payAll.data ?? []).reduce((s: number, p: { amount: number }) => s + (p.amount || 0), 0));
-      setActiveSubs(paySub.count ?? 0);
+      if (dirRes.data?.content) setDirective(dirRes.data.content);
 
-      // 피드백 로드
-      try {
-        const { data: fbData } = await s.from("hq_feedback").select("*").order("created_at", { ascending: false });
-        if (fbData) setFeedbacks(fbData.map((r: any) => ({ id: r.id, type: r.type ?? "", title: r.title ?? "", description: r.description ?? "", priority: r.priority ?? "중간", status: r.status ?? "신규", date: r.created_at?.slice(0, 10) ?? "", author: r.author ?? "" })));
-      } catch {}
-
-      // 지시사항 로드
-      try {
-        const { data: dirData } = await s.from("hq_directives").select("content").eq("user_id", userId).single();
-        if (dirData?.content) setDirective(dirData.content);
-      } catch {}
-
-      // 미결 결재 수
-      try {
-        const { count } = await s.from("hq_approvals").select("id", { count: "exact", head: true }).eq("status", "대기");
-        setPendingApprovals(count ?? 0);
-      } catch {}
-
-      // 오늘 출근 현황
+      // 오늘 출근 현황 (clock-in banner)
       try {
         const todayStr = today();
         const { data: attData } = await s.from("hq_attendance").select("id, status, user_name, clock_in, clock_out").eq("date", todayStr);
@@ -199,6 +178,41 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
           setAttendanceOut(Math.max(0, (teamCount ?? 0) - attData.length));
           setAttendanceIn(attData.length);
         }
+      } catch {}
+    } catch {
+      flash("데이터 로딩 실패");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadSecondary() {
+    const s = sb();
+    if (!s) return;
+    setSecondaryLoading(true);
+    try {
+      const [aRes, meRes, payAll, paySub] =
+        await Promise.all([
+          s.from("hq_aar").select("*").eq("user_id", userId).order("date", { ascending: false }),
+          s.from("hq_mett").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(3),
+          s.from("payments").select("amount").eq("status", "done"),
+          s.from("payments").select("id", { count: "exact", head: true }).eq("status", "done"),
+        ]);
+      setAars((aRes.data as AAR[]) ?? []);
+      setMetts((meRes.data as Mett[]) ?? []);
+      setTotalRevenue((payAll.data ?? []).reduce((s: number, p: { amount: number }) => s + (p.amount || 0), 0));
+      setActiveSubs(paySub.count ?? 0);
+
+      // 피드백 로드
+      try {
+        const { data: fbData } = await s.from("hq_feedback").select("*").order("created_at", { ascending: false });
+        if (fbData) setFeedbacks(fbData.map((r: any) => ({ id: r.id, type: r.type ?? "", title: r.title ?? "", description: r.description ?? "", priority: r.priority ?? "중간", status: r.status ?? "신규", date: r.created_at?.slice(0, 10) ?? "", author: r.author ?? "" })));
+      } catch {}
+
+      // 미결 결재 수
+      try {
+        const { count } = await s.from("hq_approvals").select("id", { count: "exact", head: true }).eq("status", "대기");
+        setPendingApprovals(count ?? 0);
       } catch {}
 
       // 최근 활동 피드 (공지, 태스크, 피드백에서 최신 5개)
@@ -229,9 +243,9 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
         }
       } catch {}
     } catch {
-      flash("데이터 로딩 실패");
+      flash("보조 데이터 로딩 실패");
     } finally {
-      setLoading(false);
+      setSecondaryLoading(false);
     }
   }
 
@@ -305,7 +319,8 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
     if (error) { flash("출근 저장 실패"); return; }
     flash(`출근 완료! (${time})`);
     setTodayAttendance({ clockIn: time, clockOut: "" });
-    load();
+    loadCritical();
+    loadSecondary();
   };
 
   return (

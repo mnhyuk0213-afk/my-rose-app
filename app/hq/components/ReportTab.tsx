@@ -68,6 +68,19 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
   const [feedbackId, setFeedbackId] = useState<string | null>(null);
   const [feedbackText, setFeedbackText] = useState("");
 
+  /* -- edit -- */
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [editProblems, setEditProblems] = useState("");
+  const [editNext, setEditNext] = useState("");
+  const [editTitle, setEditTitle] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+
+  /* -- comments -- */
+  const [commentMap, setCommentMap] = useState<Record<string, { id: string; author: string; text: string; time: string }[]>>({});
+  const [commentText, setCommentText] = useState("");
+  const [commentTarget, setCommentTarget] = useState<string | null>(null);
+
   const canApprove = myRole === "대표" || myRole === "이사" || myRole === "팀장";
 
   /* -- loaders -- */
@@ -206,6 +219,59 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
     if (sub === "issue") loadIssues();
     if (sub === "project") loadProjects();
   };
+
+  /* -- comments -- */
+  const loadComments = async (reportId: string) => {
+    const s = sb();
+    if (!s) return;
+    const { data } = await s.from("hq_item_comments").select("*").eq("item_id", reportId).eq("item_type", "report").order("created_at", { ascending: true });
+    if (data) setCommentMap(prev => ({ ...prev, [reportId]: data.map((r: any) => ({ id: r.id, author: r.author, text: r.text, time: r.created_at })) }));
+  };
+
+  const addComment = async (reportId: string) => {
+    if (!commentText.trim()) return;
+    const s = sb();
+    if (!s) return;
+    await s.from("hq_item_comments").insert({ item_id: reportId, item_type: "report", author: userName, text: commentText.trim() });
+    setCommentText("");
+    setCommentTarget(null);
+    loadComments(reportId);
+  };
+
+  /* -- edit report -- */
+  const saveEdit = async (id: string, type: "daily" | "issue" | "project") => {
+    const s = sb();
+    if (!s) return;
+    if (type === "daily") {
+      await s.from("hq_reports").update({ content: editContent, problems: editProblems, next_steps: editNext }).eq("id", id);
+      loadDailies();
+    } else if (type === "issue") {
+      await s.from("hq_reports").update({ title: editTitle, description: editDesc }).eq("id", id);
+      loadIssues();
+    } else {
+      await s.from("hq_reports").update({ title: editTitle, description: editDesc }).eq("id", id);
+      loadProjects();
+    }
+    setEditId(null);
+    flash("수정 완료");
+  };
+
+  /* -- check (대표/이사 확인) -- */
+  const checkReport = async (id: string) => {
+    const s = sb();
+    if (!s) return;
+    await s.from("hq_reports").update({ status: "approved", approver: userName }).eq("id", id);
+    flash("확인 완료 ✓");
+    if (sub === "daily") loadDailies();
+    if (sub === "issue") loadIssues();
+    if (sub === "project") loadProjects();
+  };
+
+  /* -- load comments on tab change -- */
+  useEffect(() => {
+    const items = sub === "daily" ? dailies : sub === "issue" ? issues : projects;
+    items.forEach(item => loadComments(item.id));
+  }, [dailies, issues, projects]);
 
   const statusBadge = (st: string) => {
     const r = REPORT_ST[st] ?? REPORT_ST.draft;
@@ -375,11 +441,33 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
                     <span className="text-sm font-semibold text-slate-800">{displayName(d.author ?? userName)}</span>
                     <span className="text-xs text-slate-400">{d.date}</span>
                   </div>
-                  {statusBadge(d.status ?? "submitted")}
+                  <div className="flex items-center gap-2">
+                    {statusBadge(d.status ?? "submitted")}
+                    {canApprove && d.status === "submitted" && (
+                      <button onClick={() => checkReport(d.id)} className="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100 transition-colors" title="확인">✓ 확인</button>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-slate-700 whitespace-pre-wrap mb-2">{d.content}</p>
-                {d.problems && <p className="text-sm text-red-600 mb-1"><span className="font-semibold">문제:</span> {d.problems}</p>}
-                {d.nextSteps && <p className="text-sm text-blue-600"><span className="font-semibold">계획:</span> {d.nextSteps}</p>}
+                {editId === d.id ? (
+                  <div className="space-y-2">
+                    <textarea className={`${I} min-h-[60px]`} rows={3} value={editContent} onChange={e => setEditContent(e.target.value)} />
+                    <textarea className={`${I} min-h-[40px]`} rows={2} value={editProblems} onChange={e => setEditProblems(e.target.value)} placeholder="문제/이슈" />
+                    <textarea className={`${I} min-h-[40px]`} rows={2} value={editNext} onChange={e => setEditNext(e.target.value)} placeholder="내일 계획" />
+                    <div className="flex gap-2 justify-end">
+                      <button className={B2} onClick={() => setEditId(null)}>취소</button>
+                      <button className={B} onClick={() => saveEdit(d.id, "daily")}>저장</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm text-slate-700 whitespace-pre-wrap mb-2">{d.content}</p>
+                    {d.problems && <p className="text-sm text-red-600 mb-1"><span className="font-semibold">문제:</span> {d.problems}</p>}
+                    {d.nextSteps && <p className="text-sm text-blue-600"><span className="font-semibold">계획:</span> {d.nextSteps}</p>}
+                    {d.author === userName && d.status !== "approved" && (
+                      <button onClick={() => { setEditId(d.id); setEditContent(d.content); setEditProblems(d.problems); setEditNext(d.nextSteps); }} className="text-xs text-slate-400 hover:text-[#3182F6] font-semibold mt-2">수정</button>
+                    )}
+                  </>
+                )}
                 {canApprove && d.status === "submitted" && d.author !== userName && (
                   <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
                     <button className="rounded-xl bg-emerald-50 text-emerald-700 font-semibold px-4 py-2 text-sm hover:bg-emerald-100 transition-all" onClick={() => approveReport(d.id, "approved")}>승인</button>
@@ -387,6 +475,24 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
                   </div>
                 )}
                 <FeedbackSection item={d} />
+                {/* 댓글 */}
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  <p className="text-xs font-bold text-slate-500 mb-2">댓글 ({(commentMap[d.id] ?? []).length})</p>
+                  {(commentMap[d.id] ?? []).map(c => (
+                    <div key={c.id} className="flex items-start gap-2 mb-2">
+                      <div className="w-5 h-5 bg-[#3182F6] rounded-full flex items-center justify-center shrink-0"><span className="text-[9px] text-white font-bold">{displayName(c.author)[0]}</span></div>
+                      <div><span className="text-xs font-semibold text-slate-700">{displayName(c.author)}</span> <span className="text-[10px] text-slate-400">{new Date(c.time).toLocaleString("ko-KR")}</span><p className="text-xs text-slate-600">{c.text}</p></div>
+                    </div>
+                  ))}
+                  {commentTarget === d.id ? (
+                    <div className="flex gap-2 mt-1">
+                      <input className={`${I} flex-1 text-xs`} value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="댓글 입력..." onKeyDown={e => { if (e.key === "Enter") addComment(d.id); }} />
+                      <button className="rounded-xl bg-[#3182F6] text-white font-semibold px-3 py-1.5 text-xs" onClick={() => addComment(d.id)}>등록</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setCommentTarget(d.id)} className="text-xs text-slate-400 hover:text-[#3182F6] font-semibold">+ 댓글</button>
+                  )}
+                </div>
               </div>
             ))}
             {dailies.length === 0 && <div className="text-center py-8 text-slate-400">일일 보고가 없습니다</div>}
@@ -437,13 +543,34 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
               <div key={iss.id} className={C}>
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-semibold text-slate-800 truncate">{iss.title}</h4>
-                  {statusBadge(iss.reportStatus ?? "submitted")}
+                  <div className="flex items-center gap-2">
+                    {statusBadge(iss.reportStatus ?? "submitted")}
+                    {canApprove && iss.reportStatus === "submitted" && (
+                      <button onClick={() => checkReport(iss.id)} className="text-xs px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100">✓</button>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-slate-600 mb-3 line-clamp-2">{iss.description}</p>
-                <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <span className={`${BADGE} ${priorityColor[iss.priority] ?? priorityColor["중간"]}`}>{iss.priority}</span>
-                  <span>{displayName(iss.author ?? userName)}</span>
-                </div>
+                {editId === iss.id ? (
+                  <div className="space-y-2">
+                    <input className={I} value={editTitle} onChange={e => setEditTitle(e.target.value)} />
+                    <textarea className={`${I} min-h-[60px]`} rows={2} value={editDesc} onChange={e => setEditDesc(e.target.value)} />
+                    <div className="flex gap-2 justify-end">
+                      <button className={B2} onClick={() => setEditId(null)}>취소</button>
+                      <button className={B} onClick={() => saveEdit(iss.id, "issue")}>저장</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm text-slate-600 mb-3 line-clamp-2">{iss.description}</p>
+                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                      <span className={`${BADGE} ${priorityColor[iss.priority] ?? priorityColor["중간"]}`}>{iss.priority}</span>
+                      <span>{displayName(iss.author ?? userName)}</span>
+                      {iss.author === userName && iss.reportStatus !== "approved" && (
+                        <button onClick={() => { setEditId(iss.id); setEditTitle(iss.title); setEditDesc(iss.description); }} className="text-slate-400 hover:text-[#3182F6] font-semibold">수정</button>
+                      )}
+                    </div>
+                  </>
+                )}
                 {canApprove && iss.reportStatus === "submitted" && iss.author !== userName && (
                   <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
                     <button className="rounded-xl bg-emerald-50 text-emerald-700 font-semibold px-4 py-2 text-sm hover:bg-emerald-100 transition-all" onClick={() => approveReport(iss.id, "approved")}>승인</button>
@@ -451,6 +578,23 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
                   </div>
                 )}
                 <FeedbackSection item={iss} />
+                {/* 댓글 */}
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  {(commentMap[iss.id] ?? []).map(c => (
+                    <div key={c.id} className="flex items-start gap-2 mb-2">
+                      <div className="w-5 h-5 bg-[#3182F6] rounded-full flex items-center justify-center shrink-0"><span className="text-[9px] text-white font-bold">{displayName(c.author)[0]}</span></div>
+                      <div><span className="text-xs font-semibold text-slate-700">{displayName(c.author)}</span> <span className="text-[10px] text-slate-400">{new Date(c.time).toLocaleString("ko-KR")}</span><p className="text-xs text-slate-600">{c.text}</p></div>
+                    </div>
+                  ))}
+                  {commentTarget === iss.id ? (
+                    <div className="flex gap-2 mt-1">
+                      <input className={`${I} flex-1 text-xs`} value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="댓글..." onKeyDown={e => { if (e.key === "Enter") addComment(iss.id); }} />
+                      <button className="rounded-xl bg-[#3182F6] text-white font-semibold px-3 py-1.5 text-xs" onClick={() => addComment(iss.id)}>등록</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setCommentTarget(iss.id)} className="text-xs text-slate-400 hover:text-[#3182F6] font-semibold">+ 댓글</button>
+                  )}
+                </div>
               </div>
             ))}
             {issues.length === 0 && <div className="col-span-2 text-center py-8 text-slate-400">이슈 보고가 없습니다</div>}
@@ -493,22 +637,43 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
               <div key={p.id} className={C}>
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-semibold text-slate-800">{p.title}</h4>
-                  {statusBadge(p.reportStatus ?? "submitted")}
-                </div>
-                <p className="text-sm text-slate-600 mb-3">{p.description}</p>
-                <div className="mb-2">
-                  <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-                    <span>진행률</span>
-                    <span className="font-semibold text-[#3182F6]">{p.progress}%</span>
-                  </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#3182F6] rounded-full transition-all" style={{ width: `${p.progress}%` }} />
+                  <div className="flex items-center gap-2">
+                    {statusBadge(p.reportStatus ?? "submitted")}
+                    {canApprove && p.reportStatus === "submitted" && (
+                      <button onClick={() => checkReport(p.id)} className="text-xs px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100">✓</button>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-slate-400">
-                  <span>{displayName(p.author ?? userName)}</span>
-                  <span>마감: {p.deadline}</span>
-                </div>
+                {editId === p.id ? (
+                  <div className="space-y-2">
+                    <input className={I} value={editTitle} onChange={e => setEditTitle(e.target.value)} />
+                    <textarea className={`${I} min-h-[60px]`} rows={2} value={editDesc} onChange={e => setEditDesc(e.target.value)} />
+                    <div className="flex gap-2 justify-end">
+                      <button className={B2} onClick={() => setEditId(null)}>취소</button>
+                      <button className={B} onClick={() => saveEdit(p.id, "project")}>저장</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm text-slate-600 mb-3">{p.description}</p>
+                    <div className="mb-2">
+                      <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                        <span>진행률</span>
+                        <span className="font-semibold text-[#3182F6]">{p.progress}%</span>
+                      </div>
+                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#3182F6] rounded-full transition-all" style={{ width: `${p.progress}%` }} />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-slate-400">
+                      <span>{displayName(p.author ?? userName)}</span>
+                      <span>마감: {p.deadline}</span>
+                      {p.author === userName && p.reportStatus !== "approved" && (
+                        <button onClick={() => { setEditId(p.id); setEditTitle(p.title); setEditDesc(p.description); }} className="text-slate-400 hover:text-[#3182F6] font-semibold">수정</button>
+                      )}
+                    </div>
+                  </>
+                )}
                 {canApprove && p.reportStatus === "submitted" && p.author !== userName && (
                   <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
                     <button className="rounded-xl bg-emerald-50 text-emerald-700 font-semibold px-4 py-2 text-sm hover:bg-emerald-100 transition-all" onClick={() => approveReport(p.id, "approved")}>승인</button>
@@ -516,6 +681,23 @@ export default function ReportTab({ userId, userName, myRole, flash }: Props) {
                   </div>
                 )}
                 <FeedbackSection item={p} />
+                {/* 댓글 */}
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  {(commentMap[p.id] ?? []).map(c => (
+                    <div key={c.id} className="flex items-start gap-2 mb-2">
+                      <div className="w-5 h-5 bg-[#3182F6] rounded-full flex items-center justify-center shrink-0"><span className="text-[9px] text-white font-bold">{displayName(c.author)[0]}</span></div>
+                      <div><span className="text-xs font-semibold text-slate-700">{displayName(c.author)}</span> <span className="text-[10px] text-slate-400">{new Date(c.time).toLocaleString("ko-KR")}</span><p className="text-xs text-slate-600">{c.text}</p></div>
+                    </div>
+                  ))}
+                  {commentTarget === p.id ? (
+                    <div className="flex gap-2 mt-1">
+                      <input className={`${I} flex-1 text-xs`} value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="댓글..." onKeyDown={e => { if (e.key === "Enter") addComment(p.id); }} />
+                      <button className="rounded-xl bg-[#3182F6] text-white font-semibold px-3 py-1.5 text-xs" onClick={() => addComment(p.id)}>등록</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setCommentTarget(p.id)} className="text-xs text-slate-400 hover:text-[#3182F6] font-semibold">+ 댓글</button>
+                  )}
+                </div>
               </div>
             ))}
             {projects.length === 0 && <div className="text-center py-8 text-slate-400">프로젝트 보고가 없습니다</div>}
