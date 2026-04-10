@@ -378,7 +378,7 @@ export default function HQPage() {
         {/* ── 메인 콘텐츠 (독립 스크롤) ─────────────────── */}
         <main className="flex-1 min-w-0 pb-16 md:pb-0 overflow-y-auto">
           {/* 탭 콘텐츠 */}
-          <div className="px-4 lg:px-8 pt-4 lg:pt-5 pb-10">
+          <div className="px-3 lg:px-6 pt-2 lg:pt-3 pb-10">
             {userId && tab === "dashboard" ? (
               <Dashboard userId={userId} userName={userName} myRole={myRole} flash={flash} onNavigate={setTab} />
             ) : userId ? (
