@@ -58,16 +58,16 @@ export default function NotificationBell({ userId, userName, myRole, onNavigate 
 
     // 전체 쿼리를 병렬 실행
     const [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10] = await Promise.all([
-      s.from("hq_approvals").select("id, title, date").eq("status", "대기").eq("approver", userName).then(r => r.data).catch(() => null),
-      s.from("hq_notices").select("id, title, date, read_by").order("date", { ascending: false }).limit(20).then(r => r.data).catch(() => null),
-      s.from("hq_tasks").select("id, title, deadline, status").eq("deadline", todayStr).eq("user_id", userId).then(r => r.data).catch(() => null),
-      s.from("hq_leave").select("id, type, status, date").eq("requester", userName).in("status", ["승인", "반려"]).then(r => r.data).catch(() => null),
-      s.from("hq_chat").select("id, sender, text, created_at").neq("sender", userName).order("created_at", { ascending: false }).limit(10).then(r => r.data).catch(() => null),
-      s.from("hq_dm").select("id, sender, text, created_at").eq("receiver", userName).order("created_at", { ascending: false }).limit(10).then(r => r.data).catch(() => null),
-      s.from("hq_feedback").select("id, title, author, date").order("date", { ascending: false }).limit(10).then(r => r.data).catch(() => null),
-      s.from("hq_reports").select("id, title, status, date, author").eq("status", "submitted").order("date", { ascending: false }).limit(10).then(r => r.data).catch(() => null),
-      s.from("hq_board").select("id, title, author, date").order("date", { ascending: false }).limit(10).then(r => r.data).catch(() => null),
-      s.from("hq_surveys").select("id, title, author, date, status").eq("status", "진행중").order("date", { ascending: false }).limit(5).then(r => r.data).catch(() => null),
+      s.from("hq_approvals").select("id, title, date").eq("status", "대기").eq("approver", userName).then((res: any) => res.data).catch(() => null),
+      s.from("hq_notices").select("id, title, date, read_by").order("date", { ascending: false }).limit(20).then((res: any) => res.data).catch(() => null),
+      s.from("hq_tasks").select("id, title, deadline, status").eq("deadline", todayStr).eq("user_id", userId).then((res: any) => res.data).catch(() => null),
+      s.from("hq_leave").select("id, type, status, date").eq("requester", userName).in("status", ["승인", "반려"]).then((res: any) => res.data).catch(() => null),
+      s.from("hq_chat").select("id, sender, text, created_at").neq("sender", userName).order("created_at", { ascending: false }).limit(10).then((res: any) => res.data).catch(() => null),
+      s.from("hq_dm").select("id, sender, text, created_at").eq("receiver", userName).order("created_at", { ascending: false }).limit(10).then((res: any) => res.data).catch(() => null),
+      s.from("hq_feedback").select("id, title, author, date").order("date", { ascending: false }).limit(10).then((res: any) => res.data).catch(() => null),
+      s.from("hq_reports").select("id, title, status, date, author").eq("status", "submitted").order("date", { ascending: false }).limit(10).then((res: any) => res.data).catch(() => null),
+      s.from("hq_board").select("id, title, author, date").order("date", { ascending: false }).limit(10).then((res: any) => res.data).catch(() => null),
+      s.from("hq_surveys").select("id, title, author, date, status").eq("status", "진행중").order("date", { ascending: false }).limit(5).then((res: any) => res.data).catch(() => null),
     ]);
 
     if (r1) for (const a of r1 as any[]) items.push({ id: `approval-${a.id}`, icon: "📋", title: `결재 대기: ${a.title}`, time: a.date, tab: "approval" });
