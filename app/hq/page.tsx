@@ -94,6 +94,7 @@ export default function HQPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [currentTime, setCurrentTime] = useState("");
 
   // Load dark mode preference from localStorage
   useEffect(() => {
@@ -101,6 +102,14 @@ export default function HQPage() {
       const saved = localStorage.getItem("hq_dark_mode");
       if (saved === "true") setDarkMode(true);
     } catch {}
+  }, []);
+
+  // Live clock
+  useEffect(() => {
+    const tick = () => setCurrentTime(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+    tick();
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
   }, []);
 
   // Persist dark mode preference
@@ -222,8 +231,6 @@ export default function HQPage() {
     <div className={`min-h-screen bg-[#F7F8FA]${darkMode ? " hq-dark" : ""}`}>
       <meta name="theme-color" content={darkMode ? "#0F172A" : "#ffffff"} />
       <style>{`
-        .vela-nav,.vela-mobile-tab{display:none!important}
-        body{padding-top:0!important}
         .hq-header{position:-webkit-sticky;position:sticky;top:0;z-index:100;height:56px;background:rgba(255,255,255,0.97);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid #E5E8EB;display:flex;align-items:center;padding:0 12px}
         .hq-dark { background: #0F172A !important; color: #E2E8F0 !important; }
         .hq-dark .bg-white { background: #1E293B !important; }
@@ -238,36 +245,31 @@ export default function HQPage() {
 
       {/* ── 헤더 (compact on mobile) ───────────────────── */}
       <header className="hq-header">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 lg:gap-3">
-            {/* 모바일 햄버거 */}
+        <div className="flex items-center justify-between w-full">
+          {/* ── 좌측: 햄버거 + 로고 ── */}
+          <div className="flex items-center gap-2 flex-shrink-0">
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 transition">
               <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 5h12M3 9h12M3 13h12"/></svg>
             </button>
             <button onClick={() => setTab("dashboard")} className="flex items-center gap-2">
-              {/* New hexagon HQ logo */}
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="hqLogoGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#3182F6" />
-                    <stop offset="1" stopColor="#2563EB" />
-                  </linearGradient>
-                </defs>
-                <path d="M16 1.5L29.5 9.25V24.75L16 30.5L2.5 24.75V9.25L16 1.5Z" fill="url(#hqLogoGrad)" />
-                <text x="16" y="19.5" textAnchor="middle" fill="white" fontSize="11" fontWeight="700" fontFamily="system-ui, sans-serif">HQ</text>
+              <svg width="28" height="28" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="512" height="512" rx="100" fill="#3182F6"/>
+                <text x="256" y="340" textAnchor="middle" fill="white" fontSize="280" fontWeight="800" fontFamily="sans-serif">V</text>
               </svg>
-              <span className="text-base lg:text-lg font-bold text-slate-900 tracking-tight hidden sm:block">VELA HQ</span>
+              <span className="text-base font-bold text-slate-900 tracking-tight hidden sm:block">VELA HQ</span>
             </button>
-            <span className="text-[10px] lg:text-[11px] bg-[#3182F6]/10 text-[#3182F6] px-2 py-0.5 lg:px-2.5 lg:py-1 rounded-lg font-bold">{myRole}</span>
           </div>
 
-          <div className="flex items-center gap-2 lg:gap-3">
+          {/* ── 우측: 날짜 · 시간 · 검색 · 알림 · 다크모드 · 프로필 ── */}
+          <div className="flex items-center gap-1.5 lg:gap-2.5">
             {msg && (
-              <span className="text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg font-semibold animate-pulse">
+              <span className="text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg font-semibold animate-pulse mr-1">
                 {msg}
               </span>
             )}
-            <span className="text-xs text-slate-400 hidden lg:block">{todayDate}</span>
+            <span className="text-xs text-slate-400 hidden lg:block whitespace-nowrap">{todayDate}</span>
+            <span className="text-xs text-slate-400 hidden lg:block tabular-nums">{currentTime}</span>
+            <div className="hidden lg:block w-px h-4 bg-slate-200 mx-0.5" />
             <button
               onClick={() => setSearchOpen(true)}
               className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 transition text-slate-500"
@@ -296,6 +298,7 @@ export default function HQPage() {
                 </svg>
               )}
             </button>
+            <div className="hidden lg:block w-px h-4 bg-slate-200 mx-0.5" />
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 lg:w-8 lg:h-8 bg-slate-100 rounded-xl flex items-center justify-center">
                 <span className="text-xs lg:text-sm font-bold text-slate-600">{userName[0]}</span>
