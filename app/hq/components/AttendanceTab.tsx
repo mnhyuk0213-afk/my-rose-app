@@ -33,11 +33,13 @@ function getWeekDates(): string[] {
   });
 }
 
-function diffHours(a: string, b: string): number {
+function diffHours(a: string, b: string, nextDay = false): number {
   if (!a || !b) return 0;
   const [ah, am] = a.split(":").map(Number);
   const [bh, bm] = b.split(":").map(Number);
-  return Math.max(0, +((bh + bm / 60 - ah - am / 60).toFixed(1)));
+  let diff = bh + bm / 60 - ah - am / 60;
+  if (diff < 0 || nextDay) diff += 24; // 익일 퇴근
+  return Math.max(0, +(diff.toFixed(1)));
 }
 
 function getMonthDates(): string[] {
@@ -102,7 +104,11 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
   const [editClockOutTime, setEditClockOutTime] = useState("");
 
   const todayStr = today();
-  const todayRec = records.find(r => r.date === todayStr && r.userName === userName);
+  // 오늘 출근 기록 또는 어제 미퇴근 기록 (익일 퇴근 대응)
+  const yesterdayStr = (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); })();
+  const todayRec = records.find(r => r.date === todayStr && r.userName === userName)
+    || records.find(r => r.date === yesterdayStr && r.userName === userName && r.clockIn && !r.clockOut);
+  const isNextDayClockOut = todayRec?.date === yesterdayStr;
 
   const clockIn = async () => {
     if (todayRec?.clockIn) { flash("이미 출근 기록이 있습니다"); return; }
@@ -127,8 +133,9 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
     const s = sb();
     if (!s) return;
     const time = now.toTimeString().slice(0, 5);
-    const hours = diffHours(todayRec.clockIn, time);
-    const isEarly = time < "18:00";
+    const hours = diffHours(todayRec.clockIn, time, isNextDayClockOut);
+    // 익일 퇴근이면 조퇴 아님
+    const isEarly = !isNextDayClockOut && time < "18:00";
     const overtime = Math.max(0, +(hours - 8).toFixed(1));
     const newStatus = isEarly && todayRec.status !== "지각" ? "조퇴" : todayRec.status;
     const timestamp = new Date().toISOString();
@@ -136,7 +143,7 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
       clock_out: timestamp, overtime, status: newStatus,
     }).eq("id", todayRec.id);
     if (error) { flash("저장 실패: " + error.message); return; }
-    flash(`퇴근 완료 (${time}) - ${hours}시간 근무`);
+    flash(`퇴근 완료 (${time}) - ${hours}시간 근무${isNextDayClockOut ? " (익일)" : ""}`);
     loadData();
   };
 
@@ -147,8 +154,10 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
     const [h, m] = editClockOutTime.split(":").map(Number);
     const d = new Date();
     d.setHours(h, m, 0, 0);
-    const hours = diffHours(todayRec.clockIn, editClockOutTime);
-    const isEarly = editClockOutTime < "18:00";
+    // 수정 시간이 출근보다 이르면 익일로 판단
+    const editNextDay = isNextDayClockOut || editClockOutTime < todayRec.clockIn;
+    const hours = diffHours(todayRec.clockIn, editClockOutTime, editNextDay);
+    const isEarly = !editNextDay && editClockOutTime < "18:00";
     const overtime = Math.max(0, +(hours - 8).toFixed(1));
     const newStatus = isEarly && todayRec.status !== "지각" ? "조퇴" : todayRec.status;
     const { error } = await s.from("hq_attendance").update({
@@ -173,7 +182,7 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
   const absenceCount = monthRecords.filter(r => r.status === "결근").length;
 
   const totalHoursToday = todayRec?.clockIn
-    ? diffHours(todayRec.clockIn, todayRec.clockOut || now.toTimeString().slice(0, 5))
+    ? diffHours(todayRec.clockIn, todayRec.clockOut || now.toTimeString().slice(0, 5), isNextDayClockOut)
     : 0;
 
   // 전 직원 오늘 현황
@@ -248,7 +257,10 @@ export default function AttendanceTab({ userId, userName, myRole, flash }: Props
 
       {/* Today's status */}
       <div className={C}>
-        <h3 className="text-sm font-bold text-slate-700 mb-4">오늘 근무 현황</h3>
+        <h3 className="text-sm font-bold text-slate-700 mb-4">
+          오늘 근무 현황
+          {isNextDayClockOut && <span className="ml-2 text-xs font-semibold text-amber-500">(어제 출근 → 익일 퇴근 대기)</span>}
+        </h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="text-center">
             <p className="text-xs text-slate-400 mb-1">출근</p>
