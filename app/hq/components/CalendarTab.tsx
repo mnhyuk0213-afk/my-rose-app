@@ -99,6 +99,7 @@ export default function CalendarTab({ userId, userName, myRole, flash }: Props) 
   };
 
   const delEvent = async (id: string) => {
+    if (!confirm("삭제하시겠습니까?")) return;
     const s = sb();
     if (!s) return;
     await s.from("hq_events").delete().eq("id", id);

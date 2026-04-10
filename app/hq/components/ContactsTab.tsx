@@ -145,6 +145,7 @@ export default function ContactsTab({ userId, userName, myRole, flash }: Props) 
   };
 
   const remove = async (id: string) => {
+    if (!confirm("삭제하시겠습니까?")) return;
     const s = sb();
     if (!s) { flash("DB 연결 실패"); return; }
     try {

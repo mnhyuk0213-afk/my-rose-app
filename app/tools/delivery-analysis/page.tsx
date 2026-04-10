@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import * as XLSX from "xlsx";
 import { fmt } from "@/lib/vela";
 import ToolNav from "@/components/ToolNav";
+import { useCloudSync } from "@/lib/useCloudSync";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 
 type AnalysisResult = {
   totalOrders: number | null;
@@ -19,12 +21,29 @@ type AnalysisResult = {
   summary: string;
 };
 
+type DeliveryData = {
+  platform: "baemin" | "coupang" | "yogiyo";
+  lastResult: AnalysisResult | null;
+};
+
+const KEY = "vela-delivery-analysis";
+const defaultDeliveryData: DeliveryData = { platform: "baemin", lastResult: null };
+
 export default function DeliveryAnalysisPage() {
   const [file, setFile] = useState<File | null>(null);
   const [platform, setPlatform] = useState<"baemin" | "coupang" | "yogiyo">("baemin");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState("");
+
+  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId } = useCloudSync<DeliveryData>(KEY, defaultDeliveryData);
+
+  useEffect(() => {
+    if (cloudData) {
+      setPlatform(cloudData.platform);
+      if (cloudData.lastResult) setResult(cloudData.lastResult);
+    }
+  }, [cloudData]);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -48,7 +67,9 @@ export default function DeliveryAnalysisPage() {
       });
 
       if (!res.ok) throw new Error("분석 실패");
-      setResult(await res.json());
+      const analysisResult = await res.json();
+      setResult(analysisResult);
+      cloudUpdate({ ...cloudData, lastResult: analysisResult });
     } catch {
       setError("파일 분석에 실패했습니다. 정산서 파일이 맞는지 확인해주세요.");
     } finally {
@@ -68,7 +89,10 @@ export default function DeliveryAnalysisPage() {
             <span>🛵</span> 배달 매출 분석
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">배달앱 매출 분석기</h1>
-          <p className="text-slate-500 text-sm">배달앱 정산서를 업로드하면 수수료·실매출·건당 이익을 자동 분석합니다.</p>
+          <div className="flex items-center gap-2">
+            <p className="text-slate-500 text-sm">배달앱 정산서를 업로드하면 수수료·실매출·건당 이익을 자동 분석합니다.</p>
+            <CloudSyncBadge status={syncStatus} userId={syncUserId} />
+          </div>
         </div>
 
         {/* 플랫폼 선택 */}
@@ -80,7 +104,7 @@ export default function DeliveryAnalysisPage() {
           ].map((p) => (
             <button
               key={p.id}
-              onClick={() => setPlatform(p.id)}
+              onClick={() => { setPlatform(p.id); cloudUpdate({ ...cloudData, platform: p.id }); }}
               className={`rounded-full px-4 py-2 text-sm font-semibold ring-1 transition ${platform === p.id ? p.color : "bg-white text-slate-400 ring-slate-200"}`}
             >
               {p.label}

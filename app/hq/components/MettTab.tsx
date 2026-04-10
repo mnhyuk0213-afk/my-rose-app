@@ -74,6 +74,7 @@ export default function MettTab({ userId, flash }: Props) {
   }
 
   async function remove(id: string) {
+    if (!confirm("삭제하시겠습니까?")) return;
     const s = sb();
     if (!s) return;
     await s.from("hq_mett").delete().eq("id", id);

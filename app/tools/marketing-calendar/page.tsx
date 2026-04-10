@@ -1,7 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
+import { useCloudSync } from "@/lib/useCloudSync";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 
 const CALENDAR = [
   { month: 1, title: "신년 시즌", events: ["신년 이벤트 (1/1~1/3)", "신정 연휴 프로모션"], tips: ["연초 메뉴 리뉴얼 발표", "신년 한정 메뉴 출시", "직장인 연초 모임 단체 예약 유도"], color: "#3182F6" },
@@ -18,9 +21,26 @@ const CALENDAR = [
   { month: 12, title: "연말 특수", events: ["크리스마스 (12/25)", "송년회 시즌"], tips: ["단체 예약 노쇼 방지 (예약금 제도)", "현금 확보 (매출 20% 유보 → 1월 대비)", "올해 매출 정산 + 내년 목표 설정"], color: "#DC2626" },
 ];
 
+type CalendarCloudData = { notes: Record<number, string> };
+const CALENDAR_DEFAULT: CalendarCloudData = { notes: {} };
+
 export default function MarketingCalendarPage() {
   const now = new Date();
   const currentMonth = now.getMonth() + 1;
+
+  const [notes, setNotes] = useState<Record<number, string>>({});
+  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId } = useCloudSync<CalendarCloudData>("vela-marketing-calendar", CALENDAR_DEFAULT);
+
+  // Load from cloud on mount
+  useEffect(() => {
+    if (cloudData.notes) setNotes(cloudData.notes);
+  }, [cloudData]);
+
+  const updateNote = (month: number, value: string) => {
+    const next = { ...notes, [month]: value };
+    setNotes(next);
+    cloudUpdate({ notes: next });
+  };
 
   return (
     <>
@@ -35,7 +55,10 @@ export default function MarketingCalendarPage() {
             <div className="inline-flex items-center gap-2 bg-purple-50 text-purple-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>📅</span> 마케팅 캘린더
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">시즌 마케팅 캘린더</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">시즌 마케팅 캘린더</h1>
+              <CloudSyncBadge status={syncStatus} userId={syncUserId} />
+            </div>
             <p className="text-slate-500 text-sm">매월 놓치면 안 되는 이벤트와 마케팅 전략을 확인하세요.</p>
           </div>
 
@@ -69,6 +92,16 @@ export default function MarketingCalendarPage() {
                         <p className="text-sm text-slate-700 leading-relaxed">{tip}</p>
                       </div>
                     ))}
+                  </div>
+
+                  <div className="mt-3 pt-3 border-t border-slate-100">
+                    <input
+                      type="text"
+                      placeholder="메모를 입력하세요..."
+                      value={notes[m.month] ?? ""}
+                      onChange={(e) => updateNote(m.month, e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400 focus:bg-white transition placeholder:text-slate-300"
+                    />
                   </div>
                 </div>
               );

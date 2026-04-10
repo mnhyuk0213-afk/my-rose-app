@@ -5,8 +5,6 @@ import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { useCloudSync } from "@/lib/useCloudSync";
 import CloudSyncBadge from "@/components/CloudSyncBadge";
-import SimDataPicker from "@/components/SimDataPicker";
-import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 const TABS = ["밸류에이션", "IR 덱 가이드", "투자 유형", "미팅 체크리스트"] as const;
 type Tab = (typeof TABS)[number];
@@ -100,17 +98,6 @@ export default function FundraisingPage() {
   const setMtChecks = (fn: (p: Record<string, boolean>) => Record<string, boolean>) => setFrData({ ...frData, mtChecks: typeof fn === "function" ? fn(frData.mtChecks) : fn });
   const [expandedType, setExpandedType] = useState<string | null>(null);
 
-  const simFields = (sim: SimulatorSnapshot) => [
-    { key: "annualRev", label: "연 매출", value: `${Math.round(sim.totalSales * 12 / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.totalSales * 12 / 10000) },
-    { key: "annualProfit", label: "연 순이익", value: `${Math.round(sim.profit * 12 / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.profit * 12 / 10000) },
-    { key: "industry", label: "업종", value: sim.industry, rawValue: sim.industry },
-  ];
-  const applySimSelected = (selected: Record<string, number | string>) => {
-    if (selected.annualRev !== undefined) setAnnualRev(selected.annualRev as number);
-    if (selected.annualProfit !== undefined) setAnnualProfit(selected.annualProfit as number);
-    if (selected.industry !== undefined) setIndustry(selected.industry as string);
-  };
-
   // 업종별 PSR(매출 멀티플) 범위 — 외식업 기준
   const PSR: Record<string, [number, number]> = { cafe: [0.8, 1.5], restaurant: [0.6, 1.2], bar: [0.7, 1.3], finedining: [1.0, 2.0], gogi: [0.7, 1.3] };
   // 업종별 PER(이익 멀티플) 범위
@@ -192,7 +179,6 @@ export default function FundraisingPage() {
               <p className="text-slate-500 text-sm">밸류에이션, IR 덱, 투자자 미팅까지 한 번에 준비하세요.</p>
               <CloudSyncBadge status={status} userId={userId} />
             </div>
-            <SimDataPicker fields={simFields} onApply={applySimSelected} />
           </div>
 
           <div className="flex gap-1.5 overflow-x-auto pb-2 mb-4">

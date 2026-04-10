@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 // 1시간마다 갱신 (캐싱으로 API 호출 절감)
 export const revalidate = 3600;
 

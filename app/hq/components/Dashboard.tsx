@@ -432,7 +432,11 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
                   <span className="text-[10px] text-slate-400 font-normal">({tasks.filter(t => t.deadline === today() || t.status === "pending" || t.status === "planned").length}건)</span>
                 </h3>
                 {tasks.filter(t => t.deadline === today() || t.status === "pending" || t.status === "planned").length === 0 ? (
-                  <p className="text-sm text-slate-400 py-1">오늘 예정된 할 일이 없습니다.</p>
+                  <div className="text-center py-3">
+                    <span className="text-2xl block mb-1">📭</span>
+                    <p className="text-sm text-slate-400">오늘 예정된 할 일이 없습니다.</p>
+                    <button onClick={() => go("task")} className="text-xs text-[#3182F6] hover:underline mt-1">태스크 탭에서 추가하세요 &rarr;</button>
+                  </div>
                 ) : (
                   <div className="space-y-1 max-h-[180px] overflow-y-auto">
                     {tasks
@@ -571,7 +575,11 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
               <div key="goals" className={`${C} !p-3 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20`} onClick={() => go("goal")}>
                 <h3 className="mb-1 text-xs font-bold text-slate-700">활성 목표 <span className="text-[10px] text-slate-400 font-normal">({Math.round((achievedGoals / totalGoals) * 100)}% 달성) →</span></h3>
                 {activeGoals.length === 0 ? (
-                  <p className="text-xs text-slate-400">설정된 목표가 없습니다.</p>
+                  <div className="text-center py-2">
+                    <span className="text-xl block mb-0.5">🎯</span>
+                    <p className="text-xs text-slate-400">설정된 목표가 없습니다.</p>
+                    <button onClick={() => go("goal")} className="text-[10px] text-[#3182F6] hover:underline mt-0.5">목표 탭에서 추가하세요 &rarr;</button>
+                  </div>
                 ) : (
                   <div className="space-y-1.5">
                     {activeGoals.slice(0, 3).map((g) => {
@@ -598,7 +606,11 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
               <div key="tasks" className={`${C} !p-3 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20`} onClick={() => go("task")}>
                 <h3 className="mb-1 text-xs font-bold text-slate-700">최근 태스크 <span className="text-[10px] text-slate-400 font-normal">(대기 {pendingTasks}건) →</span></h3>
                 {tasks.length === 0 ? (
-                  <p className="text-xs text-slate-400">태스크가 없습니다.</p>
+                  <div className="text-center py-2">
+                    <span className="text-xl block mb-0.5">📋</span>
+                    <p className="text-xs text-slate-400">태스크가 없습니다.</p>
+                    <button onClick={() => go("task")} className="text-[10px] text-[#3182F6] hover:underline mt-0.5">태스크 탭에서 추가하세요 &rarr;</button>
+                  </div>
                 ) : (
                   <div className="space-y-0.5">
                     {tasks.slice(0, 4).map((t) => {
@@ -623,7 +635,11 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
               <div key="feedback" className={`${C} !p-3 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20`} onClick={() => go("feedback")}>
                 <h3 className="mb-1 text-xs font-bold text-slate-700">최근 피드백 <span className="text-[10px] text-slate-400 font-normal">(미해결 {feedbackCount}건) →</span></h3>
                 {feedbacks.length === 0 ? (
-                  <p className="text-xs text-slate-400">피드백이 없습니다.</p>
+                  <div className="text-center py-2">
+                    <span className="text-xl block mb-0.5">💬</span>
+                    <p className="text-xs text-slate-400">피드백이 없습니다.</p>
+                    <button onClick={() => go("feedback")} className="text-[10px] text-[#3182F6] hover:underline mt-0.5">피드백 탭에서 추가하세요 &rarr;</button>
+                  </div>
                 ) : (
                   <div className="space-y-0.5">
                     {feedbacks.slice(0, 4).map((f) => {
@@ -648,7 +664,11 @@ export default function Dashboard({ userId, userName, myRole, flash, onNavigate 
               <div key="aars" className={`${C} !p-3 cursor-pointer hover:ring-2 hover:ring-[#3182F6]/20`} onClick={() => go("aar")}>
                 <h3 className="mb-1 text-xs font-bold text-slate-700">최근 AAR <span className="text-[10px] text-slate-400 font-normal">(이번 달 {monthAars}건) →</span></h3>
                 {aars.length === 0 ? (
-                  <p className="text-xs text-slate-400">AAR이 없습니다.</p>
+                  <div className="text-center py-2">
+                    <span className="text-xl block mb-0.5">📝</span>
+                    <p className="text-xs text-slate-400">AAR이 없습니다.</p>
+                    <button onClick={() => go("aar")} className="text-[10px] text-[#3182F6] hover:underline mt-0.5">AAR 탭에서 추가하세요 &rarr;</button>
+                  </div>
                 ) : (
                   <div className="space-y-0.5">
                     {aars.slice(0, 3).map((a) => (

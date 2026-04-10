@@ -5,8 +5,6 @@ import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { useCloudSync } from "@/lib/useCloudSync";
 import CloudSyncBadge from "@/components/CloudSyncBadge";
-import SimDataPicker from "@/components/SimDataPicker";
-import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 const TABS = ["개인 vs 법인", "설립 절차", "필요 서류", "비용 시뮬레이터"] as const;
 type Tab = (typeof TABS)[number];
@@ -53,15 +51,6 @@ export default function IncorporationPage() {
   const setDocChecks = (fn: (p: Record<string, boolean>) => Record<string, boolean>) => setIncData({ ...incData, docChecks: typeof fn === "function" ? fn(incData.docChecks) : fn });
   const [capitalAmount, setCapitalAmount] = useState(1000);
 
-  const simFields = (sim: SimulatorSnapshot) => [
-    { key: "annualRevenue", label: "예상 연매출", value: `${Math.round(sim.totalSales * 12 / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.totalSales * 12 / 10000) },
-    { key: "annualProfit", label: "예상 연순이익", value: `${Math.round(sim.profit * 12 / 10000).toLocaleString()}만원`, rawValue: Math.round(sim.profit * 12 / 10000) },
-  ];
-  const applySimSelected = (selected: Record<string, number | string>) => {
-    if (selected.annualRevenue !== undefined) setAnnualRevenue(selected.annualRevenue as number);
-    if (selected.annualProfit !== undefined) setAnnualProfit(selected.annualProfit as number);
-  };
-
   const inputCls = "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-blue-400 focus:bg-white outline-none transition";
   const cardCls = "bg-white ring-1 ring-slate-200 rounded-3xl p-6 mb-4";
   const labelCls = "block text-xs font-semibold text-slate-500 mb-1.5";
@@ -96,7 +85,6 @@ export default function IncorporationPage() {
               <p className="text-slate-500 text-sm">개인 vs 법인 비교부터 설립 절차, 비용까지 한 번에 확인하세요.</p>
               <CloudSyncBadge status={status} userId={userId} />
             </div>
-            <SimDataPicker fields={simFields} onApply={applySimSelected} />
           </div>
 
           <div className="flex gap-1.5 overflow-x-auto pb-2 mb-4">

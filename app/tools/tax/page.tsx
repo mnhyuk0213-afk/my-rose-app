@@ -9,6 +9,8 @@ import CollapsibleTip from "@/components/CollapsibleTip";
 import SimDataPicker from "@/components/SimDataPicker";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import { fmt } from "@/lib/vela";
+import { useCloudSync } from "@/lib/useCloudSync";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 type MonthSnap = { month: string; monthly_sales: number; profit: number; industry: string };
@@ -64,6 +66,26 @@ const INDUSTRY_LABEL: Record<string, string> = {
   cafe: "카페", restaurant: "음식점", bar: "술집/바", finedining: "파인다이닝", gogi: "고깃집",
 };
 
+type TaxCloudData = {
+  annualSales: string;
+  annualProfit: string;
+  isSimplified: boolean;
+  dependents: string;
+  isBlueReturn: boolean;
+  isDualBiz: boolean;
+  meatCostRatio: string;
+};
+
+const TAX_DEFAULT: TaxCloudData = {
+  annualSales: "120000000",
+  annualProfit: "24000000",
+  isSimplified: false,
+  dependents: "0",
+  isBlueReturn: false,
+  isDualBiz: false,
+  meatCostRatio: "40",
+};
+
 export default function TaxPage() {
   const simData = useSimulatorData();
   const [annualSales, setAnnualSales] = useState("120000000");
@@ -75,6 +97,19 @@ export default function TaxPage() {
   const [meatCostRatio, setMeatCostRatio] = useState("40");
 
   const [monthlySnaps, setMonthlySnaps] = useState<MonthSnap[]>([]);
+
+  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId } = useCloudSync<TaxCloudData>("vela-tax-calc", TAX_DEFAULT);
+
+  // Load from cloud on mount
+  useEffect(() => {
+    if (cloudData.annualSales) setAnnualSales(cloudData.annualSales);
+    if (cloudData.annualProfit) setAnnualProfit(cloudData.annualProfit);
+    if (cloudData.isSimplified !== undefined) setIsSimplified(cloudData.isSimplified);
+    if (cloudData.dependents) setDependents(cloudData.dependents);
+    if (cloudData.isBlueReturn !== undefined) setIsBlueReturn(cloudData.isBlueReturn);
+    if (cloudData.isDualBiz !== undefined) setIsDualBiz(cloudData.isDualBiz);
+    if (cloudData.meatCostRatio) setMeatCostRatio(cloudData.meatCostRatio);
+  }, [cloudData]);
 
   // SimDataPicker 필드 정의
   const simFields = (sim: SimulatorSnapshot) => [
@@ -96,6 +131,11 @@ export default function TaxPage() {
       setIsDualBiz(true);
     }
   };
+
+  // Save to cloud on change
+  useEffect(() => {
+    cloudUpdate({ annualSales, annualProfit, isSimplified, dependents, isBlueReturn, isDualBiz, meatCostRatio });
+  }, [annualSales, annualProfit, isSimplified, dependents, isBlueReturn, isDualBiz, meatCostRatio, cloudUpdate]);
 
   // 시뮬레이터 데이터 자동 입력
   useEffect(() => {
@@ -180,7 +220,10 @@ export default function TaxPage() {
             <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>🧾</span> 세금 계산기
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">세금 계산기</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">세금 계산기</h1>
+              <CloudSyncBadge status={syncStatus} userId={syncUserId} />
+            </div>
             <p className="text-slate-500 text-sm">연 매출과 순이익을 입력하면 부가세·종합소득세 예상액을 계산합니다.</p>
           </div>
 

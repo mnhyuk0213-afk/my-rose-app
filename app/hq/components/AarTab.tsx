@@ -67,6 +67,7 @@ export default function AarTab({ userId, flash }: Props) {
   }
 
   async function remove(id: string) {
+    if (!confirm("삭제하시겠습니까?")) return;
     const s = sb();
     if (!s) return;
     await s.from("hq_aar").delete().eq("id", id);

@@ -5,6 +5,8 @@ import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import CollapsibleTip from "@/components/CollapsibleTip";
+import SimDataPicker from "@/components/SimDataPicker";
+import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 type MonthSnap = {
   month: string;
@@ -58,6 +60,34 @@ export default function RevenueForecastPage() {
   const [loading, setLoading] = useState(false);
   const [forecast, setForecast] = useState<Forecast | null>(null);
   const [useDemo, setUseDemo] = useState(false);
+
+  const simFields = (sim: SimulatorSnapshot) => [
+    { key: "monthly_sales", label: "월 매출", value: `${Math.round(sim.totalSales).toLocaleString("ko-KR")}원`, rawValue: Math.round(sim.totalSales) },
+    { key: "profit", label: "월 순이익", value: `${Math.round(sim.profit).toLocaleString("ko-KR")}원`, rawValue: Math.round(sim.profit) },
+  ];
+
+  const applySimSelected = (selected: Record<string, number | string>) => {
+    const now = new Date();
+    const month = now.toISOString().slice(0, 7);
+    const monthlySales = (selected.monthly_sales as number) || 0;
+    const profit = (selected.profit as number) || 0;
+    const snap: MonthSnap = {
+      month,
+      monthly_sales: monthlySales,
+      rent: 0,
+      labor_cost: 0,
+      utilities: 0,
+      marketing: 0,
+      etc: 0,
+      cogs_rate: monthlySales > 0 ? Math.round((1 - profit / monthlySales) * 100) : 30,
+      profit,
+      industry: "한식",
+    };
+    setSnapshots((prev) => {
+      const filtered = prev.filter((s) => s.month !== month);
+      return [...filtered, snap].sort((a, b) => a.month.localeCompare(b.month));
+    });
+  };
 
   // Load data
   useEffect(() => {
@@ -208,6 +238,7 @@ ${revenueHistory}
             <p className="text-slate-500 text-sm">
               과거 매출 데이터를 기반으로 AI가 다음 달 매출을 예측하고 전략을 제안합니다.
             </p>
+            <SimDataPicker fields={simFields} onApply={applySimSelected} />
           </div>
 
           {/* Demo notice */}

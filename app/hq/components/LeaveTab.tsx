@@ -145,6 +145,7 @@ export default function LeaveTab({ userId, userName, myRole, flash }: Props) {
 
   /* ── cancel (승인 전에만) ──────────────────────────────── */
   const cancelRequest = async (id: string) => {
+    if (!confirm("휴가 신청을 취소하시겠습니까?")) return;
     const s = sb();
     if (!s) return;
     const { error } = await s.from("hq_leave").delete().eq("id", id);

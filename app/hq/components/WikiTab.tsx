@@ -209,6 +209,7 @@ export default function WikiTab({ userId, userName, myRole, flash }: Props) {
   };
 
   const deleteArticle = async (id: string) => {
+    if (!confirm("문서를 삭제하시겠습니까?")) return;
     const s = sb();
     if (!s) { flash("DB 연결 실패"); return; }
     try {

@@ -115,6 +115,7 @@ export default function FeedbackTab({ userId, userName, myRole, flash }: Props) 
   };
 
   const deleteFb = async (id: string) => {
+    if (!confirm("삭제하시겠습니까?")) return;
     const s = sb();
     if (!s) return;
     await s.from("hq_feedback").delete().eq("id", id);

@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import ToolNav from "@/components/ToolNav";
 import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import { fmt } from "@/lib/vela";
 import SimDataPicker from "@/components/SimDataPicker";
 import CollapsibleTip from "@/components/CollapsibleTip";
+import { useCloudSync } from "@/lib/useCloudSync";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 import type { SimulatorSnapshot } from "@/lib/useSimulatorData";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -542,11 +544,26 @@ const INDUSTRY_INFO: Record<IndustryKey, { label: string; emoji: string; color: 
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
+type MenuCostCloudData = { industry: IndustryKey; menus: MenuItem[] };
+const MENU_COST_DEFAULT: MenuCostCloudData = { industry: "cafe", menus: INDUSTRY_PRESETS["cafe"] };
+
 export default function MenuCostPage() {
   const [industry, setIndustry] = useState<IndustryKey>("cafe");
   const [menus, setMenus] = useState<MenuItem[]>(INDUSTRY_PRESETS["cafe"]);
   const [filterCategory, setFilterCategory] = useState("전체");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "done" | "error">("idle");
+
+  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId } = useCloudSync<MenuCostCloudData>("vela-menu-cost", MENU_COST_DEFAULT);
+
+  // Load from cloud on mount
+  useEffect(() => {
+    if (cloudData.menus && cloudData.menus.length > 0) {
+      setMenus(cloudData.menus);
+    }
+    if (cloudData.industry) {
+      setIndustry(cloudData.industry);
+    }
+  }, [cloudData]);
 
   const simFields = (sim: SimulatorSnapshot) => [
     { key: "industry", label: "업종", value: sim.industry, rawValue: sim.industry },
@@ -616,35 +633,49 @@ export default function MenuCostPage() {
 
   function changeIndustry(key: IndustryKey) {
     setIndustry(key);
-    setMenus(INDUSTRY_PRESETS[key].map(m => ({
+    const newMenus = INDUSTRY_PRESETS[key].map(m => ({
       ...m,
       id: uid(),
       ingredients: m.ingredients.map(i => ({ ...i, id: uid() })),
-    })));
+    }));
+    setMenus(newMenus);
     setFilterCategory("전체");
+    cloudUpdate({ industry: key, menus: newMenus });
   }
   const [sortBy, setSortBy] = useState<"default" | "costRatio" | "profit">("default");
 
   const addMenu = useCallback(() => {
-    setMenus((prev) => [
-      ...prev,
-      {
-        id: uid(),
-        name: "",
-        price: "",
-        category: "음료",
-        ingredients: [{ id: uid(), name: "", cost: "" }],
-      },
-    ]);
-  }, []);
+    setMenus((prev) => {
+      const next = [
+        ...prev,
+        {
+          id: uid(),
+          name: "",
+          price: "",
+          category: "음료",
+          ingredients: [{ id: uid(), name: "", cost: "" }],
+        },
+      ];
+      cloudUpdate({ industry, menus: next });
+      return next;
+    });
+  }, [industry, cloudUpdate]);
 
   const updateMenu = useCallback((id: string, updated: Partial<MenuItem>) => {
-    setMenus((prev) => prev.map((m) => (m.id === id ? { ...m, ...updated } : m)));
-  }, []);
+    setMenus((prev) => {
+      const next = prev.map((m) => (m.id === id ? { ...m, ...updated } : m));
+      cloudUpdate({ industry, menus: next });
+      return next;
+    });
+  }, [industry, cloudUpdate]);
 
   const deleteMenu = useCallback((id: string) => {
-    setMenus((prev) => prev.filter((m) => m.id !== id));
-  }, []);
+    setMenus((prev) => {
+      const next = prev.filter((m) => m.id !== id);
+      cloudUpdate({ industry, menus: next });
+      return next;
+    });
+  }, [industry, cloudUpdate]);
 
   // 집계
   const allCalc = menus.map((m) => ({ item: m, calc: calcMenu(m) }));
@@ -711,9 +742,12 @@ export default function MenuCostPage() {
             <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>🧮</span> 원가 계산기
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
-              메뉴별 원가 계산기
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+                메뉴별 원가 계산기
+              </h1>
+              <CloudSyncBadge status={syncStatus} userId={syncUserId} />
+            </div>
             <p className="text-slate-500 text-sm">
               메뉴별 식재료 원가를 입력하면 원가율과 건당 순이익을 자동으로 계산합니다.
             </p>

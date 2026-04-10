@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { fmt } from "@/lib/vela";
 import ToolNav from "@/components/ToolNav";
+import { useCloudSync } from "@/lib/useCloudSync";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 
 type PriceResult = {
   recommendedPrice: number;
@@ -12,6 +14,24 @@ type PriceResult = {
   targetCostRate: number;
   reasoning: string;
   tips: string[];
+};
+
+type PricingCloudData = {
+  menuName: string;
+  ingredientCost: string;
+  industry: string;
+  competitorMin: string;
+  competitorMax: string;
+  location: string;
+};
+
+const PRICING_DEFAULT: PricingCloudData = {
+  menuName: "",
+  ingredientCost: "",
+  industry: "restaurant",
+  competitorMin: "",
+  competitorMax: "",
+  location: "서울 일반 상권",
 };
 
 export default function MenuPricingPage() {
@@ -24,6 +44,23 @@ export default function MenuPricingPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PriceResult | null>(null);
   const [error, setError] = useState("");
+
+  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId } = useCloudSync<PricingCloudData>("vela-menu-pricing", PRICING_DEFAULT);
+
+  // Load from cloud on mount
+  useEffect(() => {
+    if (cloudData.menuName !== undefined) setMenuName(cloudData.menuName);
+    if (cloudData.ingredientCost !== undefined) setIngredientCost(cloudData.ingredientCost);
+    if (cloudData.industry) setIndustry(cloudData.industry);
+    if (cloudData.competitorMin !== undefined) setCompetitorMin(cloudData.competitorMin);
+    if (cloudData.competitorMax !== undefined) setCompetitorMax(cloudData.competitorMax);
+    if (cloudData.location) setLocation(cloudData.location);
+  }, [cloudData]);
+
+  // Save to cloud on change
+  useEffect(() => {
+    cloudUpdate({ menuName, ingredientCost, industry, competitorMin, competitorMax, location });
+  }, [menuName, ingredientCost, industry, competitorMin, competitorMax, location, cloudUpdate]);
 
   const analyze = async () => {
     if (!menuName.trim() || !ingredientCost) { setError("메뉴명과 원가를 입력해주세요."); return; }
@@ -68,7 +105,10 @@ JSON 형식: {"recommendedPrice":number,"minPrice":number,"maxPrice":number,"tar
           <div className="inline-flex items-center gap-2 bg-violet-50 text-violet-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
             <span>💰</span> AI 가격 추천
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">AI 메뉴 가격 추천</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">AI 메뉴 가격 추천</h1>
+            <CloudSyncBadge status={syncStatus} userId={syncUserId} />
+          </div>
           <p className="text-slate-500 text-sm">원가와 경쟁 가격대를 입력하면 AI가 적정 가격을 추천합니다.</p>
         </div>
 

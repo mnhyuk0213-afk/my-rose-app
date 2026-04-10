@@ -7,6 +7,8 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-client";
 import PlanGate from "@/components/PlanGate";
 import CollapsibleTip from "@/components/CollapsibleTip";
 import { fmt } from "@/lib/vela";
+import { useCloudSync } from "@/lib/useCloudSync";
+import CloudSyncBadge from "@/components/CloudSyncBadge";
 
 type SimHistory = { id: string; label: string; form: Record<string, number | string>; result: Record<string, number> };
 type MonthSnap = { month: string; monthly_sales: number; rent: number; labor_cost: number; utilities: number; marketing: number; etc: number; cogs_rate: number; profit: number; industry: string };
@@ -86,6 +88,20 @@ export default function PLReportPage() {
   const [form, setForm] = useState<FormData>(DEFAULT);
   const [simList, setSimList] = useState<SimHistory[]>([]);
   const [monthList, setMonthList] = useState<MonthSnap[]>([]);
+
+  const { data: cloudData, update: cloudUpdate, status: syncStatus, userId: syncUserId } = useCloudSync<{ form: FormData }>("vela-pl-report", { form: DEFAULT });
+
+  // Load from cloud on mount
+  useEffect(() => {
+    if (cloudData.form && cloudData.form.hallSales) {
+      setForm(cloudData.form);
+    }
+  }, [cloudData]);
+
+  // Save to cloud on change
+  useEffect(() => {
+    cloudUpdate({ form });
+  }, [form, cloudUpdate]);
 
   useEffect(() => {
     const sb = createSupabaseBrowserClient();
@@ -208,7 +224,10 @@ export default function PLReportPage() {
             <div className="inline-flex items-center gap-2 bg-purple-50 text-purple-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               <span>📄</span> 손익계산서
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">손익계산서 PDF 출력</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">손익계산서 PDF 출력</h1>
+              <CloudSyncBadge status={syncStatus} userId={syncUserId} />
+            </div>
             <p className="text-slate-500 text-sm">수익 데이터를 입력하면 정식 손익계산서 형식으로 PDF 출력이 가능합니다.</p>
           </div>
 

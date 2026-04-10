@@ -113,6 +113,7 @@ export default function TeamTab({ userId, userName, myRole, flash }: Props) {
   };
 
   const remove = async (id: string) => {
+    if (!confirm("삭제하시겠습니까?")) return;
     const s = sb();
     if (!s) return;
     await s.from("hq_team").delete().eq("id", id);

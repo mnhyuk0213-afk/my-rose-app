@@ -268,6 +268,7 @@ export default function ChatTab({ userId, userName, myRole, flash }: Props) {
   };
 
   const deleteMsg = async (id: string) => {
+    if (!confirm("메시지를 삭제하시겠습니까?")) return;
     const s = sb();
     if (!s) return;
     await s.from("hq_chat").delete().eq("id", id);
