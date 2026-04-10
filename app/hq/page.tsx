@@ -219,11 +219,10 @@ export default function HQPage() {
   const activeTabInfo = TAB_MAP[tab];
 
   return (
-    <div className={`h-screen flex flex-col bg-[#F7F8FA]${darkMode ? " hq-dark" : ""}`} style={{ height: "100dvh" }}>
+    <div className={`min-h-screen bg-[#F7F8FA]${darkMode ? " hq-dark" : ""}`}>
       <meta name="theme-color" content={darkMode ? "#0F172A" : "#ffffff"} />
       <style>{`
         .vela-nav,.vela-mobile-tab{display:none!important}
-        body{padding-top:0!important;margin-top:0!important}
         .hq-dark { background: #0F172A !important; color: #E2E8F0 !important; }
         .hq-dark .bg-white { background: #1E293B !important; }
         .hq-dark .bg-\\[\\#F7F8FA\\] { background: #0F172A !important; }
@@ -236,7 +235,7 @@ export default function HQPage() {
       `}</style>
 
       {/* ── 헤더 (compact on mobile) ───────────────────── */}
-      <header className="bg-white border-b border-slate-200/80 px-3 lg:px-6 pb-2 lg:pb-3 pt-[max(env(safe-area-inset-top,0px),8px)] flex-shrink-0 z-50">
+      <header className="bg-white border-b border-slate-200/80 px-3 lg:px-6 py-2 lg:py-3 sticky top-0 z-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 lg:gap-3">
             {/* 모바일 햄버거 */}
@@ -337,7 +336,7 @@ export default function HQPage() {
         </aside>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1">
         {/* ── 데스크톱 사이드바 (독립 스크롤) ─────────── */}
         <aside className="hidden md:flex flex-col w-[240px] bg-white border-r border-slate-200/80 overflow-y-auto flex-shrink-0">
           <nav className="flex-1 px-3 py-4">
@@ -376,7 +375,7 @@ export default function HQPage() {
         </aside>
 
         {/* ── 메인 콘텐츠 (독립 스크롤) ─────────────────── */}
-        <main className="flex-1 min-w-0 pb-16 md:pb-0 overflow-y-auto">
+        <main className="flex-1 min-w-0 pb-16 md:pb-0">
           {/* 탭 콘텐츠 */}
           <div className="px-3 lg:px-6 pt-2 lg:pt-3 pb-10">
             {userId && tab === "dashboard" ? (
