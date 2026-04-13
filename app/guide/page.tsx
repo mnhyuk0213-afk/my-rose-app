@@ -77,7 +77,7 @@ const SECTIONS = [
 export default function GuidePage() {
   return (
     <>
-      <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-20 pb-16 px-4">
         <div className="mx-auto max-w-3xl">
           <div className="mt-6 mb-10">
             <div className="inline-flex items-center gap-2 bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 rounded-full mb-4">

@@ -36,7 +36,7 @@ export default function TaxAdvisorPage() {
   return (
     <>
       <ToolNav />
-      <div className="min-h-screen bg-slate-50 pb-24 md:pb-8">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-24 md:pb-8">
         <main className="mx-auto max-w-3xl px-4 py-8 md:pl-64 md:px-8">
           {/* 헤더 */}
           <div className="mb-6">

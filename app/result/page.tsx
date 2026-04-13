@@ -678,7 +678,7 @@ function ResultContent() {
   }, [result, form, isProfit]);
 
   return (
-    <div className="min-h-screen bg-slate-50 print:bg-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 print:bg-white">
       
       <main className="px-4 py-6 md:px-8 print:px-0">
       <div className="mx-auto max-w-3xl space-y-6">

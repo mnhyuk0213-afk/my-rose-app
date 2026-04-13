@@ -71,7 +71,7 @@ export default function HelpPage() {
     : FAQ_SECTIONS;
 
   return (
-    <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-20 pb-16 px-4">
       <div className="mx-auto max-w-3xl">
         <Link href="/" className="text-xs text-slate-400 hover:text-slate-600 transition">← 홈</Link>
         <div className="mt-4 mb-6">

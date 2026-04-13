@@ -278,9 +278,9 @@ export default function SalesConnectPage() {
   const monthLabel = `${targetMonth.slice(0, 4)}년 ${parseInt(targetMonth.slice(5))}월`;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 pt-20 pb-24 md:px-8">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-900 px-4 pt-20 pb-24 md:px-8">
       <div className="mx-auto max-w-2xl">
-        <Link href="/dashboard" className="text-sm text-slate-400 hover:text-slate-700 transition">
+        <Link href="/dashboard" className="text-sm text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition">
           ← 대시보드
         </Link>
 
@@ -289,8 +289,8 @@ export default function SalesConnectPage() {
           <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-2">
             <span>🔗</span> 매출 연동
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-1">매출 입력</h1>
-          <p className="text-slate-500 text-xs sm:text-sm">홀 매출은 직접 입력, 배달 매출은 정산서 업로드로 관리하세요.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-1">매출 입력</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">홀 매출은 직접 입력, 배달 매출은 정산서 업로드로 관리하세요.</p>
         </div>
 
         {/* 월 선택 */}
@@ -300,7 +300,7 @@ export default function SalesConnectPage() {
             value={targetMonth}
             onChange={(e) => setTargetMonth(e.target.value)}
             max={currentMonth}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-indigo-400 transition"
+            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-indigo-400 transition"
           />
           {targetMonth === currentMonth && (
             <span className="text-xs text-indigo-500 font-semibold">이번 달</span>
@@ -341,7 +341,7 @@ export default function SalesConnectPage() {
               className={`flex-1 rounded-2xl py-4 text-sm font-bold transition active:scale-[0.98] ${
                 tab === t.id
                   ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-500 ring-1 ring-slate-200"
+                  : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 ring-1 ring-slate-200 dark:ring-slate-700"
               }`}
             >
               {t.icon} {t.label}
@@ -353,9 +353,9 @@ export default function SalesConnectPage() {
             홀 매출 탭
            ════════════════════════════════════ */}
         {tab === "hall" && (
-          <div className="rounded-2xl sm:rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 p-5 sm:p-6">
-            <h2 className="font-bold text-slate-900 mb-0.5">{monthLabel} 홀 매출</h2>
-            <p className="text-xs text-slate-400 mb-4">POS에 찍힌 홀(매장) 매출 총액만 입력하세요.</p>
+          <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700 p-5 sm:p-6">
+            <h2 className="font-bold text-slate-900 dark:text-white mb-0.5">{monthLabel} 홀 매출</h2>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">POS에 찍힌 홀(매장) 매출 총액만 입력하세요.</p>
 
             <div className="relative mb-4">
               <input
@@ -367,7 +367,7 @@ export default function SalesConnectPage() {
                   setHallSaved(false);
                 }}
                 placeholder="15,000,000"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-right text-lg sm:text-xl font-extrabold pr-10 outline-none focus:border-indigo-400 focus:bg-white transition"
+                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-4 text-right text-lg sm:text-xl font-extrabold pr-10 outline-none focus:border-indigo-400 focus:bg-white dark:focus:bg-slate-800 transition"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-semibold">원</span>
             </div>
@@ -399,8 +399,8 @@ export default function SalesConnectPage() {
         {tab === "delivery" && (
           <div className="space-y-3 sm:space-y-4">
             {/* 플랫폼 선택 */}
-            <div className="rounded-2xl sm:rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 p-5 sm:p-6">
-              <h2 className="font-bold text-slate-900 mb-3">배달앱 선택</h2>
+            <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700 p-5 sm:p-6">
+              <h2 className="font-bold text-slate-900 dark:text-white mb-3">배달앱 선택</h2>
               <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 {DELIVERY_PLATFORMS.map((p) => (
                   <button
@@ -418,9 +418,9 @@ export default function SalesConnectPage() {
             </div>
 
             {/* 파일 업로드 */}
-            <div className="rounded-2xl sm:rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 p-5 sm:p-6">
+            <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700 p-5 sm:p-6">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="font-bold text-slate-900">정산서 업로드</h2>
+                <h2 className="font-bold text-slate-900 dark:text-white">정산서 업로드</h2>
                 <button
                   onClick={() => setShowGuide(!showGuide)}
                   className="text-xs text-indigo-500 font-semibold active:text-indigo-700 transition"
@@ -431,7 +431,7 @@ export default function SalesConnectPage() {
 
               {/* 접이식 가이드 */}
               {showGuide && (
-                <div className="mb-3 rounded-xl bg-slate-50 p-3 sm:p-4">
+                <div className="mb-3 rounded-xl bg-slate-50 dark:bg-slate-900 p-3 sm:p-4">
                   <p className="text-xs font-bold text-slate-600 mb-2">{selectedPlatform.name} 정산서 내려받기</p>
                   <ol className="space-y-1.5">
                     {selectedPlatform.guide.map((s, i) => (
@@ -511,15 +511,15 @@ export default function SalesConnectPage() {
                     { label: "수수료", value: dResult.totalFees ? `${fmt(dResult.totalFees)}원` : "—", color: "text-red-500" },
                     { label: "실수령", value: dResult.netSales ? `${fmt(dResult.netSales)}원` : "—", color: "text-emerald-600" },
                   ].map((s) => (
-                    <div key={s.label} className="rounded-xl sm:rounded-2xl bg-white p-3 sm:p-4 ring-1 ring-slate-200">
-                      <p className="text-[10px] sm:text-xs text-slate-400 mb-0.5">{s.label}</p>
-                      <p className={`text-base sm:text-lg font-bold truncate ${s.color ?? "text-slate-900"}`}>{s.value}</p>
+                    <div key={s.label} className="rounded-xl sm:rounded-2xl bg-white dark:bg-slate-800 p-3 sm:p-4 ring-1 ring-slate-200 dark:ring-slate-700">
+                      <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 mb-0.5">{s.label}</p>
+                      <p className={`text-base sm:text-lg font-bold truncate ${s.color ?? "text-slate-900 dark:text-white"}`}>{s.value}</p>
                     </div>
                   ))}
                 </div>
 
-                <div className="rounded-2xl sm:rounded-3xl bg-white p-5 sm:p-6 ring-1 ring-slate-200">
-                  <h3 className="text-sm font-bold text-slate-900 mb-3">상세</h3>
+                <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-800 p-5 sm:p-6 ring-1 ring-slate-200 dark:ring-slate-700">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">상세</h3>
                   <div className="space-y-2 text-sm text-slate-600">
                     {dResult.feeRate != null && (
                       <p>수수료율: <span className="font-bold text-red-500">{dResult.feeRate.toFixed(1)}%</span></p>
@@ -547,7 +547,7 @@ export default function SalesConnectPage() {
                 <div className="flex gap-2 sm:gap-3">
                   <button
                     onClick={() => { setFile(null); setDResult(null); setDError(""); setDSaved(false); }}
-                    className="rounded-2xl border border-slate-200 px-4 sm:px-5 py-4 text-xs sm:text-sm font-semibold text-slate-600 active:bg-slate-50 transition active:scale-[0.98]"
+                    className="rounded-2xl border border-slate-200 dark:border-slate-700 px-4 sm:px-5 py-4 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 active:bg-slate-50 dark:active:bg-slate-700 transition active:scale-[0.98]"
                   >
                     다시 업로드
                   </button>
@@ -579,8 +579,8 @@ export default function SalesConnectPage() {
         )}
 
         {/* ── 하단 안내 ── */}
-        <div className="mt-6 rounded-xl sm:rounded-2xl bg-slate-100 p-4 sm:p-5">
-          <p className="text-xs font-bold text-slate-500 mb-2">이렇게 활용돼요</p>
+        <div className="mt-6 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-800 p-4 sm:p-5">
+          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">이렇게 활용돼요</p>
           <ul className="space-y-1.5 text-xs text-slate-500">
             <li>• 입력한 매출은 <Link href="/my-store" className="text-indigo-500 underline">내 매장 현황</Link>에서 월별 추이로 확인</li>
             <li>• <Link href="/simulator" className="text-indigo-500 underline">시뮬레이터</Link>에서 수익성 분석에 활용</li>

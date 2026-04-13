@@ -74,14 +74,14 @@ export default function AdminPage() {
   }, []);
 
   if (loading) return (
-    <main className="min-h-screen bg-slate-50 flex items-center justify-center">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
       <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
     </main>
   );
 
   return (
     <>
-      <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:px-8">
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-20 pb-16 px-4 md:px-8">
         <div className="mx-auto max-w-5xl space-y-6">
 
           {/* 헤더 */}

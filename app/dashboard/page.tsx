@@ -204,8 +204,8 @@ export default function DashboardHome() {
   const maxSales = Math.max(...[...snapshots].reverse().map(s => s.total_sales), 1);
 
   if (loading) return (
-    <div className="min-h-screen bg-slate-50">
-      
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+
       <div className="mx-auto max-w-5xl px-4 py-8 md:px-8 space-y-4 animate-pulse">
         <div className="h-8 bg-slate-200 rounded-3xl w-48" />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -218,17 +218,17 @@ export default function DashboardHome() {
   );
 
   if (!user) return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <div className="flex flex-col items-center justify-center h-[80vh] gap-4">
-        <p className="text-xl font-bold text-slate-900">로그인 후 이용하세요</p>
+        <p className="text-xl font-bold text-slate-900 dark:text-white">로그인 후 이용하세요</p>
         <Link href="/login" className="rounded-3xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white">로그인</Link>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+
       <main className="px-4 py-8 md:px-8">
         <div className="mx-auto max-w-6xl space-y-6">
 
@@ -256,31 +256,31 @@ export default function DashboardHome() {
           )}
 
           {/* 인사말 헤더 */}
-          <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <p className="text-sm text-slate-400">{new Date().toLocaleDateString("ko-KR", { year:"numeric", month:"long", day:"numeric", weekday:"long" })}</p>
-              <h1 className="text-2xl font-bold text-slate-900 mt-1">{greeting}, {name}! 👋</h1>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{greeting}, {name}! 👋</h1>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
               <button onClick={() => setShowWidgetSettings(!showWidgetSettings)}
-                className="rounded-3xl bg-slate-100 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-200 transition">
+                className="rounded-3xl bg-slate-100 dark:bg-slate-800 px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
                 ⚙️ 위젯 설정
               </button>
-              <Link href="/simulator" className="rounded-3xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition">시뮬레이터 →</Link>
+              <Link href="/simulator" className="flex-1 sm:flex-initial text-center rounded-3xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition">시뮬레이터 →</Link>
             </div>
           </div>
 
           {/* 위젯 설정 패널 */}
           {showWidgetSettings && (
-            <div className="rounded-3xl bg-white p-5 ring-1 ring-slate-200">
+            <div className="rounded-3xl bg-white dark:bg-slate-800 p-5 ring-1 ring-slate-200 dark:ring-slate-700">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold text-slate-900">⚙️ 대시보드 위젯 설정</h3>
-                <button onClick={() => setShowWidgetSettings(false)} className="text-slate-400 text-xs hover:text-slate-600">✕ 닫기</button>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">⚙️ 대시보드 위젯 설정</h3>
+                <button onClick={() => setShowWidgetSettings(false)} className="text-slate-400 text-xs hover:text-slate-600 dark:hover:text-slate-300">✕ 닫기</button>
               </div>
               <p className="text-xs text-slate-400 mb-3">보고 싶은 위젯만 켜세요. 설정은 자동 저장됩니다.</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {(Object.keys(WIDGET_LABELS) as WidgetKey[]).map(key => (
-                  <label key={key} className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition text-xs ${widgets[key] ? "bg-blue-50 ring-1 ring-blue-200 text-blue-700 font-semibold" : "bg-slate-50 text-slate-500"}`}>
+                  <label key={key} className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition text-xs ${widgets[key] ? "bg-blue-50 dark:bg-blue-900/30 ring-1 ring-blue-200 dark:ring-blue-700 text-blue-700 dark:text-blue-300 font-semibold" : "bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-400"}`}>
                     <input type="checkbox" checked={widgets[key]} onChange={() => toggleWidget(key)} className="accent-blue-600 w-3.5 h-3.5" />
                     {WIDGET_LABELS[key]}
                   </label>
@@ -318,9 +318,9 @@ export default function DashboardHome() {
               { label:"누적 총 매출",   value: totalRevenue > 0 ? fmt(totalRevenue)+"원" : "—",         sub: `${snapshots.length}개월 합계`, color:"text-blue-600" },
               { label:"평균 원가율",    value: menus.length > 0 ? avgCostRate.toFixed(1)+"%" : "—",    sub: `메뉴 ${menus.length}개 기준`, color: avgCostRate > 40 ? "text-red-500" : menus.length > 0 ? "text-emerald-600" : "text-slate-900" },
             ].map(s => (
-              <div key={s.label} className="rounded-3xl bg-white p-5 ring-1 ring-slate-200">
+              <div key={s.label} className="rounded-3xl bg-white dark:bg-slate-800 p-5 ring-1 ring-slate-200 dark:ring-slate-700">
                 <p className="text-xs text-slate-400 mb-1">{s.label}</p>
-                <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
+                <p className={`text-lg sm:text-xl font-bold truncate dark:text-white ${s.color}`}>{s.value}</p>
                 {s.sub && <p className="text-xs text-slate-400 mt-1">{s.sub}</p>}
               </div>
             ))}
@@ -334,9 +334,9 @@ export default function DashboardHome() {
             const todayNum = Number(todaySales.replace(/[^0-9]/g, "")) || 0;
             const goalPct = dailyGoal > 0 ? Math.min(Math.round((todayNum / dailyGoal) * 100), 100) : 0;
             return (
-              <div className="rounded-3xl bg-white p-5 ring-1 ring-slate-200">
+              <div className="rounded-3xl bg-white dark:bg-slate-800 p-5 ring-1 ring-slate-200 dark:ring-slate-700">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-bold text-slate-900">📊 오늘의 매출</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">📊 오늘의 매출</h2>
                   <span className="text-xs text-slate-400">{today}</span>
                 </div>
                 <div className="flex gap-3">
@@ -368,9 +368,9 @@ export default function DashboardHome() {
           })()}
 
           {/* 목표 달성 게이지 */}
-          {w("goal") && <div className="rounded-3xl bg-white p-5 ring-1 ring-slate-200">
+          {w("goal") && <div className="rounded-3xl bg-white dark:bg-slate-800 p-5 ring-1 ring-slate-200 dark:ring-slate-700">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-slate-900">🎯 월 매출 목표</h2>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">🎯 월 매출 목표</h2>
               <button
                 onClick={() => { setGoalInput(monthlyGoal ? String(monthlyGoal) : ""); setShowGoalModal(true); }}
                 className="text-xs text-blue-500 font-semibold hover:text-blue-700"
@@ -406,8 +406,8 @@ export default function DashboardHome() {
             )}
             {showGoalModal && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowGoalModal(false)}>
-                <div className="bg-white rounded-3xl p-6 w-80 shadow-xl ring-1 ring-slate-200" onClick={e => e.stopPropagation()}>
-                  <h3 className="text-base font-bold text-slate-900 mb-3">월 매출 목표 설정</h3>
+                <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 w-80 shadow-xl ring-1 ring-slate-200 dark:ring-slate-700" onClick={e => e.stopPropagation()}>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">월 매출 목표 설정</h3>
                   <input
                     type="text"
                     placeholder="예: 30000000"
@@ -433,9 +433,9 @@ export default function DashboardHome() {
 
               {/* 월별 매출 차트 — 스탠다드 이상 */}
               <PlanGate>
-              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+              <div className="rounded-3xl bg-white dark:bg-slate-800 p-6 ring-1 ring-slate-200 dark:ring-slate-700">
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-base font-bold text-slate-900">📈 월별 매출 현황</h2>
+                  <h2 className="text-base font-bold text-slate-900 dark:text-white">📈 월별 매출 현황</h2>
                   <div className="flex gap-2">
                     {snapshots.length > 0 && (
                       <button onClick={() => {
@@ -489,8 +489,8 @@ export default function DashboardHome() {
               {/* 월별 추이 LineChart — 스탠다드 이상 */}
               {snapshots.length >= 2 && (
               <PlanGate>
-              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
-                <h2 className="text-base font-bold text-slate-900 mb-4">📊 매출·순이익 추이</h2>
+              <div className="rounded-3xl bg-white dark:bg-slate-800 p-6 ring-1 ring-slate-200 dark:ring-slate-700">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white mb-4">📊 매출·순이익 추이</h2>
                 <ResponsiveContainer width="100%" height={260}>
                   <LineChart data={[...snapshots].reverse().map(s => ({
                     month: s.month.slice(2).replace("-", "/"),
@@ -512,8 +512,8 @@ export default function DashboardHome() {
 
               {/* 매출 예측 — 스탠다드 이상 */}
               <PlanGate>
-              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
-                <h2 className="text-base font-bold text-slate-900 mb-4">🔮 매출 예측</h2>
+              <div className="rounded-3xl bg-white dark:bg-slate-800 p-6 ring-1 ring-slate-200 dark:ring-slate-700">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white mb-4">🔮 매출 예측</h2>
                 {(() => {
                   const predictions = generatePredictions();
                   if (!predictions) {
@@ -569,9 +569,9 @@ export default function DashboardHome() {
               </PlanGate>
 
               {/* 최근 시뮬레이션 */}
-              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+              <div className="rounded-3xl bg-white dark:bg-slate-800 p-6 ring-1 ring-slate-200 dark:ring-slate-700">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-base font-bold text-slate-900">📊 최근 시뮬레이션</h2>
+                  <h2 className="text-base font-bold text-slate-900 dark:text-white">📊 최근 시뮬레이션</h2>
                   <Link href="/profile" className="text-xs text-blue-500 font-semibold hover:text-blue-700">전체보기 →</Link>
                 </div>
                 {sims.length === 0 ? (
@@ -612,22 +612,22 @@ export default function DashboardHome() {
             <div className="space-y-5">
 
               {/* 도구 바로가기 */}
-              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
-                <h2 className="text-base font-bold text-slate-900 mb-4">🛠️ 도구 바로가기</h2>
-                <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-3xl bg-white dark:bg-slate-800 p-6 ring-1 ring-slate-200 dark:ring-slate-700">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white mb-4">🛠️ 도구 바로가기</h2>
+                <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
                   {TOOLS.map(t => (
                     <Link key={t.href} href={t.href}
-                      className="flex items-center gap-1.5 rounded-xl bg-slate-50 px-2.5 py-2 hover:bg-slate-100 transition text-xs font-medium text-slate-700">
-                      <span>{t.icon}</span><span className="truncate">{t.label}</span>
+                      className="flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 rounded-xl bg-slate-50 dark:bg-slate-700 px-1.5 sm:px-2.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-600 active:scale-[0.97] transition text-xs font-medium text-slate-700 dark:text-slate-300">
+                      <span className="text-lg sm:text-base">{t.icon}</span><span className="truncate text-[10px] sm:text-xs text-center sm:text-left">{t.label}</span>
                     </Link>
                   ))}
                 </div>
               </div>
 
               {/* 원가 현황 */}
-              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+              <div className="rounded-3xl bg-white dark:bg-slate-800 p-6 ring-1 ring-slate-200 dark:ring-slate-700">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-base font-bold text-slate-900">🧮 메뉴 원가</h2>
+                  <h2 className="text-base font-bold text-slate-900 dark:text-white">🧮 메뉴 원가</h2>
                   <Link href="/tools/menu-cost" className="text-xs text-blue-500 font-semibold hover:text-blue-700">관리 →</Link>
                 </div>
                 {menus.length === 0 ? (
@@ -656,9 +656,9 @@ export default function DashboardHome() {
               </div>
 
               {/* 커뮤니티 피드 */}
-              <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+              <div className="rounded-3xl bg-white dark:bg-slate-800 p-6 ring-1 ring-slate-200 dark:ring-slate-700">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-base font-bold text-slate-900">👥 커뮤니티</h2>
+                  <h2 className="text-base font-bold text-slate-900 dark:text-white">👥 커뮤니티</h2>
                   <Link href="/community" className="text-xs text-blue-500 font-semibold hover:text-blue-700">더보기 →</Link>
                 </div>
                 {feed.length === 0 ? (
@@ -689,9 +689,9 @@ export default function DashboardHome() {
           </div>
 
           {/* 노트 */}
-          <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+          <div className="rounded-3xl bg-white dark:bg-slate-800 p-6 ring-1 ring-slate-200 dark:ring-slate-700">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-slate-900">📝 노트</h2>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">📝 노트</h2>
               <Link href="/notes" className="text-xs text-blue-500 font-semibold hover:text-blue-700">전체보기 →</Link>
             </div>
             <NotesWidget />

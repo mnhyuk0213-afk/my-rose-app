@@ -91,8 +91,8 @@ export default function OnboardingPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-700 border-t-slate-900 dark:border-t-white rounded-full animate-spin" />
       </main>
     );
   }
@@ -100,7 +100,7 @@ export default function OnboardingPage() {
   const statusLabel = businessStatus === "operating" ? "운영 중" : businessStatus === "preparing" ? "준비 중" : "고민 중";
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 pt-20 pb-24 md:px-8">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-900 px-4 pt-20 pb-24 md:px-8">
       <div className="mx-auto max-w-lg">
 
         {/* 스텝 인디케이터 */}
@@ -109,7 +109,7 @@ export default function OnboardingPage() {
             <div
               key={s}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                step >= s ? "w-10 bg-blue-600" : "w-6 bg-slate-200"
+                step >= s ? "w-10 bg-blue-600" : "w-6 bg-slate-200 dark:bg-slate-700"
               }`}
             />
           ))}
@@ -119,31 +119,31 @@ export default function OnboardingPage() {
         {step === 1 && (
           <div className="text-center animate-[fadeIn_0.3s_ease]">
             <div className="text-5xl mb-4">👋</div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
               환영합니다, {name}님!
             </h1>
-            <p className="text-sm text-slate-500 mb-8">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">
               VELA가 매장 경영을 도와드릴게요.
             </p>
 
             {/* 프로필 요약 */}
-            <div className="rounded-2xl bg-white ring-1 ring-slate-200 p-5 mb-6 text-left">
-              <p className="text-xs font-semibold text-slate-400 mb-3">내 매장 정보</p>
+            <div className="rounded-2xl bg-white dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 p-5 mb-6 text-left">
+              <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-3">내 매장 정보</p>
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-500">이름</span>
-                  <span className="text-sm font-bold text-slate-900">{name}</span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">{name}</span>
                 </div>
                 {industry && (
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-500">업종</span>
-                    <span className="text-sm font-bold text-slate-900">{INDUSTRY_LABELS[industry] ?? industry}</span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">{INDUSTRY_LABELS[industry] ?? industry}</span>
                   </div>
                 )}
                 {businessStatus && (
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-500">현재 상태</span>
-                    <span className="text-sm font-bold text-slate-900">{statusLabel}</span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">{statusLabel}</span>
                   </div>
                 )}
               </div>
@@ -165,10 +165,10 @@ export default function OnboardingPage() {
         {step === 2 && (
           <div className="animate-[fadeIn_0.3s_ease]">
             <div className="text-center mb-8">
-              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mb-2">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
                 VELA로 할 수 있는 것들
               </h2>
-              <p className="text-xs text-slate-500">매장 운영에 필요한 모든 도구가 여기에 있어요.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">매장 운영에 필요한 모든 도구가 여기에 있어요.</p>
             </div>
 
             <div className="space-y-3 mb-6">
@@ -179,13 +179,13 @@ export default function OnboardingPage() {
                 { icon: "📈", title: "AI 경영 전략", desc: "데이터 기반 맞춤 개선점 추천" },
                 { icon: "📊", title: "월별 매출 관리", desc: "홀+배달 매출 추이 한눈에" },
               ].map((f) => (
-                <div key={f.title} className="flex items-center gap-4 rounded-2xl bg-white p-4 ring-1 ring-slate-100">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-lg flex-shrink-0">
+                <div key={f.title} className="flex items-center gap-4 rounded-2xl bg-white dark:bg-slate-800 p-4 ring-1 ring-slate-100 dark:ring-slate-700">
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-lg flex-shrink-0">
                     {f.icon}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-900">{f.title}</p>
-                    <p className="text-xs text-slate-500">{f.desc}</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">{f.title}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{f.desc}</p>
                   </div>
                 </div>
               ))}
@@ -194,7 +194,7 @@ export default function OnboardingPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setStep(1)}
-                className="rounded-2xl border border-slate-200 px-5 py-4 text-sm font-semibold text-slate-600 active:bg-slate-50 transition"
+                className="rounded-2xl border border-slate-200 dark:border-slate-700 px-5 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300 active:bg-slate-50 dark:active:bg-slate-700 transition"
               >
                 이전
               </button>
@@ -212,10 +212,10 @@ export default function OnboardingPage() {
         {step === 3 && (
           <div className="animate-[fadeIn_0.3s_ease]">
             <div className="text-center mb-8">
-              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mb-2">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
                 뭐부터 해볼까요?
               </h2>
-              <p className="text-xs text-slate-500">하나를 선택하면 바로 시작됩니다.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">하나를 선택하면 바로 시작됩니다.</p>
             </div>
 
             <div className="space-y-3 mb-6">
@@ -230,12 +230,12 @@ export default function OnboardingPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-bold text-slate-900">{a.title}</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{a.title}</p>
                       {a.recommended && (
                         <span className="text-[9px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded-full">추천</span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-500">{a.desc}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{a.desc}</p>
                   </div>
                   <span className="text-slate-300 flex-shrink-0">→</span>
                 </button>
@@ -245,13 +245,13 @@ export default function OnboardingPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setStep(2)}
-                className="rounded-2xl border border-slate-200 px-5 py-4 text-sm font-semibold text-slate-600 active:bg-slate-50 transition"
+                className="rounded-2xl border border-slate-200 dark:border-slate-700 px-5 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300 active:bg-slate-50 dark:active:bg-slate-700 transition"
               >
                 이전
               </button>
               <button
                 onClick={handleSkip}
-                className="flex-1 rounded-2xl bg-slate-100 text-slate-600 py-4 text-sm font-semibold active:scale-[0.98] transition"
+                className="flex-1 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-4 text-sm font-semibold active:scale-[0.98] transition"
               >
                 나중에 할게요
               </button>

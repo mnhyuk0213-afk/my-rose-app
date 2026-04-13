@@ -562,7 +562,7 @@ export default function CommunityPage() {
   return (
     <>
       
-      <main className="min-h-screen bg-slate-50 px-4 py-8 md:px-8">
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-900 px-4 py-8 md:px-8">
         <div className="mx-auto max-w-4xl">
 
           {/* 이벤트 배너 */}

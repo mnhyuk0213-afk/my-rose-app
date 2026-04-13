@@ -97,7 +97,7 @@ export default function BenchmarkPage() {
   return (
     <>
 
-      <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-20 pb-16 px-4">
         <div className="mx-auto max-w-2xl">
           {/* 뒤로가기 */}
           <Link

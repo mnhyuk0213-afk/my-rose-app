@@ -123,7 +123,7 @@ export default function StoresPage() {
 
   if (planLoading || loading) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
         <div className="mx-auto max-w-3xl px-4 pt-24 pb-16 space-y-4 animate-pulse">
           <div className="h-8 bg-slate-200 rounded-2xl w-48" />
           <div className="h-40 bg-slate-200 rounded-3xl" />
@@ -135,7 +135,7 @@ export default function StoresPage() {
 
   if (!userId) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
         <div className="mx-auto max-w-3xl px-4 pt-24 pb-16 text-center">
           <p className="text-slate-500 text-lg mt-20">로그인이 필요합니다.</p>
         </div>
@@ -144,7 +144,7 @@ export default function StoresPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <div className="mx-auto max-w-3xl px-4 pt-24 pb-16 md:px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

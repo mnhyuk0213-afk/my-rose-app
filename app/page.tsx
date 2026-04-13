@@ -28,18 +28,18 @@ function MiniSim() {
   ];
 
   return (
-    <div className="rounded-2xl bg-white ring-1 ring-slate-200 shadow-lg p-5 sm:p-7">
+    <div className="rounded-2xl bg-white dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 shadow-lg p-5 sm:p-7">
       <div className="flex items-center justify-between mb-5">
-        <span className="text-sm font-bold text-slate-900">수익 미리보기</span>
-        <span className="text-[11px] text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full font-semibold">슬라이더를 움직여보세요</span>
+        <span className="text-sm font-bold text-slate-900 dark:text-white">수익 미리보기</span>
+        <span className="text-[11px] text-slate-400 bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-full font-semibold">슬라이더를 움직여보세요</span>
       </div>
 
       <div className="space-y-4 mb-5">
         {sliders.map((s) => (
           <div key={s.label}>
             <div className="flex justify-between mb-1.5">
-              <span className="text-xs text-slate-500">{s.label}</span>
-              <span className="text-xs font-bold text-slate-900">{s.display}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{s.label}</span>
+              <span className="text-xs font-bold text-slate-900 dark:text-white">{s.display}</span>
             </div>
             <input
               type="range" min={s.min} max={s.max} step={s.step} value={s.value}
@@ -50,10 +50,10 @@ function MiniSim() {
         ))}
       </div>
 
-      <div className="rounded-xl bg-slate-50 p-4 mb-4">
+      <div className="rounded-xl bg-slate-50 dark:bg-slate-900 p-4 mb-4">
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs text-slate-400 font-semibold">예상 월 매출</span>
-          <span className="text-lg font-extrabold text-slate-900">{fmt(sales)}원</span>
+          <span className="text-lg font-extrabold text-slate-900 dark:text-white">{fmt(sales)}원</span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-xs text-slate-400 font-semibold">예상 순이익</span>
@@ -147,7 +147,7 @@ function LandingContent() {
   return (
     <>
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 px-4 pt-24 pb-16 sm:pt-32 sm:pb-24 md:px-8">
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 px-4 pt-24 pb-16 sm:pt-32 sm:pb-24 md:px-8">
         <div className="mx-auto max-w-6xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             {/* 좌측 텍스트 */}
@@ -156,11 +156,11 @@ function LandingContent() {
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
                 외식업 AI 경영 분석
               </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-[1.15] mb-5">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.15] mb-5">
                 매장 수익을<br />
                 <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">한눈에 파악하세요</span>
               </h1>
-              <p className="text-slate-500 text-sm sm:text-base leading-relaxed mb-7 max-w-md">
+              <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base leading-relaxed mb-7 max-w-md">
                 좌석 수, 객단가, 비용만 입력하면 AI가 수익성을 분석하고 맞춤 전략을 제안합니다. 30개 이상의 경영 도구를 무료로 시작하세요.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 mb-5">
@@ -172,7 +172,7 @@ function LandingContent() {
                 </Link>
                 <Link
                   href="/tools"
-                  className="inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-700 px-7 py-4 rounded-2xl text-sm font-bold active:scale-[0.98] transition"
+                  className="inline-flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-7 py-4 rounded-2xl text-sm font-bold active:scale-[0.98] transition"
                 >
                   도구 둘러보기
                 </Link>
@@ -190,7 +190,7 @@ function LandingContent() {
           </div>
 
           {/* 통계 바 */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-12 sm:mt-16 pt-8 border-t border-slate-200">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-12 sm:mt-16 pt-8 border-t border-slate-200 dark:border-slate-700">
             {[
               { num: "30+", label: "경영 도구" },
               { num: "5", label: "업종 지원" },
@@ -198,7 +198,7 @@ function LandingContent() {
               { num: "AI", label: "실시간 전략" },
             ].map((s) => (
               <div key={s.label} className="text-center">
-                <p className="text-2xl sm:text-3xl font-black text-slate-900">{s.num}</p>
+                <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">{s.num}</p>
                 <p className="text-xs text-slate-400 mt-0.5">{s.label}</p>
               </div>
             ))}
@@ -212,24 +212,24 @@ function LandingContent() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section id="features" className="bg-white px-4 py-16 sm:py-24 md:px-8">
+      <section id="features" className="bg-white dark:bg-slate-900 px-4 py-16 sm:py-24 md:px-8">
         <div className="mx-auto max-w-6xl">
           <FadeIn className="text-center mb-10 sm:mb-14">
             <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               핵심 기능
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">사장님에게 필요한 모든 도구</h2>
-            <p className="text-sm text-slate-500 max-w-md mx-auto">원가 계산부터 AI 분석까지, 매장 운영에 필요한 도구를 한곳에서.</p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-3">사장님에게 필요한 모든 도구</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">원가 계산부터 AI 분석까지, 매장 운영에 필요한 도구를 한곳에서.</p>
           </FadeIn>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {FEATURES.map((f) => (
               <FadeIn key={f.title}>
-                <div className="rounded-2xl bg-slate-50 p-5 sm:p-6 ring-1 ring-slate-100 hover:ring-blue-200 hover:shadow-md transition group">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition">
+                <div className="rounded-2xl bg-slate-50 dark:bg-slate-800 p-5 sm:p-6 ring-1 ring-slate-100 dark:ring-slate-700 hover:ring-blue-200 hover:shadow-md transition group">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition">
                     {f.icon}
                   </div>
-                  <h3 className="text-sm font-bold text-slate-900 mb-1">{f.title}</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed mb-2">{f.desc}</p>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{f.title}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-2">{f.desc}</p>
                   <span className="inline-block text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{f.tag}</span>
                 </div>
               </FadeIn>
@@ -244,13 +244,13 @@ function LandingContent() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section className="bg-slate-50 px-4 py-16 sm:py-24 md:px-8">
+      <section className="bg-slate-50 dark:bg-slate-950 px-4 py-16 sm:py-24 md:px-8">
         <div className="mx-auto max-w-4xl">
           <FadeIn className="text-center mb-10 sm:mb-14">
             <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               이용 방법
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">3분이면 충분합니다</h2>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">3분이면 충분합니다</h2>
           </FadeIn>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
@@ -259,12 +259,12 @@ function LandingContent() {
               { step: "3", icon: "🚀", title: "바로 실행", desc: "AI 추천 전략을 확인하고 실행 계획을 세우세요.", color: "bg-emerald-600" },
             ].map((s) => (
               <FadeIn key={s.step}>
-                <div className="rounded-2xl bg-white p-6 ring-1 ring-slate-200 text-center relative overflow-hidden">
+                <div className="rounded-2xl bg-white dark:bg-slate-800 p-6 ring-1 ring-slate-200 dark:ring-slate-700 text-center relative overflow-hidden">
                   <div className={`absolute top-0 left-0 w-full h-1 ${s.color}`} />
                   <div className="text-3xl mb-3">{s.icon}</div>
                   <div className={`inline-block ${s.color} text-white text-[10px] font-bold px-3 py-1 rounded-full mb-3`}>STEP {s.step}</div>
-                  <h3 className="text-sm font-bold text-slate-900 mb-2">{s.title}</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">{s.desc}</p>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-2">{s.title}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{s.desc}</p>
                 </div>
               </FadeIn>
             ))}
@@ -273,19 +273,19 @@ function LandingContent() {
       </section>
 
       {/* ── PRICING ── */}
-      <section id="pricing" className="bg-white px-4 py-16 sm:py-24 md:px-8">
+      <section id="pricing" className="bg-white dark:bg-slate-900 px-4 py-16 sm:py-24 md:px-8">
         <div className="mx-auto max-w-3xl">
           <FadeIn className="text-center mb-10 sm:mb-14">
             <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               요금제
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">심플한 요금제</h2>
-            <p className="text-sm text-slate-500">무료로 시작하고, 필요할 때 업그레이드하세요.</p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-3">심플한 요금제</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">무료로 시작하고, 필요할 때 업그레이드하세요.</p>
           </FadeIn>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {PLANS.map((p) => (
               <FadeIn key={p.plan}>
-                <div className={`rounded-2xl p-6 sm:p-8 relative ${p.popular ? "bg-slate-900 text-white ring-2 ring-blue-600" : "bg-slate-50 ring-1 ring-slate-200"}`}>
+                <div className={`rounded-2xl p-6 sm:p-8 relative ${p.popular ? "bg-slate-900 text-white ring-2 ring-blue-600" : "bg-slate-50 dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700"}`}>
                   {p.popular && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full">
                       가장 인기
@@ -340,13 +340,13 @@ function LandingContent() {
       </section>
 
       {/* ── FAQ ── */}
-      <section id="faq" className="bg-slate-50 px-4 py-16 sm:py-24 md:px-8">
+      <section id="faq" className="bg-slate-50 dark:bg-slate-950 px-4 py-16 sm:py-24 md:px-8">
         <div className="mx-auto max-w-2xl">
           <FadeIn className="text-center mb-10">
             <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               FAQ
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">자주 묻는 질문</h2>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">자주 묻는 질문</h2>
           </FadeIn>
           <div className="space-y-3">
             {[
@@ -356,9 +356,9 @@ function LandingContent() {
               { q: "결제는 어떤 방법으로 가능한가요?", a: "신용카드, 체크카드 등 토스페이먼츠를 통한 다양한 결제 방법을 지원합니다." },
             ].map((faq) => (
               <FadeIn key={faq.q}>
-                <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
-                  <p className="text-sm font-bold text-slate-900 mb-1.5">Q. {faq.q}</p>
-                  <p className="text-xs text-slate-500 leading-relaxed">{faq.a}</p>
+                <div className="rounded-2xl bg-white dark:bg-slate-800 p-5 ring-1 ring-slate-200 dark:ring-slate-700">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white mb-1.5">Q. {faq.q}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{faq.a}</p>
                 </div>
               </FadeIn>
             ))}
@@ -383,14 +383,14 @@ function LandingContent() {
       </section>
 
       {/* ── CONTACT ── */}
-      <section id="contact" className="bg-white px-4 py-16 sm:py-24 md:px-8">
+      <section id="contact" className="bg-white dark:bg-slate-900 px-4 py-16 sm:py-24 md:px-8">
         <div className="mx-auto max-w-4xl">
           <FadeIn className="mb-10">
             <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
               문의
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">궁금한 게 있으신가요?</h2>
-            <p className="text-sm text-slate-500">서비스 도입, 기능 제안, 파트너십 등 편하게 남겨주세요.</p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">궁금한 게 있으신가요?</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">서비스 도입, 기능 제안, 파트너십 등 편하게 남겨주세요.</p>
           </FadeIn>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             <div className="md:col-span-2 space-y-5">
@@ -401,7 +401,7 @@ function LandingContent() {
               ].map((c) => (
                 <div key={c.label}>
                   <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-widest mb-1">{c.label}</p>
-                  <p className="text-sm text-slate-700">{c.value}</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300">{c.value}</p>
                 </div>
               ))}
             </div>
@@ -409,20 +409,20 @@ function LandingContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 mb-1">이름</label>
-                  <input ref={nameRef} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-blue-400 focus:bg-white transition" placeholder="홍길동" required />
+                  <input ref={nameRef} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-white px-4 py-3 text-base outline-none focus:border-blue-400 focus:bg-white dark:focus:bg-slate-700 transition" placeholder="홍길동" required />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 mb-1">연락처</label>
-                  <input className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-blue-400 focus:bg-white transition" placeholder="010-0000-0000" />
+                  <input className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-white px-4 py-3 text-base outline-none focus:border-blue-400 focus:bg-white dark:focus:bg-slate-700 transition" placeholder="010-0000-0000" />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">이메일</label>
-                <input ref={emailRef} type="email" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-blue-400 focus:bg-white transition" placeholder="your@email.com" required />
+                <input ref={emailRef} type="email" className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-white px-4 py-3 text-base outline-none focus:border-blue-400 focus:bg-white dark:focus:bg-slate-700 transition" placeholder="your@email.com" required />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">문의 내용</label>
-                <textarea ref={messageRef} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-blue-400 focus:bg-white transition resize-y min-h-[120px]" placeholder="궁금한 점을 자유롭게 적어주세요." required />
+                <textarea ref={messageRef} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-white px-4 py-3 text-base outline-none focus:border-blue-400 focus:bg-white dark:focus:bg-slate-700 transition resize-y min-h-[120px]" placeholder="궁금한 점을 자유롭게 적어주세요." required />
               </div>
               <button ref={submitBtnRef} type="submit" className="bg-blue-600 text-white px-6 py-3.5 rounded-xl text-sm font-bold active:scale-[0.98] transition">
                 문의 보내기
@@ -508,8 +508,8 @@ export default function HomePage() {
   // 로그인 확인 중 또는 리다이렉트 중
   if (loggedIn && !hasHash) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-700 border-t-slate-900 dark:border-t-white rounded-full animate-spin" />
       </div>
     );
   }

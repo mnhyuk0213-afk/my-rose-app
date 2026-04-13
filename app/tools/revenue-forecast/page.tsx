@@ -216,7 +216,7 @@ ${revenueHistory}
   return (
     <>
       <ToolNav />
-      <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:pl-60">
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-20 pb-16 px-4 md:pl-60">
         <div className="mx-auto max-w-3xl">
           {/* Header */}
           <div className="flex items-center gap-3 mb-8 mt-4">

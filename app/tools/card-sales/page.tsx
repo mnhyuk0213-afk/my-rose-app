@@ -40,7 +40,7 @@ export default function CardSalesPage() {
   return (
     <>
       <ToolNav />
-      <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4 md:pl-60">
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-20 pb-16 px-4 md:pl-60">
         <div className="mx-auto max-w-md text-center py-16">
           <p className="text-5xl mb-6">🚀</p>
           <h1 className="text-2xl font-extrabold text-slate-900 mb-2">카드매출 자동 수집</h1>

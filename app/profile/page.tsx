@@ -231,7 +231,7 @@ export default function ProfilePage() {
   const displayName = user?.user_metadata?.nickname||user?.user_metadata?.full_name||user?.email?.split("@")[0]||"사용자";
 
   if(loading) return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       
       <div className="mx-auto max-w-2xl px-4 py-8 md:px-8 space-y-4 animate-pulse">
         <div className="h-20 bg-slate-200 rounded-3xl" />
@@ -242,7 +242,7 @@ export default function ProfilePage() {
     </div>
   );
   if(!user) return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <div className="flex items-center justify-center h-[80vh]">
         <Link href="/login" className="rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white">로그인</Link>
       </div>
@@ -250,7 +250,7 @@ export default function ProfilePage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       
       <main className="px-4 py-8 md:px-8">
         <div className="mx-auto max-w-2xl space-y-5">

@@ -162,14 +162,14 @@ export default function MonthlyInputPage() {
   }
 
   if (loading) return (
-    <main className="min-h-screen bg-slate-50 flex items-center justify-center">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
       <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
     </main>
   );
 
   return (
     <>
-      <main className="min-h-screen bg-slate-50 pt-20 pb-16 px-4">
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-20 pb-16 px-4">
         <div className="mx-auto max-w-2xl">
           <div className="flex items-center gap-3 mt-4 mb-6">
             <Link href="/dashboard" className="text-sm text-slate-400 hover:text-slate-700 transition">← 월별 현황</Link>
